@@ -16,7 +16,7 @@ export interface ItemNav {
 }
 
 export const NAV_MANEJADOR: ItemNav[] = [
-  { chave: 'manejoHub', rota: '/cacar', label: 'CAÇAR', icon: 'abate', destaque: true, pronta: true },
+  { chave: 'manejoHub', rota: '/cacadas', label: 'CAÇAR', icon: 'abate', destaque: true, pronta: true },
   { chave: 'inicio', rota: '/inicio', label: 'Início', icon: 'inicio', pronta: true },
   { chave: 'agenda', rota: '/agenda', label: 'Agenda', icon: 'agenda', pronta: true },
   { chave: 'manutencaoHub', rota: '/manutencao', label: 'Manutenção', icon: 'espreita' },

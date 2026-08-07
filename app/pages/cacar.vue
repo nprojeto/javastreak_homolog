@@ -34,10 +34,19 @@ const cred = useCreditos()
       <div class="chev">›</div>
     </NuxtLink>
 
+    <NuxtLink to="/cacadas" class="card menu-card">
+      <Icone nome="painel" :px="34" />
+      <div class="txt">
+        <h3>Caçadas</h3>
+        <p>Abrir ciclo, convidar amigos e acompanhar os abates</p>
+      </div>
+      <div class="chev">›</div>
+    </NuxtLink>
+
     <EmBreve
-      titulo="Ciclo de caça"
-      lote="lote 5"
-      descricao="Abrir caçada, convidar amigos, registrar abate e o relatório de fechamento do IBAMA."
+      titulo="Relatório do IBAMA"
+      lote="lote 7c"
+      descricao="Fechar uma autorização, juntar os abates do período e exportar em PDF e CSV."
     />
   </div>
 </template>
