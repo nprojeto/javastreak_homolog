@@ -55,9 +55,11 @@ const props_ = ref<ItemMapa[]>([])
 const erro = ref('')
 const abertos = ref(true)
 
+/* Rede LIGADA por padrão: o mapa da rede é metade da razão de existir desta
+   tela, e nascer desligado fazia parecer que as lojas não estavam lá. */
 const ligados = reactive<Record<Chave, boolean>>({
   espera: true, rotas: true, marcacao: true, abate: true,
-  canil: true, propriedade: true, rede: false
+  canil: true, propriedade: true, rede: true
 })
 
 const num = (v: unknown) => {
@@ -167,6 +169,13 @@ onMounted(carregar)
         <div v-if="ligados.rede && rede && !rede.verManejadores" class="meta aviso">
           ⚠️ Você só vê os outros manejadores se o seu próprio perfil estiver
           visível na rede. Lojistas você vê sempre.
+        </div>
+        <div
+          v-if="ligados.rede && rede && !(rede.empresas || []).length"
+          class="meta aviso"
+        >
+          ℹ️ Nenhuma loja no mapa. Empresa só aparece na rede com plano ativo —
+          é regra do servidor, não falta de cadastro.
         </div>
       </div>
 
