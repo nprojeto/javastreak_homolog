@@ -52,8 +52,27 @@ const ficha = ref<Ficha | null>(null)
 const erro = ref('')
 const carregandoLista = ref(false)
 
-/* cortesia */
-const ctDestino = ref('')
+/**
+ * Cortesia — o destino tem CINCO formatos aceitos pelo servidor, e só esses:
+ * `login:<email>`, `todos`, `manejadores`, `empresas` e `novos:<dias>`.
+ * Qualquer outra coisa volta como "Destino inválido".
+ *
+ * ⚠️ Isto era um campo de texto livre com o formato só no placeholder — e
+ * digitar o e-mail sem o prefixo `login:` derrubava a ação. Virou seletor:
+ * a sintaxe deixou de ser problema de quem usa.
+ */
+const ctTipo = ref<'login' | 'todos' | 'manejadores' | 'empresas' | 'novos'>('login')
+const ctEmail = ref('')
+const ctNovosDias = ref('7')
+
+const ctDestino = computed(() => {
+  if (ctTipo.value === 'login') {
+    const e = ctEmail.value.trim().toLowerCase()
+    return e ? 'login:' + e : ''
+  }
+  if (ctTipo.value === 'novos') return 'novos:' + (ctNovosDias.value || '7')
+  return ctTipo.value
+})
 const ctPlano = ref('n2')
 const ctDias = ref('30')
 const ctObs = ref('')
@@ -102,7 +121,9 @@ async function abrirFicha(u: Usuario) {
   try {
     ficha.value = await server<Ficha>('apiFichaUsuario', u.id)
     /* Preenche o destino da cortesia com quem está aberto — é o uso comum. */
-    ctDestino.value = 'login:' + u.login
+    ctTipo.value = 'login'
+    ctEmail.value = u.login
+    contarDestino()
   } catch { /* já avisado */ }
 }
 
@@ -133,6 +154,8 @@ async function contarDestino() {
     ctQtd.value = null
   }
 }
+
+watch(ctDestino, contarDestino)
 
 async function darCortesia() {
   if (!ctDestino.value) { ui.avisar('Informe o destino', 'erro'); return }
@@ -308,15 +331,30 @@ onMounted(() => {
           testar o que o plano Novato limita.
         </div>
 
-        <label for="ct_dest">Destino *</label>
-        <input
-          id="ct_dest"
-          v-model="ctDestino"
-          class="no-i18n"
-          placeholder="login:email@dominio ou todos / manejadores / empresas / novos:7"
-          @blur="contarDestino"
-        >
-        <div v-if="ctQtd !== null" class="meta">Atinge {{ ctQtd }} conta(s).</div>
+        <label for="ct_tipo">Destino *</label>
+        <select id="ct_tipo" v-model="ctTipo">
+          <option value="login">Uma conta pelo e-mail</option>
+          <option value="manejadores">Todos os manejadores</option>
+          <option value="empresas">Todas as empresas</option>
+          <option value="todos">Todas as contas</option>
+          <option value="novos">Cadastrados nos últimos N dias</option>
+        </select>
+
+        <template v-if="ctTipo === 'login'">
+          <label for="ct_email">E-mail da conta *</label>
+          <input id="ct_email" v-model="ctEmail" type="email" class="no-i18n" placeholder="conta@dominio.com">
+        </template>
+        <template v-else-if="ctTipo === 'novos'">
+          <label for="ct_nd">Cadastrados nos últimos (dias)</label>
+          <input id="ct_nd" v-model="ctNovosDias" inputmode="numeric">
+        </template>
+
+        <div v-if="ctQtd !== null" class="meta">
+          Atinge <b>{{ ctQtd }}</b> conta(s).
+        </div>
+        <div v-if="ctQtd === 0" class="meta ruim">
+          ⚠️ Nenhuma conta encontrada com esse destino — confira o e-mail.
+        </div>
 
         <div class="two">
           <div>
