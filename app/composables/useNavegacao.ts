@@ -26,7 +26,7 @@ export const NAV_MANEJADOR: ItemNav[] = [
   { chave: 'rotas', rota: '/rotas', label: 'Rotas', icon: 'rotas', pronta: true },
   { chave: 'documentacao', rota: '/documentacao', label: 'Documentação', icon: 'documentacao', pronta: true },
   { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte', pronta: true },
-  { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa' },
+  { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa', pronta: true },
   { chave: 'trofeus', rota: '/trofeus', label: 'Sala de troféu', icon: 'trofeus' },
   { chave: 'ranking', rota: '/ranking', label: 'Ranking', icon: 'ranking' },
   { chave: 'promocoes', rota: '/promocoes', label: 'Promoções', icon: 'avisos' }
@@ -37,7 +37,7 @@ export const NAV_LOJISTA: ItemNav[] = [
   { chave: 'vitrine', rota: '/vitrine', label: 'Minha vitrine', icon: 'carrinho' },
   { chave: 'promocoes', rota: '/promocoes', label: 'Promoções', icon: 'avisos' },
   { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte', pronta: true },
-  { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa' },
+  { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa', pronta: true },
   { chave: 'ranking', rota: '/ranking', label: 'Ranking', icon: 'ranking' }
 ]
 
