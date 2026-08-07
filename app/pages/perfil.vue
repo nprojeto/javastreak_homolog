@@ -29,18 +29,42 @@ const { lang, setLang, IDIOMAS, BANDEIRA } = useTraducao()
 type Idm = 'pt' | 'en' | 'es'
 const m = computed(() => auth.manejador || {})
 
-const nome = ref(String(m.value.nome || ''))
-const sexo = ref(String(m.value.sexo || 'Masculino'))
-const whatsapp = ref(String(m.value.whatsapp || ''))
-const telefone = ref(String(m.value.telefone || ''))
-const cidade = ref(String(m.value.cidade || ''))
-const bio = ref(String(m.value.bioNetwork || ''))
-const lat = ref(String(m.value.latNetwork || m.value.lat || ''))
-const lng = ref(String(m.value.lngNetwork || m.value.lng || ''))
+const nome = ref('')
+const sexo = ref('Masculino')
+const whatsapp = ref('')
+const telefone = ref('')
+const cidade = ref('')
+const bio = ref('')
+const lat = ref('')
+const lng = ref('')
 const foto = ref('')
 const salvando = ref(false)
+const visivel = ref(false)
 
-const visivel = ref(String(m.value.visivelNetwork || '') === 'Sim')
+/**
+ * ⚠️ Não copie a ficha só na montagem. O `apiBoot` que a traz do servidor
+ * ainda está a caminho quando esta tela monta — e o resultado era cruel: o
+ * cabeçalho mostrava o nome (é reativo) e o formulário aparecia VAZIO,
+ * parecendo que nada tinha sido salvo. Estava tudo salvo; a tela é que
+ * congelava a cópia.
+ *
+ * `preenchido` garante que a chegada tardia não apague o que a pessoa já
+ * começou a digitar.
+ */
+const preenchido = ref(false)
+watch(m, (f) => {
+  if (preenchido.value || !f || !f.id) return
+  nome.value = String(f.nome || '')
+  sexo.value = String(f.sexo || 'Masculino')
+  whatsapp.value = String(f.whatsapp || '')
+  telefone.value = String(f.telefone || '')
+  cidade.value = String(f.cidade || '')
+  bio.value = String(f.bioNetwork || '')
+  lat.value = String(f.latNetwork || f.lat || '')
+  lng.value = String(f.lngNetwork || f.lng || '')
+  visivel.value = String(f.visivelNetwork || '') === 'Sim'
+  preenchido.value = true
+}, { immediate: true, deep: true })
 const trocandoVis = ref(false)
 const temCoord = computed(() => !!(lat.value && lng.value))
 

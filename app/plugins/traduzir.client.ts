@@ -21,6 +21,11 @@ export default defineNuxtPlugin(() => {
   const { lang, t } = useTraducao()
 
   let agendado = false
+  let observador: MutationObserver | null = null
+
+  /* Nós já traduzidos não voltam à varredura: sem isto, cada quadro relia a
+     página inteira e a troca de idioma ficava lenta em tela grande. */
+  const jaVisto = new WeakSet<Text>()
 
   function traduzir(raiz: Node) {
     if (lang.value === 'pt') return
@@ -33,6 +38,7 @@ export default defineNuxtPlugin(() => {
       const tag = pai.nodeName
       if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA') continue
       if (pai.closest('.no-i18n')) continue
+      if (jaVisto.has(n as Text)) continue
       alvos.push(n as Text)
     }
     for (const no of alvos) {
@@ -40,6 +46,7 @@ export default defineNuxtPlugin(() => {
       const txt = bruto.trim()
       if (!txt) continue
       const tr = t(txt)
+      jaVisto.add(no)
       if (tr && tr !== txt) no.nodeValue = bruto.replace(txt, tr)
     }
     const q = (raiz as Element).querySelectorAll?.('[placeholder],[title]')
@@ -58,13 +65,20 @@ export default defineNuxtPlugin(() => {
     agendado = true
     requestAnimationFrame(() => {
       agendado = false
+      /* Desliga o observador durante a varredura: as próprias trocas de texto
+         disparariam mutação, e a cada quadro a página seria relida de novo. */
+      observador?.disconnect()
       traduzir(document.body)
+      observador?.observe(document.body, {
+        childList: true, subtree: true, characterData: true
+      })
     })
   }
 
   if (import.meta.client) {
     /* Uma varredura por quadro, no máximo — o Vue redesenha em rajadas. */
-    new MutationObserver(agendar).observe(document.body, {
+    observador = new MutationObserver(agendar)
+    observador.observe(document.body, {
       childList: true, subtree: true, characterData: true
     })
     /* ⚠️ NÃO recarregue a página daqui. A tela de perfil salva o idioma na
