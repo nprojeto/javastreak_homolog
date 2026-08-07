@@ -9,10 +9,43 @@ import { useCreditos } from '~/stores/creditos'
 import type { Creditos } from '~/stores/creditos'
 import { useAuth } from '~/stores/auth'
 
+interface Boot {
+  appNome: string
+  tipo: 'manejador' | 'empresa'
+  admin: boolean
+  manejador?: Record<string, unknown> | null
+  empresa?: Record<string, unknown> | null
+  idioma?: string
+  login?: string
+}
+
 export function useSessaoApp() {
   const cred = useCreditos()
   const auth = useAuth()
   const { server } = useServer()
+  const { lang, setLang } = useTraducao()
+
+  /**
+   * ⚠️ Sem isto, recarregar a página perdia tudo menos o token: o nome sumia
+   * do cabeçalho, o perfil aparecia vazio e a visibilidade na rede voltava a
+   * "oculto" — mesmo com os dados salvos no banco. Só PARECIA que a gravação
+   * não tinha funcionado.
+   *
+   * O legado chamava `apiBoot` na abertura; a chamada faltava aqui.
+   */
+  async function carregarBoot(forcar = false) {
+    if (!auth.token) return
+    if (auth.manejador && !forcar) return
+    const b = await server<Boot>('apiBoot')
+    auth.tipo = b.tipo || 'manejador'
+    auth.admin = !!b.admin
+    auth.login = b.login || auth.login
+    if (auth.tipo === 'empresa') { auth.empresa = b.empresa || null; auth.manejador = null }
+    else { auth.manejador = b.manejador || null; auth.empresa = null }
+    /* O idioma da CONTA manda sobre o do aparelho — é o que faz a escolha
+       acompanhar a pessoa em qualquer celular. */
+    if (b.idioma && b.idioma !== lang.value) await setLang(b.idioma as 'pt' | 'en' | 'es')
+  }
 
   async function carregarCreditos(forcar = false) {
     if (!auth.token) return
@@ -28,7 +61,7 @@ export function useSessaoApp() {
     }
   }
 
-  return { carregarCreditos }
+  return { carregarCreditos, carregarBoot }
 }
 
 export interface Bloqueio {

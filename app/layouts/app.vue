@@ -9,12 +9,14 @@
  */
 import { useAuth } from '~/stores/auth'
 import { useSessaoApp } from '~/composables/useSessaoApp'
+import { useUi } from '~/stores/ui'
 import { NAV_MANEJADOR, NAV_LOJISTA, TOP_KEYS } from '~/composables/useNavegacao'
 import { NAV_SVG } from '~/composables/useIcones'
 
 const auth = useAuth()
 const route = useRoute()
-const { carregarCreditos } = useSessaoApp()
+const { carregarCreditos, carregarBoot } = useSessaoApp()
+const ui = useUi()
 
 const menuAberto = ref(false)
 
@@ -23,7 +25,15 @@ const atalhos = computed(() => {
   return base.filter((n) => TOP_KEYS.includes(n.chave))
 })
 
-onMounted(() => { carregarCreditos() })
+onMounted(async () => {
+  /* Ordem importa: o boot repõe a ficha, e só então a faixa faz sentido. */
+  try {
+    await carregarBoot()
+  } catch {
+    ui.avisar('Não foi possível recarregar seu perfil', 'erro')
+  }
+  carregarCreditos()
+})
 
 /* Trocar de tela fecha o menu — no celular ele fica por cima do conteúdo. */
 watch(() => route.path, () => { menuAberto.value = false })
