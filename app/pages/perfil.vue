@@ -145,12 +145,17 @@ async function trocarSenha() {
 }
 
 async function escolherIdioma(l: Idm) {
+  const anterior = lang.value
   await setLang(l)
   try {
     await server('apiSalvarIdioma', l)
   } catch {
     ui.avisar('Idioma trocado aqui, mas não foi salvo na conta', 'erro')
   }
+  /* Voltar ao português precisa de recarga: o varredor já trocou os textos no
+     DOM e não há como desfazer sem redesenhar. Só DEPOIS de salvar — senão a
+     conta fica no idioma antigo e o boot desfaz a escolha. */
+  if (l === 'pt' && anterior !== 'pt') window.location.reload()
 }
 </script>
 

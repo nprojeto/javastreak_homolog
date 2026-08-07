@@ -67,12 +67,12 @@ export default defineNuxtPlugin(() => {
     new MutationObserver(agendar).observe(document.body, {
       childList: true, subtree: true, characterData: true
     })
-    watch(lang, () => {
-      /* Voltar para o português exige recarregar: o texto original já foi
-         substituído no DOM e não temos como desfazer sem redesenhar tudo. */
-      if (lang.value === 'pt') window.location.reload()
-      else agendar()
-    })
+    /* ⚠️ NÃO recarregue a página daqui. A tela de perfil salva o idioma na
+       conta logo depois de trocar; recarregar neste ponto matava a chamada
+       pela metade, a conta continuava no idioma antigo e o `apiBoot` devolvia
+       tudo para trás — parecia que o botão Português não funcionava.
+       Quem recarrega é a tela, depois de o salvamento terminar. */
+    watch(lang, () => { agendar() })
     agendar()
   }
 })
