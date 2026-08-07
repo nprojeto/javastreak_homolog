@@ -87,14 +87,19 @@ watch(() => route.path, () => { menuAberto.value = false })
 
 .topo {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 12px; background: var(--verde-esc); color: #fff;
+  padding: 10px 12px; color: var(--osso);
   position: sticky; top: 0; z-index: 50;
+  /* ⚠️ A cor vem do tema, não daqui. O estilo com `scoped` ganha do arquivo
+     global, então deixar `background` fixo aqui fazia a faixa verde do tema
+     antigo sobreviver ao tema novo. */
+  background: var(--carvao-3);
+  box-shadow: inset 0 -2px 0 var(--laranja);
 }
 .btn-menu {
   background: none; border: 0; color: #fff; cursor: pointer;
   display: flex; align-items: center; padding: 4px; flex: none;
 }
-.btn-menu :deep(.ic-svg) { stroke: #fff; }
+.btn-menu :deep(.ic-svg) { stroke: var(--osso); }
 .titulo { flex: 1; line-height: 1.15; min-width: 0; }
 .tb-marca { display: block; height: 26px; width: auto; }
 .titulo small { display: block; font-size: 12px; opacity: .82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -108,7 +113,7 @@ watch(() => route.path, () => { menuAberto.value = false })
   padding: 7px 12px; border-radius: 999px; border: 1px solid var(--linha);
   font-size: 12.5px; color: var(--txt); text-decoration: none; background: var(--card);
 }
-.atalho.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); font-weight: 700; }
+.atalho.on { border-color: var(--laranja); background: var(--carvao-3); color: var(--laranja-cl); font-weight: 700; }
 
 .miolo { max-width: 720px; margin: 0 auto; padding: 12px 14px 24px; }
 </style>

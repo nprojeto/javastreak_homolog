@@ -95,6 +95,8 @@ onMounted(async () => {
       <div class="chave">{{ cred.dados.chave }}</div>
     </div>
 
+    <ClientOnly><CartaoDestaque /></ClientOnly>
+
     <div class="card">
       <h3><Icone nome="artigos" /> Artigos</h3>
       <div v-if="erroArtigos" class="meta erro">{{ erroArtigos }}</div>

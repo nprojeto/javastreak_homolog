@@ -46,7 +46,7 @@ onMounted(carregar)
 
     <template v-else>
       <div class="card hero">
-        <h2>Espera — Cevas</h2>
+        <h2>Cevas</h2>
         <div class="meta">
           Cada ceva fica presa a uma propriedade regular, com o ponto dentro do
           limite desenhado.

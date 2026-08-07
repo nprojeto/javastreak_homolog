@@ -35,7 +35,7 @@ interface Rede {
 }
 
 const FILTROS = [
-  { k: 'espera', rot: 'Espera', cor: '#b8863b', ic: 'ceva' },
+  { k: 'espera', rot: 'Cevas', cor: '#b8863b', ic: 'ceva' },
   { k: 'rotas', rot: 'Rotas', cor: '#3b6ea5', ic: 'rotas' },
   { k: 'marcacao', rot: 'Marcações', cor: '#8a5a10', ic: 'armadilha' },
   { k: 'abate', rot: 'Abates', cor: '#b23b3b', ic: 'painel' },

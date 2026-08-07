@@ -40,6 +40,14 @@ const MARCAS: Record<string, Marca> = {
 
 export function useMarca(): Marca {
   const cfg = useRuntimeConfig()
-  const escolhida = String(cfg.public.marca || 'javastreak')
-  return MARCAS[escolhida] || MARCAS.javastreak!
+  const m = MARCAS[String(cfg.public.marca || 'javastreak')] || MARCAS.javastreak!
+
+  /**
+   * ⚠️ O caminho precisa do endereço base. O app é servido em
+   * `/javastreak_homolog/`, e `<img src="/marca/x.png">` pede a imagem na RAIZ
+   * do domínio — que não existe. O resultado é o ícone de imagem quebrada.
+   * O Nuxt prefixa rota, não `src` de imagem: isso é por nossa conta.
+   */
+  const base = String(cfg.app.baseURL || '/').replace(/\/+$/, '')
+  return { ...m, simbolo: base + m.simbolo, lockup: base + m.lockup }
 }

@@ -22,7 +22,7 @@ export const NAV_MANEJADOR: ItemNav[] = [
   { chave: 'manutencaoHub', rota: '/manutencao', label: 'Manutenção', icon: 'espreita', pronta: true },
   { chave: 'caes', rota: '/canis', label: 'Cães', icon: 'caes', pronta: true },
   { chave: 'propriedades', rota: '/propriedades', label: 'Propriedades', icon: 'areas', pronta: true },
-  { chave: 'espera', rota: '/espera', label: 'Espera', icon: 'espera', pronta: true },
+  { chave: 'espera', rota: '/espera', label: 'Cevas', icon: 'espera', pronta: true },
   { chave: 'rotas', rota: '/rotas', label: 'Rotas', icon: 'rotas', pronta: true },
   { chave: 'documentacao', rota: '/documentacao', label: 'Documentação', icon: 'documentacao', pronta: true },
   { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte', pronta: true },
@@ -35,6 +35,7 @@ export const NAV_MANEJADOR: ItemNav[] = [
 export const NAV_LOJISTA: ItemNav[] = [
   { chave: 'empresa', rota: '/empresa', label: 'Minha empresa', icon: 'inicio', pronta: true },
   { chave: 'vitrine', rota: '/vitrine', label: 'Minha vitrine', icon: 'carrinho', pronta: true },
+  { chave: 'patrocinio', rota: '/patrocinio', label: 'Patrocínio', icon: 'patrocinio', pronta: true },
   { chave: 'promocoes', rota: '/promocoes', label: 'Promoções', icon: 'avisos', pronta: true },
   { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte', pronta: true },
   { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa', pronta: true },

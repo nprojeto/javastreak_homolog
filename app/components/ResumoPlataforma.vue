@@ -12,7 +12,7 @@ const props = defineProps<{ tipo: 'manejador' | 'empresa' }>()
 
 const ITENS = {
   manejador: [
-    ['ceva', 'Espera com ceva', 'Cadastre cevas, o alimento usado e acompanhe o nível do tratadouro.'],
+    ['ceva', 'Cevas', 'Cadastre cevas, o alimento usado e acompanhe o nível do tratadouro.'],
     ['rotas', 'Rotas de caça', 'Grave por GPS suas rotas de aproximação e espreita, com marcações no caminho.'],
     ['canil', 'Cães e canil', 'Controle sua matilha por função, com saúde, vacinas e idade de cada cão.'],
     ['armadilha', 'Armadilhas', 'Registre suas armadilhas de captura com localização e tipo.'],

@@ -65,6 +65,8 @@ onMounted(carregar)
         </div>
       </div>
 
+      <ClientOnly><CartaoDestaque /></ClientOnly>
+
       <div v-if="!dados.trofeus.length" class="card vazio">
         <div class="big"><Icone nome="trofeu" /></div>
         Nenhum troféu em disputa agora.

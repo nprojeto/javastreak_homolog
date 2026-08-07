@@ -124,6 +124,15 @@ onMounted(carregar)
         </button>
       </div>
 
+      <NuxtLink to="/patrocinio" class="card menu-card">
+        <Icone nome="patrocinio" :px="30" />
+        <div class="txt">
+          <h3>Patrocínio</h3>
+          <p>Destaque na plataforma ou prêmio do ranking</p>
+        </div>
+        <div class="chev">›</div>
+      </NuxtLink>
+
       <NuxtLink to="/vitrine" class="card menu-card">
         <Icone nome="carrinho" :px="30" />
         <div class="txt">
