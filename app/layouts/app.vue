@@ -51,6 +51,7 @@ watch(() => route.path, () => { menuAberto.value = false })
         <b>JavaStreak</b>
         <small>{{ auth.nome || '' }}</small>
       </div>
+      <SinoAvisos />
       <NuxtLink to="/perfil" class="btn-menu" aria-label="Meu perfil">
         <Icone nome="usuario" :px="24" />
       </NuxtLink>
