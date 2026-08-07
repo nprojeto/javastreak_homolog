@@ -176,10 +176,19 @@ async function escolherIdioma(l: Idm) {
   } catch {
     ui.avisar('Idioma trocado aqui, mas não foi salvo na conta', 'erro')
   }
-  /* Voltar ao português precisa de recarga: o varredor já trocou os textos no
-     DOM e não há como desfazer sem redesenhar. Só DEPOIS de salvar — senão a
-     conta fica no idioma antigo e o boot desfaz a escolha. */
-  if (l === 'pt' && anterior !== 'pt') window.location.reload()
+  /**
+   * TODA troca de idioma recarrega — não só a volta ao português.
+   *
+   * O varredor substitui o texto no DOM, e o dicionário tem a frase EM
+   * PORTUGUÊS como chave. Depois de traduzir para inglês, a tela tem "Language"
+   * escrito; pedir espanhol faz o varredor procurar "Language" no dicionário,
+   * que só conhece "Idioma" — e nada acontece. Recarregar devolve a tela em
+   * português e a varredura parte do original.
+   *
+   * Só DEPOIS de salvar: senão a conta fica no idioma antigo e o `apiBoot`
+   * desfaz a escolha na volta.
+   */
+  if (l !== anterior) window.location.reload()
 }
 </script>
 
