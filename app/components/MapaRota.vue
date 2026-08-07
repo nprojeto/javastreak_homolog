@@ -23,7 +23,12 @@ export interface Marca {
   descricao?: string; subtipo?: string; status?: string
 }
 
-const props = defineProps<{ limite: Ponto[]; nomeProp: string }>()
+const props = defineProps<{
+  limite: Ponto[]
+  nomeProp: string
+  /** Teto do plano para marcações nesta rota. -1 = sem limite. */
+  limiteMarcas?: number
+}>()
 const pontos = defineModel<Ponto[]>('pontos', { default: () => [] })
 const marcas = defineModel<Marca[]>('marcas', { default: () => [] })
 
@@ -102,8 +107,25 @@ function clicou(lat: number, lng: number) {
     return
   }
   const p = { lat: +lat.toFixed(6), lng: +lng.toFixed(6) }
-  if (modo.value === 'traco') pontos.value = [...pontos.value, p]
-  else marcas.value = [...marcas.value, { tipo: tipoMarca.value, ...p, descricao: '' }]
+  if (modo.value === 'traco') {
+    pontos.value = [...pontos.value, p]
+    return
+  }
+  /* ⚠️ Barra no clique, e não no salvamento. Antes o desenho aceitava
+     marcações sem limite e o servidor recusava as excedentes UMA A UMA na
+     hora de salvar — as primeiras entravam, o resto sumia e a pessoa não
+     sabia por quê. */
+  const teto = props.limiteMarcas
+  if (teto !== undefined && teto !== -1 && marcas.value.length >= teto) {
+    ui.avisar(
+      teto === 0
+        ? 'Seu plano não inclui marcações na rota.'
+        : 'Seu plano permite ' + teto + ' marcação(ões) por rota.',
+      'erro'
+    )
+    return
+  }
+  marcas.value = [...marcas.value, { tipo: tipoMarca.value, ...p, descricao: '' }]
 }
 
 function desfazer() {
@@ -169,7 +191,10 @@ onBeforeUnmount(() => { map?.remove(); map = null })
     <div class="dash">
       <div class="kpi"><b>{{ pontos.length }}</b><span>pontos</span></div>
       <div class="kpi"><b>{{ distTexto }}</b><span>distância</span></div>
-      <div class="kpi"><b>{{ marcas.length }}</b><span>marcações</span></div>
+      <div class="kpi">
+        <b>{{ marcas.length }}<template v-if="props.limiteMarcas !== undefined && props.limiteMarcas !== -1">/{{ props.limiteMarcas }}</template></b>
+        <span>marcações</span>
+      </div>
     </div>
 
     <div ref="el" class="mapa" />

@@ -28,6 +28,10 @@ onMounted(() => auth.restaurar())
       <NuxtPage />
     </NuxtLayout>
 
+    <!-- Recusa por plano. Fica aqui, e não no layout do app, porque o
+         cadastro (fora do layout) também pode recebê-la. -->
+    <AvisoPlano />
+
     <!-- Avisos (toast). Um lugar só para o app inteiro. -->
     <div class="avisos">
       <div

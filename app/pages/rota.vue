@@ -15,6 +15,7 @@ import { useUi } from '~/stores/ui'
 import type { Ponto } from '~/composables/useMapa'
 import type { Marca } from '~/components/MapaRota.vue'
 import type { Propriedade } from '~/pages/propriedades.vue'
+import { useCreditos } from '~/stores/creditos'
 
 definePageMeta({ layout: 'app' })
 
@@ -23,6 +24,10 @@ interface Transporte { id: string; tipo: string; identificacao?: string; meio?: 
 const router = useRouter()
 const { server } = useServer()
 const ui = useUi()
+const cred = useCreditos()
+
+/** Teto de marcações do plano. `undefined` enquanto os créditos não chegam. */
+const limiteMarcas = computed(() => cred.dados?.limites?.marcacoesPorRota)
 
 const props_ = ref<Propriedade[]>([])
 const transportes = ref<Transporte[]>([])
@@ -97,13 +102,27 @@ async function salvar() {
       tipoTransporte: transporte.value, modalidade: 'manejo',
       pontos: pontos.value, distancia: distancia.value
     })
+    /* ⚠️ A rota JÁ ESTÁ SALVA neste ponto. Se uma marcação falhar, não dá
+       para fingir que nada aconteceu nem para desfazer — o certo é contar o
+       que entrou e o que não entrou. Antes o erro abortava tudo, e nem o aviso
+       de sucesso aparecia: parecia que a rota não tinha sido salva. */
+    let falharam = 0
     for (const m of marcas.value) {
-      await server('apiCriarMarcacao', {
-        rotaId: rota.id, tipo: m.tipo, lat: m.lat, lng: m.lng,
-        descricao: m.descricao || '', subtipo: m.subtipo || '', status: m.status || ''
-      })
+      try {
+        await server('apiCriarMarcacao', {
+          rotaId: rota.id, tipo: m.tipo, lat: m.lat, lng: m.lng,
+          descricao: m.descricao || '', subtipo: m.subtipo || '', status: m.status || ''
+        })
+      } catch {
+        falharam++
+      }
     }
-    ui.avisar('Rota salva ✔')
+    ui.avisar(
+      falharam
+        ? 'Rota salva, mas ' + falharam + ' marcação(ões) não entraram'
+        : 'Rota salva ✔',
+      falharam ? 'erro' : 'info'
+    )
     await router.push('/rotas')
   } catch { /* o useServer já avisou, traduzido */ } finally {
     salvando.value = false
@@ -151,6 +170,7 @@ async function salvar() {
             v-model:marcas="marcas"
             :limite="prop.limite"
             :nome-prop="prop.nome"
+            :limite-marcas="limiteMarcas"
           />
         </ClientOnly>
       </div>
