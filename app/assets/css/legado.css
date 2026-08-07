@@ -241,10 +241,14 @@
 .rel-tab thead th{background:#e8dfd0;color:#23201c;font-weight:800;position:sticky;top:0}
 .rel-tab tbody tr:nth-child(even){background:#f6f2ea}
 .rel-tab tbody tr:hover{background:#efe7d8}
+/* ⚠️ O bloco de impressão do LEGADO foi removido daqui.
+   Ele fazia `body *{visibility:hidden}` e revelava só `#relImpressao` — um id
+   que não existe mais no Nuxt. Resultado: TODA impressão saía em branco, e
+   nenhuma regra escrita depois vencia, porque visibility:hidden no filho não
+   se desfaz mudando o pai.
+   As regras de impressão vivem agora no fim deste arquivo, por seletor de
+   moldura em vez de esconder tudo. */
 @media print{
-  body *{visibility:hidden}
-  #relImpressao,#relImpressao *{visibility:visible}
-  #relImpressao{position:absolute;left:0;top:0;width:100%}
   .rel-scroll{overflow:visible;border:0}
   .rel-tab{white-space:normal;font-size:10px}
 }
