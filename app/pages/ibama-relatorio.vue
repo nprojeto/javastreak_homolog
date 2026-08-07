@@ -237,10 +237,12 @@ h3 { margin: 0 0 4px; font-size: 14px; color: var(--verde); }
 .btn { margin-top: 8px; text-decoration: none; }
 .btn.danger { background: var(--danger); }
 
+/* O grosso das regras de impressão é GLOBAL, no legado.css — moldura fixa
+   tapando a folha não se resolve de dentro de um componente. Aqui fica só o
+   que é da tabela deste relatório. */
 @media print {
-  .sem-impressao { display: none; }
-  .impresso { border: 0; box-shadow: none; }
   .rel-tab { font-size: 9px; }
   .rel-tab th, .rel-tab td { white-space: normal; }
+  .dash { break-inside: avoid; }
 }
 </style>

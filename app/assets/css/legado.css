@@ -1080,3 +1080,36 @@
 .js-camadas button.on{background:#2f7d3a;color:#fff;border-color:#2f7d3a}
 /* O Leaflet põe z-index alto nos painéis; sem isto o menu lateral fica atrás. */
 .leaflet-pane,.leaflet-top,.leaflet-bottom{z-index:20}
+
+/* ── IMPRESSÃO ────────────────────────────────────────────────────────────
+   ⚠️ Precisa ser GLOBAL. Regras de impressão dentro de um componente só
+   alcançam o que é dele — e o que estraga a folha é a MOLDURA: cabeçalho
+   fixo, menu lateral e a camada de sobreposição. Elemento com position:fixed
+   ocupa a página inteira na impressão e tapa o conteúdo. Foi o que fez o PDF
+   sair em branco.                                                          */
+@media print {
+  html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
+
+  /* Moldura inteira fora: nada disso pertence a um documento impresso. */
+  .topo, .atalhos, .topstrip, .sidebar, .overlay, .avisos, .dot,
+  .sem-impressao, .btn, .tabs, .subnav, .chips, .modos { display: none !important; }
+
+  /* O miolo deixa de ser coluna centrada e ocupa a folha. */
+  .app-shell { min-height: 0 !important; padding: 0 !important; }
+  .miolo { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+
+  /* Cartão vira bloco de texto, e não se parte no meio de uma página. */
+  .card {
+    border: 0 !important; box-shadow: none !important;
+    padding: 0 !important; margin: 0 0 10px !important;
+    background: #fff !important; break-inside: avoid;
+  }
+
+  /* Tabela: a borda precisa sair impressa, e a rolagem lateral não existe
+     no papel. */
+  .rel-scroll { overflow: visible !important; }
+  .rel-tab { width: 100% !important; }
+  .rel-tab th { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  a[href]:after { content: none !important; }
+}
