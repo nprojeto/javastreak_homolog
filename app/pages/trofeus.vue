@@ -102,16 +102,21 @@ onMounted(carregar)
     <div v-else-if="!sala" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div class="card">
-        <h3>🏆 Minha sala de troféus</h3>
-        <div class="meta">
-          {{ sala.visivel
-            ? 'Sua sala está visível — outros veem seus troféus e você pode avaliar os deles.'
-            : 'Sua sala está oculta. Enquanto estiver assim, você também não avalia os troféus dos outros.' }}
+      <div class="card card-acao">
+        <div class="ca-txt">
+          <h3>🏆 Minha sala de troféus</h3>
+          <div class="meta">
+            {{ sala.visivel
+              ? 'Sua sala está visível — outros veem seus troféus e você pode avaliar os deles.'
+              : 'Sua sala está oculta. Enquanto estiver assim, você também não avalia os troféus dos outros.' }}
+          </div>
         </div>
-        <button class="btn" :class="{ sec: sala.visivel }" :disabled="trocando" @click="alternarSala">
-          {{ sala.visivel ? 'Ocultar minha sala' : 'Deixar minha sala visível' }}
-        </button>
+        <button
+          class="btn ca-btn"
+          :class="{ sec: sala.visivel }"
+          :disabled="trocando"
+          @click="alternarSala"
+        >{{ sala.visivel ? 'Ocultar' : 'Deixar visível' }}</button>
       </div>
 
       <div v-if="form" class="card">

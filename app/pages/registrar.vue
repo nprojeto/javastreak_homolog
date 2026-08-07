@@ -162,7 +162,7 @@ async function criar() {
         <label for="f_end">Endereço</label>
         <textarea id="f_end" v-model="endereco" />
 
-        <BotaoGps v-model:lat="lat" v-model:lng="lng" />
+        <BotaoGps v-model:lat="lat" v-model:lng="lng" :endereco="[endereco]" />
       </div>
 
       <BlocoTermo v-model:aceito="aceito" v-model:versao="versaoTermo" />

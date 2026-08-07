@@ -209,6 +209,10 @@ onMounted(carregar)
 
         <div class="card">
           <div class="meta">{{ ACERVO_AJUDA[sub] }}</div>
+          <div class="meta">
+            Este bloco é opcional. Os campos marcados com * só valem se você
+            começar a preencher o documento.
+          </div>
         </div>
 
         <div v-for="(l, i) in linhas" :key="i" class="card linha-acv">
@@ -217,18 +221,17 @@ onMounted(carregar)
             <button class="ib" title="Remover" @click="apagarLinha(i)">🗑️</button>
           </div>
 
-          <label>Número *</label>
+          <label>Número</label>
           <input v-model="l.numero" class="no-i18n" placeholder="Número do documento">
 
           <div class="two">
             <div><CampoData v-model="l.emissao" label="Emissão" /></div>
-            <div><CampoData v-model="l.vencimento" label="Vencimento" obrigatorio /></div>
+            <div><CampoData v-model="l.vencimento" label="Vencimento" /></div>
           </div>
 
           <CampoArquivo
             v-model:dados="l.arquivo"
             v-model:nome="l.arquivoNome"
-            obrigatorio
             :doc-id="l.id"
             :tem-arquivo="l.temArquivo"
             :arquivo-nome="l.nomeAtual"

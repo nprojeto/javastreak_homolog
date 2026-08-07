@@ -105,7 +105,7 @@ onMounted(carregar)
         <label for="e_end">Endereço</label>
         <input id="e_end" v-model="e.endereco" class="no-i18n">
 
-        <BotaoGps v-model:lat="e.lat" v-model:lng="e.lng" />
+        <BotaoGps v-model:lat="e.lat" v-model:lng="e.lng" :endereco="[e.endereco, e.cidade]" />
 
         <label for="e_insta">Instagram</label>
         <input id="e_insta" v-model="e.instagram" class="no-i18n">

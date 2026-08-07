@@ -1117,3 +1117,24 @@
 
   a[href]:after { content: none !important; }
 }
+
+/* ── Ajustes vindos do teste de campo (07/08/2026) ───────────────────────── */
+
+/* Cartões colados um no outro: faltava respiro entre eles. */
+.miolo > .card + .card,
+.miolo > * > .card + .card { margin-top: 12px; }
+
+/* Texto de apoio grudado no campo acima. */
+.card .meta + .meta { margin-top: 4px; }
+label + .meta { margin-top: 4px; }
+
+/* Cabeçalho de cartão com ação: título à esquerda, botão numa coluna fixa à
+   direita. Antes o botão nascia no meio do parágrafo e cada card ficava
+   diferente do outro. */
+.card-acao { display: flex; align-items: flex-start; gap: 12px; }
+.card-acao .ca-txt { flex: 1; min-width: 0; }
+.card-acao .ca-btn { flex: 0 0 auto; width: auto; margin: 0; white-space: nowrap; }
+@media (max-width: 420px) {
+  .card-acao { flex-direction: column; }
+  .card-acao .ca-btn { width: 100%; }
+}

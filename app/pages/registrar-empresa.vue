@@ -172,7 +172,7 @@ async function criar() {
         <label for="fe_end">Endereço / sede</label>
         <input id="fe_end" v-model="endereco">
 
-        <BotaoGps v-model:lat="lat" v-model:lng="lng" />
+        <BotaoGps v-model:lat="lat" v-model:lng="lng" :endereco="[endereco, cidade]" />
 
         <label for="fe_insta">Instagram</label>
         <input id="fe_insta" v-model="instagram" placeholder="@seuperfil">

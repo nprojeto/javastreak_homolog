@@ -18,24 +18,34 @@ export async function carregarLeaflet() {
 export async function addBase(map: MapaLeaflet, padrao: 'ruas' | 'sat' = 'ruas') {
   const L = await carregarLeaflet()
 
+  /**
+   * ⚠️ `maxNativeZoom` mais baixo que `maxZoom` é o que faz o mapa NÃO SUMIR
+   * no zoom fundo: o Leaflet para de pedir imagem nova e amplia a última que
+   * tem. Sem isso, no interior o Esri devolve um quadrado cinza escrito
+   * "Map data not yet available" — que é resposta válida, não erro, então
+   * nenhum tratamento de falha pega.
+   *
+   * O satélite fica em 18 porque em área rural o Esri raramente tem imagem
+   * além disso. Ampliar um pouco borrado é melhor que ficar cinza.
+   */
   const ruas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxNativeZoom: 19, maxZoom: 21, attribution: '© OpenStreetMap'
+    maxNativeZoom: 19, maxZoom: 20, attribution: '© OpenStreetMap'
   })
   const sat: LayerGroup = L.layerGroup([
     L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { maxNativeZoom: 19, maxZoom: 21, attribution: 'Imagery © Esri' }
+      { maxNativeZoom: 18, maxZoom: 20, attribution: 'Imagery © Esri' }
     ),
     L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-      { maxNativeZoom: 19, maxZoom: 21, attribution: 'Labels © Esri' }
+      { maxNativeZoom: 18, maxZoom: 20, attribution: 'Labels © Esri' }
     )
   ])
 
   const camadas = { ruas, sat }
   let atual: 'ruas' | 'sat' = padrao === 'sat' ? 'sat' : 'ruas'
   camadas[atual].addTo(map)
-  try { map.setMaxZoom(21) } catch { /* versão sem setMaxZoom */ }
+  try { map.setMaxZoom(20) } catch { /* versão sem setMaxZoom */ }
 
   const ctl = new L.Control({ position: 'topright' })
   ctl.onAdd = () => {

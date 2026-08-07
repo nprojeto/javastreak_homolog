@@ -265,7 +265,7 @@ async function escolherIdioma(l: Idm) {
       <label for="p_bio">Sobre você</label>
       <textarea id="p_bio" v-model="bio" placeholder="Ex: manejo com cães, aberto a parcerias" />
 
-      <BotaoGps v-model:lat="lat" v-model:lng="lng" />
+      <BotaoGps v-model:lat="lat" v-model:lng="lng" :endereco="[cidade]" />
 
       <div v-if="!temCoord" class="meta aviso">
         ⚠️ Sem a localização preenchida você não aparece no mapa da rede e também

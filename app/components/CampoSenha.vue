@@ -30,7 +30,7 @@ const naoConfere = computed(
 </template>
 
 <style scoped>
-.regra { margin: -4px 0 4px; }
-.ruim { color: var(--danger); margin: -2px 0 8px; }
-.bom { color: var(--ok); margin: -2px 0 8px; }
+.regra { margin: 8px 0 4px; line-height: 1.5; }
+.ruim { color: var(--danger); margin: 2px 0 10px; }
+.bom { color: var(--ok); margin: 2px 0 10px; }
 </style>

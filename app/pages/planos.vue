@@ -245,7 +245,12 @@ onMounted(carregar)
 }
 .pl-per button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 
-.pl-grade { display: grid; gap: 12px; }
+/* Em tela larga os planos ficavam encostados à esquerda. Grade centrada, com
+   largura máxima por cartão — dois ou três cabem lado a lado sem esticar. */
+.pl-grade { display: grid; gap: 12px; justify-content: center; }
+@media (min-width: 620px) {
+  .pl-grade { grid-template-columns: repeat(auto-fit, minmax(240px, 300px)); }
+}
 .plano { background: #fff; border: 1.5px solid var(--linha); border-radius: 16px; padding: 16px; }
 .plano.destaque { border-color: var(--laranja); }
 .plano.atual { border-color: var(--verde); }
