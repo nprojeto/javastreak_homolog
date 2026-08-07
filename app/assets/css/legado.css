@@ -1071,3 +1071,12 @@
   .adm-sec.on{display:block}
   .sup-resposta{margin-top:8px;padding:10px;background:#eef6ef;border-left:3px solid #2e8b3d;border-radius:8px;
     font-size:13px;line-height:1.5;color:var(--txt)}
+
+/* ── Controle de camadas do mapa (porte do .js-camadas do legado) ────────── */
+.js-camadas{display:flex;flex-direction:column;gap:4px}
+.js-camadas button{background:#fff;border:1px solid rgba(0,0,0,.2);border-radius:8px;
+  padding:8px 10px;font-size:12.5px;font-weight:600;cursor:pointer;color:#1a231a;
+  box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.js-camadas button.on{background:#2f7d3a;color:#fff;border-color:#2f7d3a}
+/* O Leaflet põe z-index alto nos painéis; sem isto o menu lateral fica atrás. */
+.leaflet-pane,.leaflet-top,.leaflet-bottom{z-index:20}

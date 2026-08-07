@@ -15,7 +15,12 @@ export default defineNuxtConfig({
 
   modules: ['@pinia/nuxt', '@vite-pwa/nuxt'],
 
-  css: ['~/assets/css/legado.css'],
+  css: [
+    /* O CSS do Leaflet precisa vir ANTES do nosso: o legado sobrescreve
+       alguns estilos de controle, e a ordem inversa desfaz isso. */
+    'leaflet/dist/leaflet.css',
+    '~/assets/css/legado.css'
+  ],
 
   app: {
     /**
@@ -67,7 +72,7 @@ export default defineNuxtConfig({
         || 'https://pbtgvllxjnumjiololio.supabase.co/functions/v1/api',
       apiKey: process.env.NUXT_PUBLIC_API_KEY
         || 'sb_publishable_y2bMte4WKgzlNNLAi9WtHQ_oWoA-oad',
-      appVer: 'vJS.070826.0957',
+      appVer: 'vJS.070826.1015',
       ambiente: 'homologacao'
     }
   },

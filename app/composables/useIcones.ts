@@ -26,7 +26,7 @@ export const ICO: Record<string, string> = {
 export const NAV_SVG: Record<string, string> = {
   abate: 'painel', inicio: 'inicio', agenda: 'calendario', espera: 'ceva',
   espreita: 'transporte', caes: 'canil', armadilha: 'armadilha',
-  documentacao: 'documentos', suporte: 'suporte', mapa: 'mapa',
+  documentacao: 'documentos', suporte: 'suporte', mapa: 'mapa', areas: 'areas',
   trofeus: 'estrela', ranking: 'grafico', avisos: 'avisos',
   carrinho: 'carrinho', admin: 'ajustes', network: 'global'
 }
