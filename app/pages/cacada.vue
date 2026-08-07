@@ -157,12 +157,11 @@ onMounted(carregar)
           </div>
         </div>
 
-        <div v-if="aberta" class="card obra">
-          <div class="meta">
-            🚧 O registro de abate chega na próxima entrega — com o clima em
-            tempo real e a lista fechada de método, desenvolvimento e amostra.
-          </div>
-        </div>
+        <NuxtLink
+          v-if="aberta"
+          :to="{ path: '/abate', query: { manejo: id } }"
+          class="btn"
+        >🐗 Registrar abate</NuxtLink>
       </template>
 
       <!-- AMIGOS -->
