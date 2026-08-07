@@ -22,6 +22,7 @@ export const NAV_MANEJADOR: ItemNav[] = [
   { chave: 'manutencaoHub', rota: '/manutencao', label: 'Manutenção', icon: 'espreita' },
   { chave: 'saudeAnimal', rota: '/saude-animal', label: 'Saúde animal', icon: 'caes' },
   { chave: 'propriedades', rota: '/propriedades', label: 'Propriedades', icon: 'areas', pronta: true },
+  { chave: 'espera', rota: '/espera', label: 'Espera', icon: 'espera', pronta: true },
   { chave: 'documentacao', rota: '/documentacao', label: 'Documentação', icon: 'documentacao', pronta: true },
   { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte', pronta: true },
   { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa' },
