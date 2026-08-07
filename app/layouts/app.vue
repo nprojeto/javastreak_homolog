@@ -54,9 +54,7 @@ watch(() => route.path, () => { menuAberto.value = false })
         <small>{{ auth.nome || '' }}</small>
       </div>
       <SinoAvisos />
-      <NuxtLink to="/perfil" class="btn-menu" aria-label="Meu perfil">
-        <Icone nome="usuario" :px="24" />
-      </NuxtLink>
+      <MenuConta />
     </header>
 
     <FaixaCreditos />
@@ -106,12 +104,15 @@ watch(() => route.path, () => { menuAberto.value = false })
 
 .atalhos {
   display: flex; gap: 6px; overflow-x: auto;
-  padding: 8px 10px; background: var(--card); border-bottom: 1px solid var(--linha);
+  padding: 8px 10px; border-bottom: 1px solid var(--linha);
+  /* `safe center` centra quando cabe e volta a alinhar à esquerda quando não
+     cabe — sem ele, no celular o primeiro atalho ficaria cortado fora da tela. */
+  justify-content: safe center;
 }
 .atalho {
   display: flex; align-items: center; gap: 6px; flex: none;
   padding: 7px 12px; border-radius: 999px; border: 1px solid var(--linha);
-  font-size: 12.5px; color: var(--txt); text-decoration: none; background: var(--card);
+  font-size: 12.5px; color: var(--txt); text-decoration: none; background: transparent;
 }
 .atalho.on { border-color: var(--laranja); background: var(--carvao-3); color: var(--laranja-cl); font-weight: 700; }
 

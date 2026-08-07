@@ -89,7 +89,7 @@ export default defineNuxtConfig({
        * Ver app/composables/useMarca.ts.
        */
       marca: process.env.NUXT_PUBLIC_MARCA || 'meateater',
-      appVer: 'vJS.070826.2001',
+      appVer: 'vJS.070826.2019',
       ambiente: 'homologacao'
     }
   },

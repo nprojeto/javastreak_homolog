@@ -56,17 +56,14 @@ async function copiarChave() {
       <span><span class="rot">Sua chave</span><br><b>{{ c.chave }}</b></span>
     </button>
 
-    <NuxtLink to="/perfil" class="ts-card" title="Meu perfil">
-      <Icone nome="engrenagem" :px="16" />
-      <span><span class="rot">Conta</span><br><b>perfil</b></span>
-    </NuxtLink>
   </div>
 </template>
 
 <style scoped>
 .topstrip {
   display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px;
-  background: var(--areia); border-bottom: 1px solid var(--linha);
+  border-bottom: 1px solid var(--linha);
+  justify-content: safe center;
 }
 .ts-card {
   display: flex; align-items: center; gap: 6px; flex: none;
