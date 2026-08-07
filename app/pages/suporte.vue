@@ -75,7 +75,7 @@ onMounted(carregar)
       <div class="card">
         <h3>Fale com a gente</h3>
         <div class="meta">{{ info.texto }}</div>
-        <div class="meta horario">🕘 {{ info.horario }}</div>
+        <div class="meta horario"><Icone nome="relogio" /> {{ info.horario }}</div>
 
         <div class="canais">
           <a v-if="linkWhats" :href="linkWhats" target="_blank" rel="noopener" class="canal">
@@ -130,13 +130,13 @@ h3 { margin: 0 0 4px; }
 .canal {
   display: flex; align-items: center; gap: 10px; padding: 11px 12px;
   border: 1px solid var(--linha); border-radius: 12px;
-  text-decoration: none; color: var(--txt); font-size: 14px; background: #fff;
+  text-decoration: none; color: var(--txt); font-size: 14px; background: var(--card);
 }
 .sec { margin: 14px 4px 6px; font-size: 15px; }
 .chamado .topo { display: flex; align-items: center; gap: 8px; }
 .chamado .topo b { flex: 1; }
 .pill { font-size: 11px; padding: 3px 9px; border-radius: 999px; background: var(--linha); flex: none; }
-.pill.aberto { background: #ffe9c7; color: #8a5a10; }
+.pill.aberto { background: #3A2E13; color: var(--alerta); }
 .pill.respondido { background: var(--verde-claro); color: var(--verde-esc); }
 .msg { font-size: 13.5px; line-height: 1.55; margin: 8px 0 0; white-space: pre-wrap; }
 .resposta { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--linha); }

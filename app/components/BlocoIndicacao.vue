@@ -69,9 +69,9 @@ defineExpose({ validar, conferir })
       >
       <div class="meta msg">
         <span v-if="estado === 'conferindo'">Conferindo…</span>
-        <span v-else-if="estado === 'ok'" class="bom">✅ Chave válida</span>
+        <span v-else-if="estado === 'ok'" class="bom"><Icone nome="confirmar" /> Chave válida</span>
         <span v-else-if="estado === 'ruim'" class="ruim">
-          ❌ Chave não encontrada ou de conta não confirmada
+          <Icone nome="fechar" /> Chave não encontrada ou de conta não confirmada
         </span>
         <span v-else-if="estado === 'erro'">Não foi possível conferir agora</span>
       </div>

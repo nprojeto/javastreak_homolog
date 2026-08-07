@@ -218,7 +218,7 @@ onMounted(carregar)
         <div v-for="(l, i) in linhas" :key="i" class="card linha-acv">
           <div class="cab">
             <b>{{ sub }} {{ i + 1 }}</b>
-            <button class="ib" title="Remover" @click="apagarLinha(i)">🗑️</button>
+            <button class="ib" title="Remover" @click="apagarLinha(i)"><Icone nome="excluir" /></button>
           </div>
 
           <label>Número</label>
@@ -251,7 +251,7 @@ onMounted(carregar)
       <template v-else>
         <NuxtLink v-if="cat === 'pessoal'" to="/ctf" class="card doc-linha click">
           <div class="grow">
-            <b>📄 CTF — Cadastro Técnico Federal</b>
+            <b><Icone nome="documentos" /> CTF — Cadastro Técnico Federal</b>
             <span
               class="doc-tag"
               :class="doCtf && statusVencimento(doCtf.vencimento)?.classe || 'venc'"
@@ -279,7 +279,7 @@ onMounted(carregar)
               <template v-if="d.vencimento"> · vence {{ dataBR(d.vencimento) }}</template>
             </div>
             <div v-if="d.transporteId && nomeTransporte(d.transporteId)" class="meta no-i18n">
-              🚗 {{ nomeTransporte(d.transporteId) }}
+              <Icone nome="transporte" /> {{ nomeTransporte(d.transporteId) }}
             </div>
             <div v-if="d.obs" class="meta no-i18n">{{ d.obs }}</div>
           </div>
@@ -287,8 +287,8 @@ onMounted(carregar)
             :to="{ path: '/documento', query: { cat, id: d.id } }"
             class="ib"
             title="Editar"
-          >✏️</NuxtLink>
-          <button class="ib" title="Excluir" @click="excluirDoc(d)">🗑️</button>
+          ><Icone nome="editar" /></NuxtLink>
+          <button class="ib" title="Excluir" @click="excluirDoc(d)"><Icone nome="excluir" /></button>
         </div>
 
         <NuxtLink :to="{ path: '/documento', query: { cat } }" class="btn">
@@ -308,7 +308,7 @@ onMounted(carregar)
 .subnav button {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 10px 6px; border-radius: 12px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-size: 12.5px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-size: 12.5px; color: var(--txt);
 }
 .subnav button.active { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); font-weight: 700; }
 .subnav .num { font-size: 10.5px; background: var(--verde); color: #fff; border-radius: 999px; padding: 0 6px; }
@@ -316,9 +316,9 @@ onMounted(carregar)
 .subsub { display: flex; gap: 6px; margin-bottom: 10px; }
 .subsub button {
   flex: 1; padding: 8px; border-radius: 10px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-weight: 700; font-size: 13px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-weight: 700; font-size: 13px; color: var(--txt);
 }
-.subsub button.on { border-color: var(--laranja); background: #fff1e8; color: var(--laranja-esc); }
+.subsub button.on { border-color: var(--laranja); background: var(--carvao-3); color: var(--laranja-esc); }
 
 .linha-acv .cab { display: flex; align-items: center; margin-bottom: 6px; }
 .linha-acv .cab b { flex: 1; }
@@ -329,8 +329,8 @@ onMounted(carregar)
 .doc-linha .meta { margin: 3px 0 0; }
 .doc-tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--linha); margin-left: 6px; }
 .doc-tag.ok { background: var(--verde-claro); color: var(--verde-esc); }
-.doc-tag.perto { background: #ffe9c7; color: #8a5a10; }
-.doc-tag.venc { background: #ffdad3; color: #a33; }
+.doc-tag.perto { background: #3A2E13; color: var(--alerta); }
+.doc-tag.venc { background: #3A1E1C; color: var(--danger); }
 .chev { font-size: 22px; color: var(--linha); }
 .btn { text-decoration: none; }
 </style>

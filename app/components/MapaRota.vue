@@ -17,6 +17,7 @@ import type { Map as MapaLeaflet, FeatureGroup } from 'leaflet'
 import { addBase, carregarLeaflet, pontoDentro } from '~/composables/useMapa'
 import type { Ponto } from '~/composables/useMapa'
 import { useUi } from '~/stores/ui'
+import { ICO } from '~/composables/useIcones'
 
 export interface Marca {
   tipo: string; lat: number; lng: number
@@ -32,10 +33,12 @@ const props = defineProps<{
 const pontos = defineModel<Ponto[]>('pontos', { default: () => [] })
 const marcas = defineModel<Marca[]>('marcas', { default: () => [] })
 
+/** Tipo da marcação → ícone do sistema, no lugar do emoji. */
 const TIPOS_MARCA: Array<[string, string]> = [
-  ['Abate', '🐗'], ['Armadilha', '🪤'], ['Referência', '📍'], ['Aviso', '⚠️'],
-  ['Rastro', '🐾'], ['Água', '💧'], ['Comida/isca', '🌽'], ['Perigo', '☠️'],
-  ['Foto/registro', '📷'], ['Outro', '📌']
+  ['Abate', 'abate'], ['Armadilha', 'armadilha'], ['Referência', 'pino'],
+  ['Aviso', 'alerta'], ['Rastro', 'canil'], ['Água', 'nuvem'],
+  ['Comida/isca', 'ceva'], ['Perigo', 'alerta'], ['Foto/registro', 'camera'],
+  ['Outro', 'pino']
 ]
 
 const ui = useUi()
@@ -64,8 +67,14 @@ const distTexto = computed(() =>
     : (distancia.value / 1000).toFixed(2).replace('.', ',') + ' km'
 )
 
-function emoji(t: string) {
-  return TIPOS_MARCA.find((x) => x[0] === t)?.[1] || '📌'
+function iconeDe(t: string) {
+  return TIPOS_MARCA.find((x) => x[0] === t)?.[1] || 'pino'
+}
+
+/** O Leaflet monta o pino fora da árvore do Vue, então o SVG vai como texto. */
+function svgMarca(t: string) {
+  return '<svg class="ic-svg" aria-hidden="true"><use href="#js-'
+    + (ICO[iconeDe(t)] || ICO.painel) + '"/></svg>'
 }
 
 function redesenhar() {
@@ -93,8 +102,8 @@ function redesenhar() {
     L.marker([m.lat, m.lng], {
       icon: L.divIcon({
         className: 'marca-rota',
-        html: '<span>' + emoji(m.tipo) + '</span>',
-        iconSize: [26, 26], iconAnchor: [13, 13]
+        html: svgMarca(m.tipo),
+        iconSize: [28, 28], iconAnchor: [14, 14]
       }),
       interactive: false
     }).addTo(camada)
@@ -165,10 +174,10 @@ onBeforeUnmount(() => { map?.remove(); map = null })
   <div>
     <div class="modos">
       <button type="button" :class="{ on: modo === 'traco' }" @click="modo = 'traco'">
-        ✏️ Traçado
+        <Icone nome="editar" /> Traçado
       </button>
       <button type="button" :class="{ on: modo === 'ponto' }" @click="modo = 'ponto'">
-        📍 Aviso / marcação
+        <Icone nome="pino" /> Aviso / marcação
       </button>
     </div>
 
@@ -184,7 +193,7 @@ onBeforeUnmount(() => { map?.remove(); map = null })
     <template v-if="modo === 'ponto'">
       <label for="m_tipo">Tipo da marcação</label>
       <select id="m_tipo" v-model="tipoMarca">
-        <option v-for="t in TIPOS_MARCA" :key="t[0]" :value="t[0]">{{ t[1] }} {{ t[0] }}</option>
+        <option v-for="t in TIPOS_MARCA" :key="t[0]" :value="t[0]">{{ t[0] }}</option>
       </select>
     </template>
 
@@ -200,8 +209,8 @@ onBeforeUnmount(() => { map?.remove(); map = null })
     <div ref="el" class="mapa" />
 
     <div class="acoes">
-      <button type="button" class="btn sec" @click="desfazer">↶ Desfazer</button>
-      <button type="button" class="btn sec" @click="limpar">🗑️ Limpar</button>
+      <button type="button" class="btn sec" @click="desfazer"><Icone nome="desfazer" /> Desfazer</button>
+      <button type="button" class="btn sec" @click="limpar"><Icone nome="excluir" /> Limpar</button>
     </div>
   </div>
 </template>
@@ -211,19 +220,24 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 .modos { display: flex; gap: 6px; margin-bottom: 6px; }
 .modos button {
   flex: 1; padding: 9px; border-radius: 10px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-weight: 600; font-size: 13px; color: var(--txt);
 }
 .modos button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 .dica { margin-bottom: 8px; }
 .dash { display: flex; gap: 8px; margin: 8px 0; }
-.kpi { flex: 1; background: #fff; border: 1px solid var(--linha); border-radius: 12px; padding: 8px; text-align: center; }
+.kpi { flex: 1; background: var(--card); border: 1px solid var(--linha); border-radius: 12px; padding: 8px; text-align: center; }
 .kpi b { display: block; font-size: 16px; }
-.kpi span { font-size: 11px; color: #7a7466; }
+.kpi span { font-size: 11px; color: var(--osso-2); }
 .acoes { display: flex; gap: 8px; margin-top: 10px; }
 .acoes .btn { margin: 0; }
 </style>
 
 <style>
 /* Fora do scoped: o Leaflet cria o divIcon fora da árvore do componente. */
-.marca-rota { display: flex; align-items: center; justify-content: center; font-size: 19px; }
+.marca-rota { display: flex; align-items: center; justify-content: center; }
+.marca-rota .ic-svg {
+  width: 22px; height: 22px; stroke: #2f6ea8; stroke-width: 2;
+  background: var(--card); border-radius: 50%; padding: 2px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.35);
+}
 </style>

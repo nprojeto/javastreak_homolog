@@ -46,7 +46,7 @@ const arquivoNome = defineModel<string>('arquivoNome', { default: '' })
 <style scoped>
 .bloco {
   border: 1px solid var(--linha); border-left: 4px solid var(--verde);
-  border-radius: 12px; padding: 12px; margin: 12px 0; background: #fffdf8;
+  border-radius: 12px; padding: 12px; margin: 12px 0; background: var(--carvao-3);
 }
 .bloco.falta { border-left-color: var(--danger); }
 h4 { margin: 0 0 8px; font-size: 14px; }

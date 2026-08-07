@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMarca } from '~/composables/useMarca'
 /**
  * Menu lateral. Porte de buildSidebar (index.html, 4643).
  *
@@ -19,6 +20,7 @@ const route = useRoute()
 const router = useRouter()
 const { server } = useServer()
 const cfg = useRuntimeConfig()
+const marca = useMarca()
 
 const itens = computed(() => {
   const base = auth.tipo === 'empresa' ? NAV_LOJISTA : NAV_MANEJADOR
@@ -56,7 +58,7 @@ async function sair() {
 
   <aside class="sidebar" :class="{ on: aberto }">
     <div class="sb-topo">
-      <img src="/logo.png" alt="JavaStreak" class="sb-logo">
+      <img :src="marca.lockup" :alt="marca.nome" class="sb-logo">
       <div class="sb-nome">{{ auth.nome || '—' }}</div>
       <NuxtLink
         v-if="cred.dados"
@@ -77,7 +79,7 @@ async function sair() {
       >
         <span class="sb-ico"><Icone :nome="NAV_SVG[n.icon] || 'painel'" :px="24" /></span>
         <span class="sb-label">{{ n.label }}</span>
-        <span v-if="bloqueado(n.chave)" class="sb-lock">🔒</span>
+        <span v-if="bloqueado(n.chave)" class="sb-lock"><Icone nome="bloqueio" /></span>
       </button>
     </nav>
 
@@ -129,5 +131,5 @@ async function sair() {
 
 .sb-pe { padding: 12px 14px 18px; border-top: 1px solid var(--linha); }
 .sair { margin: 0; }
-.sb-ver { text-align: center; font-size: 10.5px; color: #cfc9bd; margin-top: 10px; }
+.sb-ver { text-align: center; font-size: 10.5px; color: var(--osso-2); margin-top: 10px; }
 </style>

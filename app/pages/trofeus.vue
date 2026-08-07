@@ -104,7 +104,7 @@ onMounted(carregar)
     <template v-else>
       <div class="card card-acao">
         <div class="ca-txt">
-          <h3>🏆 Minha sala de troféus</h3>
+          <h3><Icone nome="trofeu" /> Minha sala de troféus</h3>
           <div class="meta">
             {{ sala.visivel
               ? 'Sua sala está visível — outros veem seus troféus e você pode avaliar os deles.'
@@ -132,7 +132,7 @@ onMounted(carregar)
       </div>
 
       <div v-if="!sala.trofeus.length && !form" class="card vazio">
-        <div class="big">🏆</div>
+        <div class="big"><Icone nome="trofeu" /></div>
         Nenhum troféu ainda.
       </div>
 
@@ -141,11 +141,11 @@ onMounted(carregar)
         <div class="corpo">
           <b class="no-i18n">{{ t.titulo || 'Troféu' }}</b>
           <div class="meta">
-            ⭐ {{ t.media ? t.media.toFixed(1).replace('.', ',') : '—' }}
+            <Icone nome="estrela" /> {{ t.media ? t.media.toFixed(1).replace('.', ',') : '—' }}
             · {{ t.votos }} voto(s) · {{ dataBR(t.criadoEm) }}
           </div>
           <div v-if="t.noRanking && !t.saiuDoRanking" class="meta viva">
-            🔴 No ranking
+            <Icone nome="alerta" /> No ranking
             <template v-if="t.horasRestantes"> · sai em {{ t.horasRestantes }}h</template>
           </div>
           <div v-else-if="t.saiuDoRanking" class="meta">
@@ -156,7 +156,7 @@ onMounted(carregar)
             <button class="btn sm sec" @click="alternarRanking(t)">
               {{ t.noRanking && !t.saiuDoRanking ? 'Tirar do ranking' : 'Disputar ranking' }}
             </button>
-            <button class="btn sm sec" @click="excluir(t)">🗑️ Excluir</button>
+            <button class="btn sm sec" @click="excluir(t)"><Icone nome="excluir" /> Excluir</button>
           </div>
         </div>
       </div>

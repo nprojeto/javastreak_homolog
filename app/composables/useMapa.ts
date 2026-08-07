@@ -50,9 +50,14 @@ export async function addBase(map: MapaLeaflet, padrao: 'ruas' | 'sat' = 'ruas')
   const ctl = new L.Control({ position: 'topright' })
   ctl.onAdd = () => {
     const d = L.DomUtil.create('div', 'js-camadas')
+    /* O controle vive fora da árvore do Vue, então o ícone do sprite vai
+       como texto — o `<use>` acha o símbolo mesmo assim, porque o sprite é
+       montado uma vez no layout. */
+    const ic = (n: string) =>
+      '<svg class="ic-svg" aria-hidden="true"><use href="#js-' + n + '"/></svg>'
     d.innerHTML =
-      '<button type="button" data-c="ruas">🗺️ Ruas</button>' +
-      '<button type="button" data-c="sat">🛰️ Satélite</button>'
+      '<button type="button" data-c="ruas">' + ic('b10') + 'Ruas</button>' +
+      '<button type="button" data-c="sat">' + ic('d9') + 'Satélite</button>'
     const pintar = () => {
       for (const b of Array.from(d.getElementsByTagName('button'))) {
         b.className = b.getAttribute('data-c') === atual ? 'on' : ''

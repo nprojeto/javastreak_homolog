@@ -19,7 +19,7 @@ onMounted(() => auth.restaurar())
     />
 
     <!--
-      ⚠️ O <NuxtLayout> é OBRIGATÓRIO aqui. Quando existe app.vue, é ele quem
+      <Icone nome="alerta" /> O <NuxtLayout> é OBRIGATÓRIO aqui. Quando existe app.vue, é ele quem
       aplica o layout que cada tela declara em definePageMeta. Sem esta linha,
       `layout: 'app'` é ignorado em silêncio e as telas aparecem sem moldura —
       sem cabeçalho, sem menu e sem a faixa de créditos.
@@ -72,12 +72,13 @@ onMounted(() => auth.restaurar())
   width: min(92vw, 420px);
 }
 .aviso {
-  background: var(--verde-esc);
-  color: #fff;
+  background: var(--carvao-3);
+  color: var(--osso);
+  border-left: 3px solid var(--laranja);
   padding: 10px 14px;
   border-radius: 10px;
   box-shadow: var(--sombra);
   font-size: 14px;
 }
-.aviso.erro { background: var(--danger); }
+.aviso.erro { border-left-color: var(--danger); color: #F3C9C7; }
 </style>

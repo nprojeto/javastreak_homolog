@@ -19,7 +19,13 @@ export const ICO: Record<string, string> = {
   confirmar: 'e6', fechar: 'e7', avancar: 'e8', atualizar: 'e9', baixar: 'e10',
   enviar: 'e11', favorito: 'e12', estrela: 'e13', salvar: 'e14', menu: 'e15',
   voltar: 'e16',
-  haras: 'h1', ferradura: 'h2', engrenagem: 'h3', carrinho: 'h4'
+  haras: 'h1', ferradura: 'h2', engrenagem: 'h3', carrinho: 'h4',
+
+  /* Acrescentados na migração — ver o comentário no IconeSprite.vue. */
+  alerta: 'n1', abate: 'n2', loja: 'n3', manejador: 'n4', amigos: 'n5',
+  denuncia: 'n6', cortesia: 'n7', promocao: 'n8', saude: 'n9',
+  ferramenta: 'n10', pino: 'n11', diagnostico: 'n12', trofeu: 'n13',
+  desfazer: 'n14'
 }
 
 /** Chave antiga do menu → nome novo. Porte de NAV_SVG. */

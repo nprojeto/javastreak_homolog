@@ -95,8 +95,8 @@ onMounted(carregar)
     <!-- ───── ASSINATURAS E CORTESIAS ───── -->
     <div class="card">
       <div class="topo">
-        <h3>🎫 Assinaturas e cortesias</h3>
-        <button class="ib" title="Atualizar" @click="carregar">🔄</button>
+        <h3><Icone nome="planos" /> Assinaturas e cortesias</h3>
+        <button class="ib" title="Atualizar" @click="carregar"><Icone nome="atualizar" /></button>
       </div>
       <label class="check">
         <input v-model="soVigentes" type="checkbox">
@@ -122,7 +122,7 @@ onMounted(carregar)
 
     <!-- ───── PAGAMENTOS ───── -->
     <div class="card">
-      <h3>💳 Pagamentos</h3>
+      <h3><Icone nome="pagamentos" /> Pagamentos</h3>
       <div v-if="!pagamentos" class="meta">Carregando…</div>
       <template v-else>
         <div class="dash">
@@ -151,7 +151,7 @@ onMounted(carregar)
 
     <!-- ───── LIMITES ───── -->
     <div class="card">
-      <h3>⚙️ Limites por plano</h3>
+      <h3><Icone nome="engrenagem" />️ Limites por plano</h3>
       <div class="meta">
         −1 é ilimitado, 0 desliga o recurso. O valor vale a partir do próximo
         carregamento de cada usuário.
@@ -224,11 +224,11 @@ h3 { margin: 0 0 4px; }
 .valor { font-weight: 700; font-size: 13.5px; }
 .pill { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--linha); margin-left: 6px; }
 .pill.ok, .pill.pago { background: var(--verde-claro); color: var(--verde-esc); }
-.pill.pendente { background: #ffe9c7; color: #8a5a10; }
+.pill.pendente { background: #3A2E13; color: var(--alerta); }
 .dash { display: flex; gap: 8px; margin: 8px 0; }
 .kpi { flex: 1; background: var(--areia); border-radius: 12px; padding: 9px; text-align: center; }
 .kpi b { display: block; font-size: 17px; }
-.kpi span { font-size: 10.5px; color: #7a7466; }
+.kpi span { font-size: 10.5px; color: var(--osso-2); }
 .tab-scroll { overflow-x: auto; }
 .lim { border-collapse: collapse; font-size: 12px; width: 100%; }
 .lim th, .lim td { border: 1px solid var(--linha); padding: 4px 6px; }

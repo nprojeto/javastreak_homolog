@@ -128,7 +128,7 @@ onMounted(carregar)
       <!-- ───── EMPRESA ───── -->
       <template v-if="ehEmpresa">
         <div v-if="pode && !pode.pode" class="card travado">
-          <div class="meta">🔒 {{ pode.motivo }}</div>
+          <div class="meta"><Icone nome="bloqueio" /> {{ pode.motivo }}</div>
           <NuxtLink v-if="pode.semPlano" to="/planos" class="btn sec">Ver planos</NuxtLink>
         </div>
 
@@ -167,7 +167,7 @@ onMounted(carregar)
         </div>
 
         <button v-else-if="pode?.pode" class="btn" @click="form = true">
-          ⚡ Lançar promoção
+          <Icone nome="promocao" /> Lançar promoção
           <template v-if="pode.restantes"> ({{ pode.restantes }} hoje)</template>
         </button>
 
@@ -199,7 +199,7 @@ onMounted(carregar)
       <template v-if="recebe">
         <h3 v-if="ehEmpresa" class="sec">De outras lojas</h3>
         <div v-if="!promos.length" class="card vazio">
-          <div class="big">⚡</div>
+          <div class="big"><Icone nome="promocao" /></div>
           Nenhuma promoção no ar agora.
         </div>
 
@@ -239,7 +239,7 @@ onMounted(carregar)
 .corpo { padding: 12px 14px; }
 .desc { font-size: 14px; margin: 4px 0; }
 .precos { margin: 6px 0; }
-.precos s { color: #8a8577; margin-right: 8px; }
+.precos s { color: var(--osso-2); margin-right: 8px; }
 .precos b { color: var(--laranja); font-size: 18px; }
 .corpo .btn { width: auto; margin-top: 8px; }
 .prev { max-width: 160px; border-radius: 10px; display: block; margin: 4px 0 8px; }

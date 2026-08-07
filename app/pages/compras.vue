@@ -50,7 +50,7 @@ onMounted(async () => {
         <div class="kpi"><b>{{ dados.resumo.pendentes }}</b><span>pendentes</span></div>
       </div>
 
-      <h3 class="sec">🧾 Pagamentos</h3>
+      <h3 class="sec"><Icone nome="pagamentos" /> Pagamentos</h3>
       <div v-if="!dados.pagamentos.length" class="card">
         <div class="meta">Nenhum pagamento registrado ainda.</div>
       </div>
@@ -68,7 +68,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <h3 class="sec">📜 Assinaturas</h3>
+      <h3 class="sec"><Icone nome="arquivo" /> Assinaturas</h3>
       <div v-if="!dados.assinaturas.length" class="card">
         <div class="meta">Nenhuma assinatura registrada.</div>
       </div>
@@ -94,9 +94,9 @@ onMounted(async () => {
 <style scoped>
 .ruim { color: var(--danger); }
 .dash { display: flex; gap: 8px; margin-bottom: 10px; }
-.kpi { flex: 1; background: #fff; border: 1px solid var(--linha); border-radius: 12px; padding: 10px; text-align: center; }
+.kpi { flex: 1; background: var(--card); border: 1px solid var(--linha); border-radius: 12px; padding: 10px; text-align: center; }
 .kpi b { display: block; font-size: 16px; }
-.kpi span { font-size: 11px; color: #7a7466; }
+.kpi span { font-size: 11px; color: var(--osso-2); }
 .sec { margin: 14px 4px 6px; font-size: 15px; }
 .linha { display: flex; align-items: center; gap: 10px; }
 .txt { flex: 1; min-width: 0; }
@@ -105,6 +105,6 @@ onMounted(async () => {
 .valor { font-weight: 700; font-size: 14px; }
 .pill { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 999px; background: var(--linha); }
 .pill.pago { background: var(--verde-claro); color: var(--verde-esc); }
-.pill.pendente { background: #ffe9c7; color: #8a5a10; }
+.pill.pendente { background: #3A2E13; color: var(--alerta); }
 .voltar { margin-top: 14px; text-decoration: none; }
 </style>

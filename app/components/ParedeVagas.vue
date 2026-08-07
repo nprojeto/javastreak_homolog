@@ -11,7 +11,7 @@ defineProps<{ tipo: 'manejador' | 'empresa' }>()
 <template>
   <AbasTipoConta :atual="tipo" />
   <div class="card parede">
-    <div class="emoji">🤝</div>
+    <div class="emoji"><Icone nome="amigos" /></div>
     <h3>Cadastro temporariamente fechado</h3>
     <p>
       Estamos trabalhando para aumentar nossa comunidade e muito em breve iremos

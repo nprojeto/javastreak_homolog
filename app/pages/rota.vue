@@ -153,7 +153,11 @@ async function salvar() {
           v-if="avisoProp.texto"
           class="meta aviso"
           :class="avisoProp.ok ? 'bom' : 'ruim'"
-        >{{ avisoProp.ok ? '✔' : '⚠️' }} {{ avisoProp.texto }}</div>
+        >
+          <template v-if="avisoProp.ok">✔</template>
+          <Icone v-else nome="alerta" />
+          {{ avisoProp.texto }}
+        </div>
 
         <label for="r_transp">Tipo de transporte</label>
         <select id="r_transp" v-model="transporte">
@@ -163,7 +167,7 @@ async function salvar() {
       </div>
 
       <div v-if="podeDesenhar && prop" class="card">
-        <h3>🗺️ Marcar no mapa</h3>
+        <h3><Icone nome="mapa" /> Marcar no mapa</h3>
         <ClientOnly>
           <MapaRota
             v-model:pontos="pontos"
@@ -177,7 +181,8 @@ async function salvar() {
 
       <div class="card">
         <button class="btn" :disabled="salvando" @click="salvar">
-          {{ salvando ? 'Salvando…' : '💾 Salvar rota' }}
+          <template v-if="salvando">Salvando…</template>
+          <template v-else><Icone nome="salvar" /> Salvar rota</template>
         </button>
         <NuxtLink to="/rotas" class="btn sec">Cancelar</NuxtLink>
       </div>

@@ -46,7 +46,8 @@ onMounted(async () => {
     <div ref="caixa" class="termo-box" @scroll="rolou">{{ texto }}</div>
 
     <div class="termo-fim" :class="{ ok: leu }">
-      {{ leu ? '✓ Você leu o termo — marque o aceite abaixo' : '⬇ role até o fim para continuar' }}
+      <template v-if="leu">✓ Você leu o termo — marque o aceite abaixo</template>
+      <template v-else><Icone nome="baixar" /> role até o fim para continuar</template>
     </div>
 
     <label v-if="leu" class="aceite">
@@ -65,7 +66,7 @@ h3 { margin: 0 0 6px; }
 .termo-box {
   height: 220px; overflow-y: auto; white-space: pre-wrap;
   border: 1px solid var(--linha); border-radius: 12px;
-  padding: 12px; font-size: 13px; line-height: 1.55; background: #fffdf8;
+  padding: 12px; font-size: 13px; line-height: 1.55; background: var(--carvao-3);
 }
 .termo-fim { font-size: 12.5px; color: var(--laranja-esc); text-align: center; margin-top: 8px; }
 .termo-fim.ok { color: var(--ok); }

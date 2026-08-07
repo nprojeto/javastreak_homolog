@@ -211,22 +211,22 @@ onMounted(() => {
 <template>
   <div>
     <div v-if="!auth.admin" class="card">
-      <div class="meta">🔒 Esta tela é do administrador.</div>
+      <div class="meta"><Icone nome="bloqueio" /> Esta tela é do administrador.</div>
     </div>
 
     <template v-else>
       <div class="card hero">
-        <h2>🛡️ Administração</h2>
+        <h2><Icone nome="bloqueio" /> Administração</h2>
         <div class="meta">Painel, usuários, cortesia e diagnósticos.</div>
       </div>
 
       <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
 
       <nav class="abas">
-        <button :class="{ on: aba === 'painel' }" @click="aba = 'painel'">📊 Painel</button>
-        <button :class="{ on: aba === 'planos' }" @click="aba = 'planos'">🎫 Planos</button>
-        <button :class="{ on: aba === 'moderacao' }" @click="aba = 'moderacao'">🚩 Moderação</button>
-        <button :class="{ on: aba === 'ajustes' }" @click="aba = 'ajustes'">🎛️ Ajustes</button>
+        <button :class="{ on: aba === 'painel' }" @click="aba = 'painel'"><Icone nome="grafico" /> Painel</button>
+        <button :class="{ on: aba === 'planos' }" @click="aba = 'planos'"><Icone nome="planos" /> Planos</button>
+        <button :class="{ on: aba === 'moderacao' }" @click="aba = 'moderacao'"><Icone nome="denuncia" /> Moderação</button>
+        <button :class="{ on: aba === 'ajustes' }" @click="aba = 'ajustes'"><Icone nome="ajustes" /> Ajustes</button>
       </nav>
 
       <AdminPlanos v-if="aba === 'planos'" />
@@ -237,8 +237,8 @@ onMounted(() => {
       <!-- ───── PAINEL ───── -->
       <div class="card">
         <div class="topo">
-          <h3>📊 Painel da plataforma</h3>
-          <button class="ib" title="Atualizar" @click="carregarPainel">🔄</button>
+          <h3><Icone nome="grafico" /> Painel da plataforma</h3>
+          <button class="ib" title="Atualizar" @click="carregarPainel"><Icone nome="atualizar" /></button>
         </div>
 
         <div v-if="!painel" class="meta">Carregando…</div>
@@ -264,7 +264,7 @@ onMounted(() => {
 
       <!-- ───── USUÁRIOS ───── -->
       <div class="card">
-        <h3>👥 Usuários da plataforma</h3>
+        <h3><Icone nome="amigos" /> Usuários da plataforma</h3>
         <div class="meta">
           Busque por nome, e-mail, telefone, cidade, CPF/CNPJ ou id. Clique para
           ver a ficha completa.
@@ -338,7 +338,7 @@ onMounted(() => {
 
       <!-- ───── CORTESIA ───── -->
       <div class="card cortesia">
-        <h3>🎁 Dar cortesia</h3>
+        <h3><Icone nome="cortesia" /> Dar cortesia</h3>
         <div class="meta">
           Libera um plano por tempo determinado. Em homologação é o que permite
           testar o que o plano Novato limita.
@@ -366,7 +366,7 @@ onMounted(() => {
           Atinge <b>{{ ctQtd }}</b> conta(s).
         </div>
         <div v-if="ctQtd === 0" class="meta ruim">
-          ⚠️ Nenhuma conta encontrada com esse destino — confira o e-mail.
+          <Icone nome="alerta" /> Nenhuma conta encontrada com esse destino — confira o e-mail.
         </div>
 
         <div class="two">
@@ -392,7 +392,7 @@ onMounted(() => {
 
       <!-- ───── DIAGNÓSTICOS ───── -->
       <div class="card">
-        <h3>🩺 Diagnósticos</h3>
+        <h3><Icone nome="diagnostico" /> Diagnósticos</h3>
 
         <label for="dg_email">Enviar e-mail de teste para</label>
         <input id="dg_email" v-model="diagEmail" type="email" class="no-i18n">
@@ -426,19 +426,19 @@ h3 { margin: 0 0 4px; }
 .dash { display: flex; gap: 8px; margin: 10px 0 0; }
 .kpi { flex: 1; background: var(--areia); border-radius: 12px; padding: 9px; text-align: center; }
 .kpi b { display: block; font-size: 18px; }
-.kpi span { font-size: 10.5px; color: #7a7466; }
+.kpi span { font-size: 10.5px; color: var(--osso-2); }
 .mod { margin-bottom: 8px; }
 .mod-rot { display: flex; justify-content: space-between; font-size: 12.5px; }
-.mod-rot span { color: #7a7466; }
+.mod-rot span { color: var(--osso-2); }
 .barra { height: 8px; background: var(--linha); border-radius: 999px; overflow: hidden; margin-top: 3px; }
 .barra span { display: block; height: 100%; background: var(--verde); }
-.ficha { border-left: 5px solid var(--verde); background: #fffdf8; border-radius: 10px; padding: 12px; margin: 10px 0; }
+.ficha { border-left: 5px solid var(--verde); background: var(--carvao-3); border-radius: 10px; padding: 12px; margin: 10px 0; }
 .linha { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 13px; border-bottom: 1px solid var(--linha); }
-.linha span { color: #7a7466; }
+.linha span { color: var(--osso-2); }
 .conts { display: flex; flex-wrap: wrap; gap: 6px; }
-.cont { background: #fff; border: 1px solid var(--linha); border-radius: 10px; padding: 6px 10px; text-align: center; min-width: 74px; }
+.cont { background: var(--card); border: 1px solid var(--linha); border-radius: 10px; padding: 6px 10px; text-align: center; min-width: 74px; }
 .cont b { display: block; font-size: 15px; }
-.cont span { font-size: 10.5px; color: #7a7466; }
+.cont span { font-size: 10.5px; color: var(--osso-2); }
 .acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .acoes .btn { width: auto; margin: 0; }
 .usr {
@@ -449,16 +449,16 @@ h3 { margin: 0 0 4px; }
 .usr .grow { flex: 1; min-width: 0; }
 .usr .meta { margin: 2px 0 0; }
 .pill { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--linha); margin-left: 6px; }
-.pill.warn { background: #ffe9c7; color: #8a5a10; }
+.pill.warn { background: #3A2E13; color: var(--alerta); }
 .cortesia { border-left: 5px solid var(--laranja); }
 .saida {
-  background: #1c2a1c; color: #cfe6cf; border-radius: 10px; padding: 10px;
+  background: #0E0D09; color: #B7D3A8; border-radius: 10px; padding: 10px;
   font-size: 11px; overflow-x: auto; margin-top: 10px; white-space: pre-wrap;
 }
 .abas { display: flex; gap: 6px; margin-bottom: 10px; }
 .abas button {
   flex: 1; padding: 10px 6px; border-radius: 10px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
 }
 .abas button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 </style>

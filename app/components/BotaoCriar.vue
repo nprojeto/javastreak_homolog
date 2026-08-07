@@ -29,7 +29,7 @@ const bloqueio = computed(() =>
 
 <template>
   <div v-if="bloqueio" class="card travado">
-    <div class="meta">🔒 {{ bloqueio.motivo }}</div>
+    <div class="meta"><Icone nome="bloqueio" /> {{ bloqueio.motivo }}</div>
     <NuxtLink :to="bloqueio.rota" class="btn sec">{{ bloqueio.rotuloAcao }}</NuxtLink>
   </div>
   <NuxtLink v-else-if="props.para" :to="props.para" class="btn">{{ props.rotulo }}</NuxtLink>

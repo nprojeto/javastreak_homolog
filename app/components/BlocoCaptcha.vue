@@ -97,7 +97,7 @@ onMounted(async () => {
   <label>Verificação de segurança *</label>
   <div v-if="aviso" class="ausente">
     <div class="meta">
-      🔒 {{ aviso }} O cadastro fica indisponível até o administrador configurar.
+      <Icone nome="bloqueio" /> {{ aviso }} O cadastro fica indisponível até o administrador configurar.
       Já tem conta? <NuxtLink to="/login">Entrar</NuxtLink>.
     </div>
   </div>
@@ -106,6 +106,6 @@ onMounted(async () => {
 
 <style scoped>
 .ts-box { min-height: 65px; margin-bottom: 8px; }
-.ausente { border-left: 5px solid var(--alerta); padding: 10px 12px; background: #fff4e5; border-radius: 8px; margin-bottom: 8px; }
+.ausente { border-left: 5px solid var(--alerta); padding: 10px 12px; background: var(--carvao-3); border-radius: 8px; margin-bottom: 8px; }
 .ausente a { color: var(--laranja); font-weight: 600; }
 </style>

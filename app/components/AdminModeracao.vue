@@ -101,7 +101,7 @@ onMounted(carregar)
   <div>
     <!-- ───── AVISOS ───── -->
     <div class="card">
-      <h3>📢 Enviar aviso</h3>
+      <h3><Icone nome="avisos" /> Enviar aviso</h3>
       <label for="av_tit">Título *</label>
       <input id="av_tit" v-model="avTitulo" class="no-i18n" placeholder="Ex: Nova função disponível">
       <label for="av_msg">Mensagem *</label>
@@ -132,19 +132,19 @@ onMounted(carregar)
             {{ a.publico }} · até {{ dataBR(a.expiraEm) }}
           </div>
         </div>
-        <button class="ib" title="Excluir" @click="excluirAviso(a)">🗑️</button>
+        <button class="ib" title="Excluir" @click="excluirAviso(a)"><Icone nome="excluir" /></button>
       </div>
     </div>
 
     <!-- ───── DENÚNCIAS ───── -->
     <div class="card">
-      <h3>🚩 Denúncias</h3>
+      <h3><Icone nome="denuncia" /> Denúncias</h3>
       <div v-if="denuncias === null" class="meta">Carregando…</div>
       <div v-else-if="!denuncias.length" class="meta">Nenhuma denúncia no momento.</div>
 
       <div v-for="d in denuncias || []" :key="d.donoTipo + d.donoId" class="den">
         <b class="no-i18n">
-          {{ d.donoTipo === 'empresa' ? '🏪' : '🧑‍🌾' }} {{ d.nome }}
+          <Icone :nome="d.donoTipo === 'empresa' ? 'loja' : 'manejador'" /> {{ d.nome }}
         </b>
         <span class="pill" :class="d.bloqueado ? 'dan' : 'warn'">
           {{ d.bloqueado ? 'bloqueado' : d.total + ' denúncia(s)' }}
@@ -153,8 +153,8 @@ onMounted(carregar)
           <b v-if="x.por">{{ x.por }}:</b> {{ x.motivo || '(sem motivo)' }}
         </div>
         <div class="acoes">
-          <button class="btn sm" @click="resolver(d, 'liberar')">✅ Liberar perfil</button>
-          <button class="btn sm sec" @click="resolver(d, 'manter')">⛔ Manter bloqueado</button>
+          <button class="btn sm" @click="resolver(d, 'liberar')"><Icone nome="confirmar" /> Liberar perfil</button>
+          <button class="btn sm sec" @click="resolver(d, 'manter')"><Icone nome="bloqueio" /> Manter bloqueado</button>
         </div>
       </div>
     </div>
@@ -162,7 +162,7 @@ onMounted(carregar)
     <!-- ───── CHAMADOS ───── -->
     <div class="card">
       <h3>
-        🎫 Chamados
+        <Icone nome="planos" /> Chamados
         <span v-if="chamados?.abertos" class="pill warn">{{ chamados.abertos }} aberto(s)</span>
       </h3>
       <div v-if="!chamados" class="meta">Carregando…</div>
@@ -197,9 +197,9 @@ h3 { margin: 0 0 6px; }
 .ib { border: 0; background: none; cursor: pointer; font-size: 17px; padding: 4px; flex: none; }
 .pill { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--linha); margin-left: 6px; }
 .pill.ok { background: var(--verde-claro); color: var(--verde-esc); }
-.pill.warn { background: #ffe9c7; color: #8a5a10; }
-.pill.dan { background: #ffdad3; color: #a33; }
-.den { border-left: 4px solid #8a3a2c; padding: 10px 12px; margin: 10px 0 0; background: #fffdf8; border-radius: 8px; }
+.pill.warn { background: #3A2E13; color: var(--alerta); }
+.pill.dan { background: #3A1E1C; color: var(--danger); }
+.den { border-left: 4px solid #8a3a2c; padding: 10px 12px; margin: 10px 0 0; background: var(--carvao-3); border-radius: 8px; }
 .motivo { border-left: 3px solid var(--linha); padding-left: 8px; margin: 6px 0; font-size: 12.5px; }
 .acoes { display: flex; gap: 8px; margin-top: 8px; }
 .acoes .btn { width: auto; margin: 0; }

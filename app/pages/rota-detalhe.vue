@@ -15,9 +15,11 @@ interface Marcacao {
   dataHora?: string; fotoUrl?: string
 }
 
-const EMOJI: Record<string, string> = {
-  Abate: '🐗', Armadilha: '🪤', 'Referência': '📍', Aviso: '⚠️', Rastro: '🐾',
-  'Água': '💧', 'Comida/isca': '🌽', Perigo: '☠️', 'Foto/registro': '📷', Outro: '📌'
+/** Tipo da marcação → ícone do sistema. Emoji não herda cor nem tamanho. */
+const ICONE_MARCA: Record<string, string> = {
+  Abate: 'abate', Armadilha: 'armadilha', 'Referência': 'pino', Aviso: 'alerta',
+  Rastro: 'canil', 'Água': 'nuvem', 'Comida/isca': 'ceva', Perigo: 'alerta',
+  'Foto/registro': 'camera', Outro: 'pino'
 }
 
 const route = useRoute()
@@ -62,7 +64,7 @@ onMounted(async () => {
 
     <template v-else>
       <div class="card">
-        <h3 class="no-i18n">🧭 {{ rota.nome || 'Rota' }}</h3>
+        <h3 class="no-i18n"><Icone nome="rotas" /> {{ rota.nome || 'Rota' }}</h3>
         <div class="meta no-i18n">
           <template v-if="rota.propriedade">{{ rota.propriedade }} · </template>
           {{ rota.tipoTransporte || '' }}
@@ -91,7 +93,7 @@ onMounted(async () => {
         <div class="meta">Nenhuma marcação nesta rota.</div>
       </div>
       <div v-for="m in marcacoes || []" :key="m.id" class="card marca">
-        <span class="ic">{{ EMOJI[m.tipo] || '📌' }}</span>
+        <span class="ic"><Icone :nome="ICONE_MARCA[m.tipo] || 'pino'" /></span>
         <div class="grow">
           <b>{{ m.tipo }}</b>
           <span v-if="m.subtipo" class="pill no-i18n">{{ m.subtipo }}</span>

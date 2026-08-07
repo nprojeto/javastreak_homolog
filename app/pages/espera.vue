@@ -54,13 +54,13 @@ onMounted(carregar)
       </div>
 
       <div v-if="!lista.length" class="card vazio">
-        <div class="big">🌽</div>
+        <div class="big"><Icone nome="ceva" /></div>
         Nenhuma ceva cadastrada.
       </div>
 
       <div v-for="c in lista" :key="c.id" class="card ceva">
         <img v-if="c.fotoUrl" :src="String(c.fotoUrl)" class="thumb" alt="">
-        <div v-else class="ic">🌽</div>
+        <div v-else class="ic"><Icone nome="ceva" /></div>
 
         <NuxtLink :to="{ path: '/ceva-detalhe', query: { id: c.id } }" class="grow">
           <b class="no-i18n">{{ c.nome || 'Ceva' }}</b>
@@ -68,8 +68,8 @@ onMounted(carregar)
           <div v-if="c.obs" class="meta no-i18n">{{ c.obs }}</div>
         </NuxtLink>
 
-        <NuxtLink :to="{ path: '/ceva', query: { id: c.id } }" class="ib" title="Editar">✏️</NuxtLink>
-        <button class="ib" title="Excluir" @click="excluir(c)">🗑️</button>
+        <NuxtLink :to="{ path: '/ceva', query: { id: c.id } }" class="ib" title="Editar"><Icone nome="editar" /></NuxtLink>
+        <button class="ib" title="Excluir" @click="excluir(c)"><Icone nome="excluir" /></button>
       </div>
 
       <BotaoCriar

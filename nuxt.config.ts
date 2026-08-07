@@ -19,7 +19,9 @@ export default defineNuxtConfig({
     /* O CSS do Leaflet precisa vir ANTES do nosso: o legado sobrescreve
        alguns estilos de controle, e a ordem inversa desfaz isso. */
     'leaflet/dist/leaflet.css',
-    '~/assets/css/legado.css'
+    '~/assets/css/legado.css',
+    /* Entra DEPOIS do legado: só redefine tokens e superfícies. */
+    '~/assets/css/tema.css'
   ],
 
   app: {
@@ -40,9 +42,18 @@ export default defineNuxtConfig({
           name: 'viewport',
           content: 'width=device-width, initial-scale=1, viewport-fit=cover'
         },
-        { name: 'theme-color', content: '#2e4d2e' }
+        { name: 'theme-color', content: '#16150F' }
       ],
       link: [
+        /* Barlow Condensed carrega a personalidade dos títulos e botões.
+           É a única fonte externa do projeto — preconnect para não custar
+           uma ida e volta extra. */
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap'
+        },
         { rel: 'icon', href: '/favicon.ico' },
         { rel: 'apple-touch-icon', href: '/icone-180.png' }
       ]
@@ -72,7 +83,13 @@ export default defineNuxtConfig({
         || 'https://pbtgvllxjnumjiololio.supabase.co/functions/v1/api',
       apiKey: process.env.NUXT_PUBLIC_API_KEY
         || 'sb_publishable_y2bMte4WKgzlNNLAi9WtHQ_oWoA-oad',
-      appVer: 'vJS.070826.1751',
+      /**
+       * MARCA DO APP. `meateater` durante a demonstração; `javastreak` depois.
+       * Uma linha muda logo, cor de acento e nome em todas as telas.
+       * Ver app/composables/useMarca.ts.
+       */
+      marca: process.env.NUXT_PUBLIC_MARCA || 'meateater',
+      appVer: 'vJS.070826.1948',
       ambiente: 'homologacao'
     }
   },
@@ -86,8 +103,8 @@ export default defineNuxtConfig({
       lang: 'pt-BR',
       start_url: '/',
       display: 'standalone',
-      background_color: '#f4f1e8',
-      theme_color: '#2e4d2e',
+      background_color: '#16150F',
+      theme_color: '#16150F',
       icons: [
         { src: '/icone-192.png', sizes: '192x192', type: 'image/png' },
         { src: '/icone-512.png', sizes: '512x512', type: 'image/png' },

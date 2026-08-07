@@ -125,25 +125,25 @@ onMounted(carregar)
       </div>
 
       <div v-if="!dados.produtos.length && !form" class="card vazio">
-        <div class="big">🛍️</div>
+        <div class="big"><Icone nome="carrinho" /></div>
         Nenhum produto na vitrine.
       </div>
 
       <div v-for="p in dados.produtos" :key="p.id" class="card prod">
         <img v-if="p.fotoUrl" :src="String(p.fotoUrl)" class="thumb" alt="">
-        <div v-else class="ic">🛍️</div>
+        <div v-else class="ic"><Icone nome="carrinho" /></div>
         <div class="grow">
           <b class="no-i18n">{{ p.nome }}</b>
           <div v-if="p.preco" class="meta no-i18n">R$ {{ p.preco }}</div>
           <div v-if="p.descricao" class="meta no-i18n">{{ p.descricao }}</div>
         </div>
-        <button class="ib" title="Editar" @click="abrir(p)">✏️</button>
-        <button class="ib" title="Excluir" @click="excluir(p)">🗑️</button>
+        <button class="ib" title="Editar" @click="abrir(p)"><Icone nome="editar" /></button>
+        <button class="ib" title="Excluir" @click="excluir(p)"><Icone nome="excluir" /></button>
       </div>
 
       <div v-if="cheio && !form" class="card travado">
         <div class="meta">
-          🔒 Você chegou ao limite de {{ dados.limite }} produtos do seu plano.
+          <Icone nome="bloqueio" /> Você chegou ao limite de {{ dados.limite }} produtos do seu plano.
         </div>
         <NuxtLink to="/planos" class="btn sec">Ver planos</NuxtLink>
       </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMarca } from '~/composables/useMarca'
 /**
  * Casca das telas de entrada (bem-vindo, login, cadastro, recuperação).
  * No legado esse cabeçalho era colado à mão em cada `app('<div ...>')`, com o
@@ -11,6 +12,7 @@ defineProps<{
 }>()
 
 const cfg = useRuntimeConfig()
+const marca = useMarca()
 const homolog = cfg.public.ambiente === 'homologacao'
 </script>
 
@@ -19,7 +21,7 @@ const homolog = cfg.public.ambiente === 'homologacao'
     <p v-if="homolog" class="ambiente">HOMOLOGAÇÃO</p>
 
     <div class="logo">
-      <img src="/logo.png" alt="JavaStreak">
+      <img :src="marca.lockup" :alt="marca.nome">
     </div>
 
     <slot />
@@ -32,7 +34,7 @@ const homolog = cfg.public.ambiente === 'homologacao'
 .wrap { max-width: 560px; margin: 0 auto; padding: 10px 14px 28px; }
 .logo { text-align: center; margin: 10px 0 4px; }
 .logo img { width: 100%; max-width: 290px; }
-.ver { text-align: center; margin-top: 12px; font-size: 11px; color: #cfc9bd; }
+.ver { text-align: center; margin-top: 12px; font-size: 11px; color: var(--osso-2); }
 .ambiente {
   display: block;
   text-align: center;

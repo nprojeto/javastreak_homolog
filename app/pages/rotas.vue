@@ -75,13 +75,13 @@ onMounted(carregar)
       </div>
 
       <div v-if="!minhas.length" class="card vazio">
-        <div class="big">🧭</div>
+        <div class="big"><Icone nome="rotas" /></div>
         Nenhuma rota cadastrada ainda.
       </div>
 
       <div v-for="r in minhas" :key="r.id" class="card rota">
         <NuxtLink :to="{ path: '/rota-detalhe', query: { id: r.id } }" class="grow">
-          <b class="no-i18n">🧭 {{ r.nome || 'Rota' }}</b>
+          <b class="no-i18n"><Icone nome="rotas" /> {{ r.nome || 'Rota' }}</b>
           <div class="meta no-i18n">
             <template v-if="r.propriedade">{{ r.propriedade }} · </template>
             {{ r.tipoTransporte || '' }}
@@ -92,7 +92,7 @@ onMounted(carregar)
             {{ dataBR(r.dataCadastro) }}
           </div>
         </NuxtLink>
-        <button class="ib" title="Excluir" @click="excluir(r)">🗑️</button>
+        <button class="ib" title="Excluir" @click="excluir(r)"><Icone nome="excluir" /></button>
       </div>
 
       <BotaoCriar
@@ -103,11 +103,11 @@ onMounted(carregar)
       />
 
       <template v-if="comigo.length">
-        <h3 class="sec">🤝 Compartilhadas comigo</h3>
+        <h3 class="sec"><Icone nome="amigos" /> Compartilhadas comigo</h3>
         <div v-for="r in comigo" :key="r.id" class="card rota">
           <NuxtLink :to="{ path: '/rota-detalhe', query: { id: r.id } }" class="grow">
             <b class="no-i18n">
-              🧭 {{ r.nome || 'Rota' }}
+              <Icone nome="rotas" /> {{ r.nome || 'Rota' }}
               <span class="pill">{{ r.permissao === 'editar' ? 'Editar' : 'Seguir' }}</span>
             </b>
             <div class="meta no-i18n">

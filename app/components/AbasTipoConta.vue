@@ -12,10 +12,10 @@ function trocar(t: 'manejador' | 'empresa') {
 <template>
   <div class="tipo-conta">
     <button :class="{ on: props.atual === 'manejador' }" @click="trocar('manejador')">
-      🌿 Manejador
+      <Icone nome="manejador" /> Manejador
     </button>
     <button :class="{ on: props.atual === 'empresa' }" @click="trocar('empresa')">
-      🏪 Empresa
+      <Icone nome="loja" /> Empresa
     </button>
   </div>
 </template>
@@ -25,7 +25,7 @@ function trocar(t: 'manejador' | 'empresa') {
 .tipo-conta button {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 12px 8px; border-radius: 14px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--txt);
+  background: var(--card); cursor: pointer; font-size: 14px; font-weight: 600; color: var(--txt);
 }
 .tipo-conta button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 </style>

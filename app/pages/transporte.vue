@@ -111,7 +111,7 @@ onMounted(carregar)
     <template v-else>
       <div class="card cab">
         <img v-if="t.fotoUrl" :src="String(t.fotoUrl)" class="thumb" alt="">
-        <div v-else class="ic">{{ ehCavalo ? '🐎' : '🚗' }}</div>
+        <div v-else class="ic"><Icone :nome="ehCavalo ? 'ferradura' : 'transporte'" :px="34" /></div>
         <div class="grow">
           <h3 class="no-i18n">{{ t.identificacao || t.tipo }}</h3>
           <div class="meta"><span class="pill">{{ t.tipo }}</span></div>
@@ -119,7 +119,10 @@ onMounted(carregar)
         </div>
       </div>
 
-      <h3 class="sec">{{ ehCavalo ? '💉 Saúde e casqueamento' : '🔧 Manutenções' }}</h3>
+      <h3 class="sec">
+        <Icone :nome="ehCavalo ? 'saude' : 'ferramenta'" />
+        {{ ehCavalo ? 'Saúde e casqueamento' : 'Manutenções' }}
+      </h3>
 
       <div v-if="form" class="card">
         <label for="x_tipo">Tipo *</label>
@@ -175,10 +178,10 @@ onMounted(carregar)
             <div class="meta no-i18n">
               {{ dataBR(s.data) }}<template v-if="s.descricao"> · {{ s.descricao }}</template>
             </div>
-            <div v-if="s.proximaData" class="meta">📅 próxima em {{ dataBR(s.proximaData) }}</div>
+            <div v-if="s.proximaData" class="meta"><Icone nome="calendario" /> próxima em {{ dataBR(s.proximaData) }}</div>
             <div v-if="s.obs" class="meta no-i18n">{{ s.obs }}</div>
           </div>
-          <button class="ib" title="Excluir" @click="excluir('saudeTransp', s.id)">🗑️</button>
+          <button class="ib" title="Excluir" @click="excluir('saudeTransp', s.id)"><Icone nome="excluir" /></button>
         </div>
       </template>
 
@@ -195,13 +198,13 @@ onMounted(carregar)
               {{ dataBR(x.data) }}<template v-if="x.km"> · {{ x.km }} km</template>
             </div>
             <div v-if="x.proximaData || x.proximoKm" class="meta no-i18n">
-              📅 próxima
+              <Icone nome="calendario" /> próxima
               <template v-if="x.proximaData"> em {{ dataBR(x.proximaData) }}</template>
               <template v-if="x.proximoKm"> ou aos {{ x.proximoKm }} km</template>
             </div>
             <div v-if="x.obs" class="meta no-i18n">{{ x.obs }}</div>
           </div>
-          <button class="ib" title="Excluir" @click="excluir('manutencao', x.id)">🗑️</button>
+          <button class="ib" title="Excluir" @click="excluir('manutencao', x.id)"><Icone nome="excluir" /></button>
         </div>
       </template>
 
@@ -210,7 +213,7 @@ onMounted(carregar)
       <NuxtLink
         :to="{ path: '/documentacao', query: { cat: 'veiculo' } }"
         class="btn sec"
-      >📄 Documentos deste item</NuxtLink>
+      ><Icone nome="documentos" /> Documentos deste item</NuxtLink>
       <NuxtLink to="/manutencao" class="btn sec">Voltar</NuxtLink>
     </template>
   </div>

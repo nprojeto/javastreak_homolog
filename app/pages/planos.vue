@@ -223,9 +223,9 @@ onMounted(carregar)
         </div>
         <div class="acoes">
           <button class="btn sec" :disabled="conferindo" @click="conferirPagamento">
-            🔄 {{ conferindo ? 'Verificando…' : 'Já paguei — atualizar' }}
+            <Icone nome="atualizar" /> {{ conferindo ? 'Verificando…' : 'Já paguei — atualizar' }}
           </button>
-          <NuxtLink to="/compras" class="btn sec">🧾 Minhas compras</NuxtLink>
+          <NuxtLink to="/compras" class="btn sec"><Icone nome="pagamentos" /> Minhas compras</NuxtLink>
         </div>
       </div>
     </template>
@@ -241,7 +241,7 @@ onMounted(carregar)
 .pl-per { display: flex; gap: 6px; margin: 10px 0; }
 .pl-per button {
   flex: 1; padding: 9px; border-radius: 10px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-weight: 600; font-size: 13px; color: var(--txt);
 }
 .pl-per button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 
@@ -251,7 +251,7 @@ onMounted(carregar)
 @media (min-width: 620px) {
   .pl-grade { grid-template-columns: repeat(auto-fit, minmax(240px, 300px)); }
 }
-.plano { background: #fff; border: 1.5px solid var(--linha); border-radius: 16px; padding: 16px; }
+.plano { background: var(--card); border: 1.5px solid var(--linha); border-radius: 16px; padding: 16px; }
 .plano.destaque { border-color: var(--laranja); }
 .plano.atual { border-color: var(--verde); }
 .plano-top { display: flex; align-items: center; gap: 8px; }

@@ -68,7 +68,7 @@ onMounted(async () => {
       class="card alerta"
       :class="{ vermelho: atrasadas > 0 }"
     >
-      <h3>📅 Lembrete da agenda</h3>
+      <h3><Icone nome="calendario" /> Lembrete da agenda</h3>
       <div class="meta">
         <b v-if="atrasadas" class="atr">{{ atrasadas }} atrasada(s)</b>
         <span v-if="atrasadas && proximas"> · </span>
@@ -96,7 +96,7 @@ onMounted(async () => {
     </div>
 
     <div class="card">
-      <h3>📰 Artigos</h3>
+      <h3><Icone nome="artigos" /> Artigos</h3>
       <div v-if="erroArtigos" class="meta erro">{{ erroArtigos }}</div>
       <div v-else-if="artigos === null" class="meta">Carregando…</div>
       <div v-else-if="!artigos.length" class="meta">
@@ -108,9 +108,9 @@ onMounted(async () => {
           <div v-for="a in artigos" :key="a.id" class="blog-item">
             <div class="bi-tit">{{ a.titulo }}</div>
             <div class="bi-meta">
-              <span>✍️ {{ a.autor || 'Redação' }}</span>
+              <span><Icone nome="editar" />️ {{ a.autor || 'Redação' }}</span>
               <span>{{ dataBR(a.data) }}</span>
-              <span v-if="a.curtidas">👍 {{ a.curtidas }}</span>
+              <span v-if="a.curtidas"><Icone nome="favorito" /> {{ a.curtidas }}</span>
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@ onMounted(async () => {
 .menu-card { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--txt); }
 .menu-card .txt { flex: 1; }
 .menu-card h3 { margin: 0 0 2px; }
-.menu-card p { margin: 0; font-size: 12.5px; color: #7a7466; }
+.menu-card p { margin: 0; font-size: 12.5px; color: var(--osso-2); }
 .chev { font-size: 22px; color: var(--linha); }
 .indic { border-left: 5px solid var(--laranja); }
 .indic h3 { margin: 0 0 4px; }
@@ -139,7 +139,7 @@ onMounted(async () => {
 .blog-lista { margin-top: 6px; }
 .blog-item { padding: 10px 0; border-top: 1px solid var(--linha); }
 .bi-tit { font-weight: 600; font-size: 14.5px; }
-.bi-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: #7a7466; margin-top: 3px; }
+.bi-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--osso-2); margin-top: 3px; }
 .erro { color: var(--danger); }
 .rodape { margin-top: 8px; }
 </style>

@@ -85,17 +85,17 @@ onMounted(carregar)
       </div>
 
       <div v-if="!lista.length && !form" class="card vazio">
-        <div class="big">🏠</div>
+        <div class="big"><Icone nome="canil" /></div>
         Nenhum canil cadastrado.
       </div>
 
       <div v-for="k in lista" :key="k.id" class="card canil">
         <NuxtLink :to="{ path: '/canil', query: { id: k.id } }" class="grow">
-          <b class="no-i18n">🏠 {{ k.nome || 'Canil' }}</b>
+          <b class="no-i18n"><Icone nome="canil" /> {{ k.nome || 'Canil' }}</b>
           <div class="meta">{{ k.qtdCaes || 0 }} cão(es)</div>
           <div v-if="k.obs" class="meta no-i18n">{{ k.obs }}</div>
         </NuxtLink>
-        <button class="ib" title="Excluir" @click="excluir(k)">🗑️</button>
+        <button class="ib" title="Excluir" @click="excluir(k)"><Icone nome="excluir" /></button>
       </div>
 
       <BotaoCriar

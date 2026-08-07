@@ -61,7 +61,7 @@ async function reenviar() {
 <template>
   <TelaEntrada>
     <div class="card">
-      <h3>📧 Confirme seu e-mail</h3>
+      <h3><Icone nome="email" /> Confirme seu e-mail</h3>
       <div class="meta">
         Enviamos um código de 6 dígitos para <b>{{ alvo }}</b>. Ele vale por 24 horas.
       </div>

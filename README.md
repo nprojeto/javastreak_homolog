@@ -79,3 +79,25 @@ node scripts/extrair-do-html.mjs ../caminho/index.html
 ```
 
 Regenera os três JSON de idioma e o `legado.css` a partir do fonte cru.
+
+---
+
+## Trocar a marca (demonstração ↔ JavaStreak)
+
+O app está vestido com a marca do cliente para a apresentação. Voltar ao
+JavaStreak é **uma linha**, em `nuxt.config.ts`:
+
+```ts
+marca: process.env.NUXT_PUBLIC_MARCA || 'meateater'   // demonstração
+marca: process.env.NUXT_PUBLIC_MARCA || 'javastreak'  // depois
+```
+
+Isso muda de uma vez: logo do cabeçalho, logo das telas de entrada, cor de
+acento, nome no título da página e o `data-marca` do `<html>`.
+
+As imagens ficam em `public/marca/`, já sem fundo. Marca nova é acrescentar
+dois PNG lá e uma entrada em `app/composables/useMarca.ts`.
+
+⚠️ Nenhuma tela conhece a marca — todas passam por `useMarca()`. Se você
+escrever `/logo.png` direto em algum lugar, esse lugar deixa de acompanhar a
+troca.

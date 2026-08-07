@@ -93,7 +93,7 @@ onMounted(carregar)
     <template v-else>
       <div class="card cab">
         <img v-if="cao.fotoUrl" :src="String(cao.fotoUrl)" class="thumb" alt="">
-        <div v-else class="ic">🐕</div>
+        <div v-else class="ic"><Icone nome="canil" /></div>
         <div class="grow">
           <h3 class="no-i18n">{{ cao.nome }}</h3>
           <div class="meta">
@@ -107,7 +107,7 @@ onMounted(carregar)
         </div>
       </div>
 
-      <h3 class="sec">💉 Saúde</h3>
+      <h3 class="sec"><Icone nome="saude" /> Saúde</h3>
 
       <div v-if="form" class="card">
         <label for="s_tipo">Tipo *</label>
@@ -148,11 +148,11 @@ onMounted(carregar)
             <template v-if="s.descricao"> · {{ s.descricao }}</template>
           </div>
           <div v-if="s.proximaData" class="meta">
-            📅 próxima em {{ dataBR(s.proximaData) }}
+            <Icone nome="calendario" /> próxima em {{ dataBR(s.proximaData) }}
           </div>
           <div v-if="s.obs" class="meta no-i18n">{{ s.obs }}</div>
         </div>
-        <button class="ib" title="Excluir" @click="excluir(s)">🗑️</button>
+        <button class="ib" title="Excluir" @click="excluir(s)"><Icone nome="excluir" /></button>
       </div>
 
       <button v-if="!form" class="btn" @click="form = true">＋ Registrar saúde</button>

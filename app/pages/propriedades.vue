@@ -76,7 +76,7 @@ onMounted(carregar)
       </div>
 
       <div v-if="!lista.length" class="card vazio">
-        <div class="big">🏞️</div>
+        <div class="big"><Icone nome="areas" /></div>
         Nenhuma propriedade cadastrada.
         <div class="meta">Comece cadastrando onde você maneja.</div>
       </div>
@@ -98,7 +98,7 @@ onMounted(carregar)
         </div>
 
         <div v-if="!p.regular" class="meta ruim">
-          ⚠️ Falta: {{ faltas(p).join(', ') }}
+          <Icone nome="alerta" /> Falta: {{ faltas(p).join(', ') }}
         </div>
         <div v-else class="meta">
           Acesso vence {{ dataBR(p.autManejo?.vencimento) }} ·
@@ -107,9 +107,9 @@ onMounted(carregar)
 
         <div class="acoes">
           <NuxtLink :to="{ path: '/propriedade', query: { id: p.id } }" class="btn sm sec">
-            ✏️ Editar
+            <Icone nome="editar" /> Editar
           </NuxtLink>
-          <button class="btn sm sec" @click="excluir(p)">🗑️ Excluir</button>
+          <button class="btn sm sec" @click="excluir(p)"><Icone nome="excluir" /> Excluir</button>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ onMounted(carregar)
 .prop .cab b { flex: 1; }
 .doc-tag { font-size: 11px; padding: 2px 9px; border-radius: 999px; background: var(--linha); }
 .doc-tag.ok { background: var(--verde-claro); color: var(--verde-esc); }
-.doc-tag.venc { background: #ffdad3; color: #a33; }
+.doc-tag.venc { background: #3A1E1C; color: var(--danger); }
 .acoes { display: flex; gap: 8px; margin-top: 10px; }
 .acoes .btn { width: auto; margin: 0; text-decoration: none; }
 .btn { text-decoration: none; }

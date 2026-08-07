@@ -23,17 +23,17 @@ function continuar() {
 
     <div class="tipo-conta">
       <button :class="{ on: tipo === 'manejador' }" @click="tipo = 'manejador'">
-        🌿 Manejador
+        <Icone nome="manejador" /> Manejador
         <small>Cevas, rotas, cães, abates e troféus</small>
       </button>
       <button :class="{ on: tipo === 'empresa' }" @click="tipo = 'empresa'">
-        🏪 Empresa
+        <Icone nome="loja" /> Empresa
         <small>Loja no mapa, promoções e vitrine</small>
       </button>
     </div>
 
     <div class="card idade">
-      <h3>🔞 Conteúdo para maiores de 18 anos</h3>
+      <h3><Icone nome="alerta" /> Conteúdo para maiores de 18 anos</h3>
       <p>
         O JavaStreak é uma ferramenta de manejo de javali destinada a pessoas com
         18 anos ou mais, que possuam as autorizações legais exigidas para a
@@ -52,7 +52,7 @@ function continuar() {
 .tipo-conta button {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 14px 8px; border-radius: 14px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--txt);
+  background: var(--card); cursor: pointer; font-size: 15px; font-weight: 600; color: var(--txt);
 }
 .tipo-conta button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 .tipo-conta small { font-weight: 400; font-size: 11.5px; color: var(--txt); opacity: .75; text-align: center; }

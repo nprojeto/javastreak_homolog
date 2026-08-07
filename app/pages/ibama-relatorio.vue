@@ -160,7 +160,7 @@ onMounted(carregar)
             {{ dataBR(r.autorizacao.vencimento) }}
           </div>
           <div v-if="fechada" class="meta">
-            🔒 Fechada em {{ dataBR(r.autorizacao.encerradoEm) }}
+            <Icone nome="bloqueio" /> Fechada em {{ dataBR(r.autorizacao.encerradoEm) }}
           </div>
         </div>
 
@@ -200,17 +200,18 @@ onMounted(carregar)
       </div>
 
       <div class="card sem-impressao">
-        <button class="btn sec" @click="imprimir">🖨️ Imprimir / salvar PDF</button>
-        <button class="btn sec" @click="baixarCsv">📊 Baixar CSV</button>
+        <button class="btn sec" @click="imprimir"><Icone nome="baixar" /> Imprimir / salvar PDF</button>
+        <button class="btn sec" @click="baixarCsv"><Icone nome="grafico" /> Baixar CSV</button>
 
         <template v-if="!fechada">
           <div class="meta aviso">
-            ⚠️ Fechar esta autorização <b>bloqueia a propriedade</b> até entrar
+            <Icone nome="alerta" /> Fechar esta autorização <b>bloqueia a propriedade</b> até entrar
             a autorização nova — sem ceva nova, sem rota nova, sem caçada nova.
             Não há como desfazer.
           </div>
           <button class="btn danger" :disabled="fechando" @click="fechar">
-            {{ fechando ? 'Fechando…' : '🔒 Gerar relatório e fechar autorização' }}
+            <template v-if="fechando">Fechando…</template>
+            <template v-else><Icone nome="bloqueio" /> Gerar relatório e fechar autorização</template>
           </button>
         </template>
 
@@ -228,7 +229,7 @@ h3 { margin: 0 0 4px; font-size: 14px; color: var(--verde); }
 .dash { display: flex; gap: 8px; margin: 14px 0; }
 .kpi { flex: 1; background: var(--areia); border-radius: 12px; padding: 10px; text-align: center; }
 .kpi b { display: block; font-size: 20px; }
-.kpi span { font-size: 11px; color: #7a7466; }
+.kpi span { font-size: 11px; color: var(--osso-2); }
 .rel-scroll { overflow-x: auto; margin-top: 8px; }
 .rel-tab { border-collapse: collapse; font-size: 11.5px; width: 100%; }
 .rel-tab th, .rel-tab td { border: 1px solid var(--linha); padding: 5px 7px; white-space: nowrap; }

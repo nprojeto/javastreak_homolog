@@ -105,7 +105,7 @@ onMounted(carregar)
 
     <template v-else>
       <div class="card">
-        <h3 class="no-i18n">🏠 {{ canil.nome || 'Canil' }}</h3>
+        <h3 class="no-i18n"><Icone nome="canil" /> {{ canil.nome || 'Canil' }}</h3>
         <div class="meta">{{ (caes || []).length }} cão(es) na matilha</div>
         <div v-if="canil.obs" class="meta no-i18n">{{ canil.obs }}</div>
       </div>
@@ -150,13 +150,13 @@ onMounted(carregar)
 
       <div v-if="caes === null" class="card"><div class="meta">Carregando…</div></div>
       <div v-else-if="!caes.length && !form" class="card vazio">
-        <div class="big">🐕</div>
+        <div class="big"><Icone nome="canil" /></div>
         Nenhum cão neste canil.
       </div>
 
       <div v-for="c in caes || []" :key="c.id" class="card cao">
         <img v-if="c.fotoUrl" :src="String(c.fotoUrl)" class="thumb" alt="">
-        <div v-else class="ic">🐕</div>
+        <div v-else class="ic"><Icone nome="canil" /></div>
         <NuxtLink :to="{ path: '/cao', query: { id: c.id, canil: id } }" class="grow">
           <b class="no-i18n">{{ c.nome }}</b>
           <div class="meta">
@@ -167,7 +167,7 @@ onMounted(carregar)
             {{ c.sexo }}<template v-if="idade(c.dataNascimento)"> · {{ idade(c.dataNascimento) }}</template>
           </div>
         </NuxtLink>
-        <button class="ib" title="Excluir" @click="excluir(c)">🗑️</button>
+        <button class="ib" title="Excluir" @click="excluir(c)"><Icone nome="excluir" /></button>
       </div>
 
       <BotaoCriar

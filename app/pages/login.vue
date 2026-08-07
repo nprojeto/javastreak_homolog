@@ -60,10 +60,10 @@ async function entrar() {
   <TelaEntrada versao>
     <div class="segbar">
       <button :class="{ on: tipo === 'manejador' }" @click="tipo = 'manejador'">
-        🌿 {{ tk('manejador') }}
+        <Icone nome="manejador" /> {{ tk('manejador') }}
       </button>
       <button :class="{ on: tipo === 'empresa' }" @click="tipo = 'empresa'">
-        🏪 {{ tk('empresa') }}
+        <Icone nome="loja" /> {{ tk('empresa') }}
       </button>
     </div>
 

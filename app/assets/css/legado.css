@@ -1082,6 +1082,9 @@
   padding:8px 10px;font-size:12.5px;font-weight:600;cursor:pointer;color:#1a231a;
   box-shadow:0 1px 4px rgba(0,0,0,.2)}
 .js-camadas button.on{background:#2f7d3a;color:#fff;border-color:#2f7d3a}
+.js-camadas button .ic-svg{width:15px;height:15px;margin-right:5px;vertical-align:-3px;
+  pointer-events:none}
+.js-camadas button.on .ic-svg{stroke:#fff}
 /* O Leaflet põe z-index alto nos painéis; sem isto o menu lateral fica atrás. */
 .leaflet-pane,.leaflet-top,.leaflet-bottom{z-index:20}
 

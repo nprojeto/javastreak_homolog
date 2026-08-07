@@ -95,7 +95,7 @@ onMounted(carregar)
   <div>
     <!-- ───── PARÂMETROS ───── -->
     <div class="card">
-      <h3>🎛️ Ajustes da plataforma</h3>
+      <h3><Icone nome="ajustes" /> Ajustes da plataforma</h3>
       <div class="meta">
         Estes valores mandam nas regras do app. Mudança vale a partir do
         próximo carregamento de cada usuário.
@@ -127,7 +127,7 @@ onMounted(carregar)
 
     <!-- ───── CAMPANHAS ───── -->
     <div class="card">
-      <h3>📣 Campanhas</h3>
+      <h3><Icone nome="avisos" /> Campanhas</h3>
       <div v-if="campanhas === null" class="meta">Carregando…</div>
       <div v-else-if="!campanhas.length" class="meta">Nenhuma campanha cadastrada.</div>
 
@@ -146,7 +146,7 @@ onMounted(carregar)
 
     <!-- ───── PATROCÍNIOS ───── -->
     <div class="card">
-      <h3>🤝 Patrocínios</h3>
+      <h3><Icone nome="amigos" /> Patrocínios</h3>
       <label for="pt_filtro">Mostrar</label>
       <select id="pt_filtro" v-model="filtroPat">
         <option value="fila">Na fila</option>

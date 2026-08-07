@@ -135,7 +135,7 @@ async function salvar() {
           </option>
         </select>
         <div class="meta aviso" :class="avisoProp.ok ? 'bom' : 'ruim'">
-          {{ avisoProp.ok ? '⏱' : '⚠️' }} {{ avisoProp.texto }}
+          <Icone :nome="avisoProp.ok ? 'relogio' : 'alerta'" /> {{ avisoProp.texto }}
         </div>
 
         <template v-if="prop && avisoProp.ok">
@@ -164,7 +164,7 @@ async function salvar() {
             </label>
             <div class="meta">
               <template v-if="livre">
-                🔴 O percurso será gravado por GPS quando a caçada começar. O
+                <Icone nome="alerta" /> O percurso será gravado por GPS quando a caçada começar. O
                 traçado que sair do limite aparece em vermelho, mas é salvo do
                 mesmo jeito.
               </template>

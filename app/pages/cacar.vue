@@ -60,9 +60,9 @@ const cred = useCreditos()
 .menu-card { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--txt); }
 .menu-card .txt { flex: 1; }
 .menu-card h3 { margin: 0 0 2px; font-size: 15px; }
-.menu-card p { margin: 0; font-size: 12.5px; color: #7a7466; }
+.menu-card p { margin: 0; font-size: 12.5px; color: var(--osso-2); }
 .chev { font-size: 22px; color: var(--linha); }
 .doc-tag { font-size: 10.5px; padding: 2px 7px; border-radius: 999px; background: var(--linha); }
 .doc-tag.ok { background: var(--verde-claro); color: var(--verde-esc); }
-.doc-tag.venc { background: #ffdad3; color: #a33; }
+.doc-tag.venc { background: #3A1E1C; color: var(--danger); }
 </style>

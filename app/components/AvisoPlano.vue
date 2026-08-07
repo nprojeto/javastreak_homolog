@@ -39,7 +39,7 @@ const limiteAtual = computed(() => {
 <template>
   <div v-if="ui.upgrade" class="fundo" @click.self="ui.fecharUpgrade()">
     <div class="caixa">
-      <div class="ic">🔒</div>
+      <div class="ic"><Icone nome="bloqueio" /></div>
       <h3>Seu plano não cobre isso</h3>
       <p>
         <template v-if="limiteAtual !== null && limiteAtual > 0">
@@ -62,11 +62,11 @@ const limiteAtual = computed(() => {
 
 <style scoped>
 .fundo {
-  position: fixed; inset: 0; background: rgba(20,26,20,.5);
+  position: fixed; inset: 0; background: rgba(0,0,0,.68);
   display: flex; align-items: center; justify-content: center; z-index: 90; padding: 18px;
 }
 .caixa {
-  background: #fff; border-radius: 16px; padding: 22px 18px;
+  background: var(--card); border-radius: 16px; padding: 22px 18px;
   max-width: 380px; width: 100%; text-align: center; box-shadow: var(--sombra);
 }
 .ic { font-size: 38px; margin-bottom: 6px; }

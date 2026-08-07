@@ -72,14 +72,14 @@ onMounted(carregar)
     <template v-else>
       <div v-if="cred.dados && !cred.dados.ctfEmDia" class="card ctf">
         <div class="meta">
-          🔒 Seu CTF está vencido ou não foi cadastrado. Sem ele não dá para
+          <Icone nome="bloqueio" /> Seu CTF está vencido ou não foi cadastrado. Sem ele não dá para
           abrir caçada nem entrar na de ninguém.
         </div>
         <NuxtLink to="/ctf" class="btn sec">Cadastrar CTF</NuxtLink>
       </div>
 
       <template v-if="convites.length">
-        <h3 class="sec">✉️ Convites recebidos</h3>
+        <h3 class="sec"><Icone nome="email" /> Convites recebidos</h3>
         <div v-for="c in convites" :key="c.id" class="card convite">
           <div class="grow">
             <b class="no-i18n">{{ c.manejoNome || 'Caçada' }}</b>
@@ -92,7 +92,7 @@ onMounted(carregar)
         </div>
       </template>
 
-      <h3 class="sec">🔴 Abertas</h3>
+      <h3 class="sec"><Icone nome="alerta" /> Abertas</h3>
       <div v-if="!abertas.length" class="card">
         <div class="meta">Nenhuma caçada aberta.</div>
       </div>

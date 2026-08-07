@@ -72,6 +72,40 @@
   <symbol id="js-e16" viewBox="0 0 24 24"><path d="M20 12H5"/><path d="m11 6-6 6 6 6"/></symbol>
   <symbol id="js-e15" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="js-h1" viewBox="0 0 24 24"><path d="M5.5 20.5V12a6.5 6.5 0 0 1 13 0v8.5h-3V12a3.5 3.5 0 0 0-7 0v8.5z"/><circle cx="7" cy="14" r=".45"/><circle cx="7" cy="17.2" r=".45"/><circle cx="17" cy="14" r=".45"/><circle cx="17" cy="17.2" r=".45"/></symbol>
+
+  <!-- ── Acrescentados na migração Nuxt ──────────────────────────────────
+       Mesmo traço dos 61 originais: viewBox 24×24, sem preenchimento,
+       stroke-width 1.6 e pontas arredondadas (o CSS aplica). Existem porque
+       o app passou a precisar deles e emoji não é ícone: não herda cor, não
+       acompanha o tamanho e muda de desenho em cada sistema. -->
+
+  <symbol id="js-n1" viewBox="0 0 24 24"><path d="M12 3.6 21.2 19a1.4 1.4 0 0 1-1.2 2.1H4a1.4 1.4 0 0 1-1.2-2.1z"/><path d="M12 9.6v4.6"/><path d="M12 17.4h.01"/></symbol>
+
+  <symbol id="js-n2" viewBox="0 0 24 24"><path d="M3.4 12.6c0-3.4 3.3-6 7.4-6 1.6 0 3 .4 4.2 1l2.4-1.5-.5 2.7c1.4 1 2.3 2.3 2.3 3.8 0 3.3-3.3 6-7.4 6-1.1 0-2.2-.2-3.1-.6L5 19.6l.9-2.6c-1.5-1.1-2.5-2.6-2.5-4.4z"/><path d="M8.6 11.6h.01M13.8 11.6h.01"/><path d="M17.6 13.9c.9-.5 1.4-1.2 1.4-1.2"/><path d="M9.6 6.9 8.4 4.6M13.4 7 15 4.8"/></symbol>
+
+  <symbol id="js-n3" viewBox="0 0 24 24"><path d="M4 9.5h16v10a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5z"/><path d="M3 9.5 4.8 4.3A1.5 1.5 0 0 1 6.2 3.3h11.6a1.5 1.5 0 0 1 1.4 1L21 9.5"/><path d="M9.2 21v-5.4h5.6V21"/></symbol>
+
+  <symbol id="js-n4" viewBox="0 0 24 24"><path d="M4.5 20.5c0-7.5 4.4-12.8 15-14.4.8 8.6-4.2 14.4-11.2 14.4z"/><path d="M4.5 20.5c2.6-4.4 6.2-7.6 10.4-9.6"/></symbol>
+
+  <symbol id="js-n5" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20.4a6.2 6.2 0 0 1 12.4 0"/><path d="M16.2 5.2a3.2 3.2 0 0 1 0 6"/><path d="M18 14.6a6.2 6.2 0 0 1 3.2 5.8"/></symbol>
+
+  <symbol id="js-n6" viewBox="0 0 24 24"><path d="M5.4 21V3.4"/><path d="M5.4 4.4c4.2-1.8 8.4 1.8 12.6 0v8.8c-4.2 1.8-8.4-1.8-12.6 0z"/></symbol>
+
+  <symbol id="js-n7" viewBox="0 0 24 24"><rect x="3.2" y="10.2" width="17.6" height="10.6" rx="1.6"/><path d="M2.2 6.6h19.6v3.6H2.2z"/><path d="M12 6.6v14.2"/><path d="M12 6.6C10.4 4 8.8 3 7.6 3a2.2 2.2 0 0 0 0 4.4h4.4"/><path d="M12 6.6C13.6 4 15.2 3 16.4 3a2.2 2.2 0 0 1 0 4.4H12"/></symbol>
+
+  <symbol id="js-n8" viewBox="0 0 24 24"><path d="M13.4 2.6 4.8 13.4h6L9.8 21.4l9-11.2h-6.2z"/></symbol>
+
+  <symbol id="js-n9" viewBox="0 0 24 24"><path d="m15.4 3.6 5 5"/><path d="m17.4 5.6-9.6 9.6-3.4 5.2 5.2-3.4 9.6-9.6z"/><path d="m10.6 8.4 5 5"/><path d="M8.4 10.6 13 15.2"/></symbol>
+
+  <symbol id="js-n10" viewBox="0 0 24 24"><path d="M14.9 6.3a4.4 4.4 0 0 0 5.9 5.6l-9 9a2.5 2.5 0 0 1-3.6-3.5l9-9z"/><path d="M14.9 6.3 12 3.4a4.4 4.4 0 0 0-5.6 5.9L9.3 12"/></symbol>
+
+  <symbol id="js-n11" viewBox="0 0 24 24"><path d="M12 21.4s6.8-6.1 6.8-11a6.8 6.8 0 1 0-13.6 0c0 4.9 6.8 11 6.8 11z"/><circle cx="12" cy="10.2" r="2.4"/></symbol>
+
+  <symbol id="js-n12" viewBox="0 0 24 24"><path d="M5.4 3v4.6a4.4 4.4 0 0 0 8.8 0V3"/><path d="M4 3h2.8M12.8 3h2.8"/><path d="M9.8 12v2.6a4.6 4.6 0 0 0 9.2 0v-1.2"/><circle cx="19" cy="11.4" r="2"/></symbol>
+
+  <symbol id="js-n13" viewBox="0 0 24 24"><path d="M7.4 3.6h9.2v5.2a4.6 4.6 0 0 1-9.2 0z"/><path d="M7.4 5h-2.6a2.4 2.4 0 0 0 2.6 4.2"/><path d="M16.6 5h2.6a2.4 2.4 0 0 1-2.6 4.2"/><path d="M12 13.4v3.4"/><path d="M8.4 20.6h7.2l-.8-3.8H9.2z"/></symbol>
+
+  <symbol id="js-n14" viewBox="0 0 24 24"><path d="M3.4 7.4h11a6 6 0 0 1 0 12H9"/><path d="m7.4 3.4-4 4 4 4"/></symbol>
     </defs>
   </svg>
 </template>

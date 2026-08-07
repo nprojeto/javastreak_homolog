@@ -22,9 +22,9 @@ export interface Transporte {
 }
 
 const CASAS = [
-  { k: 'garagem', rot: 'Garagem', ic: 'garagem', emoji: '🚗' },
-  { k: 'marina', rot: 'Marina', ic: 'marina', emoji: '🛥️' },
-  { k: 'haras', rot: 'Haras', ic: 'ferradura', emoji: '🐎' }
+  { k: 'garagem', rot: 'Garagem', ic: 'garagem' },
+  { k: 'marina', rot: 'Marina', ic: 'marina' },
+  { k: 'haras', rot: 'Haras', ic: 'ferradura' }
 ] as const
 type Casa = (typeof CASAS)[number]['k']
 
@@ -165,19 +165,21 @@ onMounted(carregar)
       </div>
 
       <div v-if="!daCasa.length && !form" class="card vazio">
-        <div class="big">{{ CASAS.find((c) => c.k === casa)?.emoji }}</div>
+        <div class="big"><Icone :nome="CASAS.find((c) => c.k === casa)?.ic || 'transporte'" :px="42" /></div>
         Nada cadastrado aqui ainda.
       </div>
 
       <div v-for="t in daCasa" :key="t.id" class="card item">
         <img v-if="t.fotoUrl" :src="String(t.fotoUrl)" class="thumb" alt="">
-        <div v-else class="ic">{{ CASAS.find((c) => c.k === casa)?.emoji }}</div>
+        <div v-else class="ic">
+          <Icone :nome="CASAS.find((c) => c.k === casa)?.ic || 'transporte'" :px="26" />
+        </div>
         <NuxtLink :to="{ path: '/transporte', query: { id: t.id } }" class="grow">
           <b class="no-i18n">{{ t.identificacao || t.tipo }}</b>
           <div class="meta"><span class="pill">{{ t.tipo }}</span></div>
           <div v-if="t.obs" class="meta no-i18n">{{ t.obs }}</div>
         </NuxtLink>
-        <button class="ib" title="Excluir" @click="excluir(t)">🗑️</button>
+        <button class="ib" title="Excluir" @click="excluir(t)"><Icone nome="excluir" /></button>
       </div>
 
       <BotaoCriar
@@ -199,7 +201,7 @@ onMounted(carregar)
 .subnav button {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 10px 6px; border-radius: 12px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-size: 12.5px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-size: 12.5px; color: var(--txt);
 }
 .subnav button.active { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); font-weight: 700; }
 .subnav .num { font-size: 10.5px; background: var(--verde); color: #fff; border-radius: 999px; padding: 0 6px; }

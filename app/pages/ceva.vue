@@ -135,7 +135,7 @@ async function salvar() {
             {{ p.nome }}{{ p.regular ? '' : (p.temLimite ? ' (irregular)' : ' (sem limite)') }}
           </option>
         </select>
-        <div v-if="avisoProp" class="meta ruim aviso">⚠️ {{ avisoProp }}</div>
+        <div v-if="avisoProp" class="meta ruim aviso"><Icone nome="alerta" /> {{ avisoProp }}</div>
 
         <label for="c_tipo">Tipo de ponto *</label>
         <select id="c_tipo" v-model="tipo">
@@ -144,7 +144,7 @@ async function salvar() {
 
         <BotaoGps v-model:lat="lat" v-model:lng="lng" />
         <div v-if="foraDoLimite" class="meta ruim aviso">
-          ⚠️ Este ponto está fora do limite desenhado de {{ prop?.nome }}
+          <Icone nome="alerta" /> Este ponto está fora do limite desenhado de {{ prop?.nome }}
         </div>
 
         <label for="c_obs">Observações</label>

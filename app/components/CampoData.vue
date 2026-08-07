@@ -57,7 +57,7 @@ function escolheu(e: Event) {
       @input="digitou"
     >
     <button type="button" class="data-btn" title="Escolher no calendário" @click="abrirCalendario">
-      📅
+      <Icone nome="calendario" />
     </button>
     <input ref="nativo" type="date" class="data-nativo" @change="escolheu">
   </div>
@@ -67,7 +67,7 @@ function escolheu(e: Event) {
 .data-wrap { position: relative; display: flex; gap: 6px; align-items: stretch; }
 .data-txt { flex: 1; }
 .data-btn {
-  flex: none; width: 46px; border: 1px solid var(--linha); background: #fff;
+  flex: none; width: 46px; border: 1px solid var(--linha); background: var(--card);
   border-radius: 12px; cursor: pointer; font-size: 18px;
 }
 .data-nativo { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }

@@ -70,11 +70,11 @@ async function copiarChave() {
 }
 .ts-card {
   display: flex; align-items: center; gap: 6px; flex: none;
-  background: #fff; border: 1px solid var(--linha); border-radius: 10px;
+  background: var(--card); border: 1px solid var(--linha); border-radius: 10px;
   padding: 6px 10px; font-size: 12px; color: var(--txt);
   text-decoration: none; cursor: pointer; line-height: 1.25;
 }
-.ts-card .rot { color: #8a8577; font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px; }
+.ts-card .rot { color: var(--osso-2); font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px; }
 .ts-card b { font-size: 12.5px; }
 .chave b { font-family: monospace; letter-spacing: .5px; }
 </style>

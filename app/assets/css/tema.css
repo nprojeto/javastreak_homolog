@@ -1,0 +1,323 @@
+/* ════════════════════════════════════════════════════════════════════════
+   JAVASTREAK — TEMA DE CAMPO
+   ════════════════════════════════════════════════════════════════════════
+
+   Direção: carvão como base, laranja como ÚNICO acento forte, títulos
+   condensados em caixa alta. É a linguagem visual de produto outdoor — e
+   encaixa no JavaStreak, que já nasceu com laranja e a silhueta do javali.
+
+   ⚠️ Este arquivo entra DEPOIS do legado.css e só redefine tokens e
+   superfícies. Não reescreve as 1.070 linhas herdadas: o que estava certo
+   continua valendo, e a pele muda por cima. Se um dia o tema claro voltar,
+   basta não carregar este arquivo.
+
+   ⚠️ O verde deixou de ser a cor de marca e passou a ser SINAL: só aparece
+   em "em dia", "regular", "aceito". Antes ele disputava atenção com o
+   laranja em toda tela, e nada se destacava.
+   ──────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Base */
+  --carvao:      #16150F;   /* fundo da aplicação */
+  --carvao-2:    #201E17;   /* superfície: cartão, campo */
+  --carvao-3:    #2B2820;   /* superfície elevada: aba ativa, cabeçalho */
+  --linha-esc:   #3A362B;   /* divisória */
+
+  /* Acento — um só */
+  --laranja:     #E8552B;
+  --laranja-cl:  #FF7A1A;
+  --laranja-esc: #B23F1C;
+
+  /* Texto */
+  --osso:        #EDE7D6;   /* texto principal */
+  --osso-2:      #A49C86;   /* texto de apoio */
+
+  /* Sinais */
+  --verde:       #5E8C4A;
+  --verde-claro: #2C3D24;
+  --verde-esc:   #8FBF74;
+  --danger:      #D9534F;
+  --ok:          #7FB069;
+  --alerta:      #D9A441;
+
+  /* Reescreve os nomes do legado, para o CSS antigo herdar o tema. */
+  --areia:  var(--carvao);
+  --card:   var(--carvao-2);
+  --txt:    var(--osso);
+  --txt2:   var(--osso-2);
+  --linha:  var(--linha-esc);
+  --terra:  var(--laranja-esc);
+  --sombra: 0 2px 14px rgba(0, 0, 0, .45);
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+
+html, body {
+  background: var(--carvao);
+  color: var(--osso);
+}
+
+/**
+ * Assinatura: curvas de nível ao fundo, quase imperceptíveis. O app é sobre
+ * território — limite desenhado, rota, ponto dentro da área. A topografia diz
+ * isso sem ocupar espaço nem competir com o conteúdo.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .5;
+  background:
+    radial-gradient(ellipse 62% 45% at 50% 0%, rgba(232, 85, 43, .10), transparent 70%),
+    repeating-radial-gradient(circle at 18% 28%,
+      transparent 0 38px, rgba(237, 231, 214, .028) 38px 39px),
+    repeating-radial-gradient(circle at 82% 74%,
+      transparent 0 46px, rgba(237, 231, 214, .022) 46px 47px);
+}
+
+/* ── Tipografia: display condensada carrega a personalidade ─────────────── */
+
+h1, h2, h3, h4,
+.btn, .sb-item, .atalho, .pill, .kpi span, .rot, .subnav button, .tabs button,
+.abas button, .modos button, .subsub button, .pl-per button, .lang-sel button {
+  font-family: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: .04em;
+}
+
+h1, h2, h3, h4 {
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--osso);
+}
+h2 { font-size: 1.45rem; letter-spacing: .05em; }
+h3 { font-size: 1.12rem; }
+h4 { font-size: .95rem; color: var(--laranja-cl); }
+
+label {
+  font-family: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  font-size: .82rem;
+  color: var(--osso-2);
+}
+
+.meta { color: var(--osso-2); }
+
+/* ── Superfícies: sem caixa dentro de caixa ─────────────────────────────── */
+
+/**
+ * O cartão perdeu a borda e o branco. No tema claro ele era um retângulo
+ * branco sobre areia — cada bloco virava um quadrado destacado, e a tela
+ * inteira parecia uma pilha de caixas. Aqui ele é só uma superfície um pouco
+ * mais clara que o fundo, separada por respiro.
+ */
+.card {
+  background: var(--carvao-2);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: none;
+  color: var(--osso);
+}
+.card + .card { margin-top: 12px; }
+
+/* Bloco dentro de bloco: fundo nenhum, só um fio à esquerda. */
+.card .card,
+.ficha, .aut, .bloco, .den, .clima, .livre, .resp, .termo-box {
+  background: transparent;
+  border: 0;
+  border-left: 2px solid var(--linha-esc);
+  border-radius: 0;
+  padding-left: 12px;
+}
+.card .card { margin-top: 12px; }
+
+/* Cartão com barra de cor no topo vira barra fina à esquerda. */
+.hero, .cortesia, .obra, .travado, .venc, .parede, .idade, .ctf, .encerrar,
+.alerta, .indic, .bloqueado {
+  border-top: 0;
+  border-left: 3px solid var(--laranja);
+}
+.hero { border-left-color: var(--laranja); }
+.ctf, .encerrar, .bloqueado { border-left-color: var(--danger); }
+.obra, .travado, .venc, .idade { border-left-color: var(--alerta); }
+
+/* ── Campos ─────────────────────────────────────────────────────────────── */
+
+input, select, textarea {
+  background: var(--carvao);
+  border: 1px solid var(--linha-esc);
+  color: var(--osso);
+  border-radius: 10px;
+}
+input::placeholder, textarea::placeholder { color: #6F6857; }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--laranja);
+  box-shadow: 0 0 0 3px rgba(232, 85, 43, .18);
+  outline: none;
+}
+select option { background: var(--carvao-2); color: var(--osso); }
+
+/* ── Botões ─────────────────────────────────────────────────────────────── */
+
+.btn {
+  background: var(--laranja);
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.btn:hover { background: var(--laranja-cl); }
+.btn:active { background: var(--laranja-esc); }
+.btn.sec {
+  background: transparent;
+  color: var(--osso);
+  border: 1px solid var(--linha-esc);
+}
+.btn.sec:hover { border-color: var(--laranja); color: var(--laranja-cl); }
+.btn.sec .ic-svg { stroke: var(--laranja-cl); }
+.btn.danger { background: var(--danger); }
+.btn:disabled { opacity: .45; cursor: default; }
+
+/* Botão de ícone: some o quadrado, fica só o traço. */
+.ib { color: var(--osso-2); border-radius: 8px; }
+.ib:hover { color: var(--laranja-cl); background: rgba(255, 255, 255, .04); }
+
+/* ── Abas, chips e selos ────────────────────────────────────────────────── */
+
+.subnav button, .tabs button, .abas button, .modos button,
+.subsub button, .pl-per button, .lang-sel button, .segbar button,
+.tipo-conta button, .chip, .atalho {
+  background: transparent;
+  border: 1px solid var(--linha-esc);
+  color: var(--osso-2);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.subnav button.active, .tabs button.on, .abas button.on, .modos button.on,
+.subsub button.on, .pl-per button.on, .lang-sel button.on, .segbar button.on,
+.tipo-conta button.on, .chip.on, .atalho.on {
+  background: var(--carvao-3);
+  border-color: var(--laranja);
+  color: var(--laranja-cl);
+}
+.subnav button.active .ic-svg, .tipo-conta button.on .ic-svg,
+.atalho.on .ic-svg { stroke: var(--laranja-cl); }
+
+.pill {
+  background: var(--carvao-3);
+  color: var(--osso-2);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+.pill.ok, .pill.viva, .pill.pago, .doc-tag.ok {
+  background: var(--verde-claro);
+  color: var(--verde-esc);
+}
+.pill.warn, .pill.pendente, .doc-tag.perto {
+  background: #3A2E13;
+  color: var(--alerta);
+}
+.pill.dan, .doc-tag.venc { background: #3A1E1C; color: var(--danger); }
+
+/* ── Moldura ────────────────────────────────────────────────────────────── */
+
+.topo, .sidebar {
+  background: var(--carvao-3);
+  border-color: var(--linha-esc);
+}
+/* Fio laranja separando o cabeçalho: o detalhe que amarra a marca. */
+.topo { box-shadow: inset 0 -2px 0 var(--laranja); }
+.topstrip, .atalhos { background: var(--carvao); border-color: var(--linha-esc); }
+.ts-card { background: var(--carvao-2); border-color: var(--linha-esc); color: var(--osso); }
+.ts-card .rot { color: var(--osso-2); }
+.ts-card b { color: var(--laranja-cl); }
+
+.sb-item { color: var(--osso-2); }
+.sb-item:hover { background: rgba(255, 255, 255, .04); }
+.sb-item.active { background: var(--carvao); color: var(--laranja-cl); }
+.sb-item.destaque { color: var(--laranja); }
+.sb-nome { color: var(--osso); }
+.sb-plano { background: var(--carvao-3); color: var(--osso-2); }
+.sb-plano.pago { background: var(--laranja); color: #fff; }
+
+/* ── Tabelas e barras ───────────────────────────────────────────────────── */
+
+.rel-tab th, .lim th { background: var(--carvao-3); color: var(--osso); }
+.rel-tab th, .rel-tab td, .lim th, .lim td { border-color: var(--linha-esc); }
+.kpi { background: var(--carvao-3); }
+.kpi b { color: var(--laranja-cl); }
+.barra { background: var(--linha-esc); }
+.barra span { background: var(--laranja); }
+
+/* ── Mapa ───────────────────────────────────────────────────────────────── */
+
+.mapa { border-color: var(--linha-esc); }
+.js-camadas button { background: var(--carvao-2); color: var(--osso); border-color: var(--linha-esc); }
+.js-camadas button.on { background: var(--laranja); border-color: var(--laranja); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: var(--carvao-2); color: var(--osso);
+}
+
+/* ── Ícones ─────────────────────────────────────────────────────────────── */
+
+.ic-svg { stroke: var(--laranja-cl); }
+.topo .ic-svg, .btn:not(.sec) .ic-svg { stroke: #fff; }
+
+/* Ícone grande de estado vazio: some para o fundo, não compete com o texto. */
+.vazio .big .ic-svg, .obra .big .ic-svg {
+  stroke: var(--linha-esc);
+  stroke-width: 1.2;
+}
+
+/* ── Impressão: o tema escuro não vai para o papel ──────────────────────── */
+
+@media print {
+  html, body { background: #fff !important; color: #111 !important; }
+  body::before { display: none !important; }
+  .card { background: #fff !important; color: #111 !important; }
+  h1, h2, h3, h4 { color: #111 !important; }
+  .meta { color: #444 !important; }
+  .rel-tab th { background: #eee !important; color: #111 !important; }
+  .rel-tab th, .rel-tab td { border-color: #999 !important; }
+}
+
+/* ── Detalhes que denunciam tema escuro mal feito ───────────────────────── */
+
+/* Sem isto, o navegador desenha barra de rolagem clara e campos com o
+   preenchimento automático em branco — dois retângulos brancos no meio do
+   carvão. */
+:root { color-scheme: dark; }
+
+::selection { background: rgba(232, 85, 43, .35); color: #fff; }
+
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--osso);
+  -webkit-box-shadow: 0 0 0 1000px var(--carvao) inset;
+  caret-color: var(--osso);
+}
+
+/* Foco visível pelo teclado — piso de qualidade, não enfeite. */
+a:focus-visible, button:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--laranja-cl);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ── Acento por marca ───────────────────────────────────────────────────
+   O laranja do cliente é um pouco mais quente que o do JavaStreak. Fica
+   preso ao atributo `data-marca` do <html>, escrito pelo plugin de marca —
+   assim a troca continua sendo uma linha só no nuxt.config.ts.            */
+html[data-marca='meateater'] {
+  --laranja:     #FF6319;
+  --laranja-cl:  #FF7F42;
+  --laranja-esc: #C4460D;
+}

@@ -108,10 +108,11 @@ function mudarMes(delta: number) {
   diaEscolhido.value = ''
 }
 
+/** Escopo do item → ícone do sistema. */
 function icone(escopo: string) {
-  return escopo === 'cao' ? '🐕'
-    : escopo === 'cavalo' ? '🐎'
-      : escopo === 'documento' ? '📄' : '🚗'
+  return escopo === 'cao' ? 'canil'
+    : escopo === 'cavalo' ? 'ferradura'
+      : escopo === 'documento' ? 'documentos' : 'transporte'
 }
 
 function situacao(prox?: string) {
@@ -141,7 +142,7 @@ onMounted(async () => {
     <div v-else-if="itens === null" class="card"><div class="meta">Carregando agenda…</div></div>
 
     <div v-else-if="!lista.length" class="card vazio">
-      <div class="big">📅</div>
+      <div class="big"><Icone nome="calendario" /></div>
       Nada na agenda ainda.<br>
       <span class="meta">
         Registre vacinas e retornos nos cães e nos cavalos, e os vencimentos
@@ -180,10 +181,10 @@ onMounted(async () => {
       </div>
 
       <template v-if="diaEscolhido">
-        <h3 class="sec">📆 {{ dataBR(diaEscolhido) }}</h3>
+        <h3 class="sec"><Icone nome="calendario" /> {{ dataBR(diaEscolhido) }}</h3>
         <div v-if="!doDia.length" class="card"><div class="meta">Nenhum evento neste dia.</div></div>
         <div v-for="i in doDia" :key="i.id" class="card item">
-          <span class="ic">{{ icone(i.escopo) }}</span>
+          <span class="ic"><Icone :nome="icone(i.escopo)" :px="20" /></span>
           <div class="txt">
             <b>{{ i.tipo || 'Item' }}</b>
             <div class="meta">{{ i.animalNome }}{{ i.obs ? ' · ' + i.obs : '' }}</div>
@@ -196,9 +197,9 @@ onMounted(async () => {
 
       <template v-else>
         <template v-if="atrasadas.length">
-          <h3 class="sec dan">⚠️ Atrasadas</h3>
+          <h3 class="sec dan"><Icone nome="alerta" /> Atrasadas</h3>
           <div v-for="i in atrasadas" :key="i.id" class="card item">
-            <span class="ic">{{ icone(i.escopo) }}</span>
+            <span class="ic"><Icone :nome="icone(i.escopo)" :px="20" /></span>
             <div class="txt">
               <b>{{ i.tipo || 'Item' }}</b>
               <div class="meta">{{ i.animalNome }}{{ i.obs ? ' · ' + i.obs : '' }}</div>
@@ -208,9 +209,9 @@ onMounted(async () => {
         </template>
 
         <template v-if="proximas.length">
-          <h3 class="sec">📌 Próximas</h3>
+          <h3 class="sec"><Icone nome="pino" /> Próximas</h3>
           <div v-for="i in proximas" :key="i.id" class="card item">
-            <span class="ic">{{ icone(i.escopo) }}</span>
+            <span class="ic"><Icone :nome="icone(i.escopo)" :px="20" /></span>
             <div class="txt">
               <b>{{ i.tipo || 'Item' }}</b>
               <div class="meta">{{ i.animalNome }}{{ i.obs ? ' · ' + i.obs : '' }}</div>
@@ -222,7 +223,7 @@ onMounted(async () => {
         <template v-if="semData.length">
           <h3 class="sec cinza">Histórico recente</h3>
           <div v-for="i in semData" :key="i.id" class="card item">
-            <span class="ic">{{ icone(i.escopo) }}</span>
+            <span class="ic"><Icone :nome="icone(i.escopo)" :px="20" /></span>
             <div class="txt">
               <b>{{ i.tipo || 'Item' }}</b>
               <div class="meta">{{ i.animalNome }}{{ i.descricao ? ' · ' + i.descricao : '' }}</div>
@@ -243,7 +244,7 @@ onMounted(async () => {
 .cal-topo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .ib { border: 0; background: none; font-size: 22px; cursor: pointer; color: var(--verde); padding: 0 10px; }
 .cal-sem, .cal-grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.cal-sem span { text-align: center; font-size: 11px; color: #8a8577; padding-bottom: 4px; }
+.cal-sem span { text-align: center; font-size: 11px; color: var(--osso-2); padding-bottom: 4px; }
 .cal-dia {
   aspect-ratio: 1; border: 0; background: none; border-radius: 9px;
   font-size: 12.5px; cursor: pointer; color: var(--txt);
@@ -251,26 +252,26 @@ onMounted(async () => {
 .cal-dia.fora { opacity: .3; }
 .cal-dia.hoje { outline: 1.5px solid var(--verde); }
 .cal-dia.sel { background: var(--verde); color: #fff; font-weight: 700; }
-.cal-dia.atrasada { background: #ffe0dc; font-weight: 700; }
+.cal-dia.atrasada { background: #3A1E1C; font-weight: 700; }
 .cal-dia.proxima { background: var(--verde-claro); font-weight: 700; }
 .cal-dia.sel.atrasada, .cal-dia.sel.proxima { background: var(--verde); color: #fff; }
 
 .dash { display: flex; gap: 8px; margin: 10px 0; }
-.kpi { flex: 1; background: #fff; border: 1px solid var(--linha); border-radius: 12px; padding: 10px; text-align: center; }
+.kpi { flex: 1; background: var(--card); border: 1px solid var(--linha); border-radius: 12px; padding: 10px; text-align: center; }
 .kpi b { display: block; font-size: 20px; }
-.kpi span { font-size: 11.5px; color: #7a7466; }
+.kpi span { font-size: 11.5px; color: var(--osso-2); }
 .dan { color: var(--danger); }
 
 .sec { margin: 14px 4px 6px; font-size: 15px; }
-.sec.cinza { color: #8a8577; }
+.sec.cinza { color: var(--osso-2); }
 
 .item { display: flex; align-items: center; gap: 10px; }
-.item .ic { font-size: 20px; flex: none; }
+.item .ic { display: flex; flex: none; }
 .item .txt { flex: 1; min-width: 0; }
 .item .meta { margin: 2px 0 0; }
 .pill { flex: none; font-size: 11px; padding: 3px 9px; border-radius: 999px; background: var(--linha); }
-.pill.atrasada { background: #ffdad3; color: #a33; }
-.pill.hoje { background: #ffe9c7; color: #8a5a10; }
+.pill.atrasada { background: #3A1E1C; color: var(--danger); }
+.pill.hoje { background: #3A2E13; color: var(--alerta); }
 .pill.proxima { background: var(--verde-claro); color: var(--verde-esc); }
-.quando { font-size: 11.5px; color: #8a8577; flex: none; }
+.quando { font-size: 11.5px; color: var(--osso-2); flex: none; }
 </style>

@@ -136,10 +136,10 @@ onMounted(carregar)
       <div class="card cab">
         <img v-if="ceva.fotoUrl" :src="String(ceva.fotoUrl)" class="thumb" alt="">
         <div class="grow">
-          <h3 class="no-i18n">🌽 {{ ceva.nome || 'Ceva' }}</h3>
+          <h3 class="no-i18n"><Icone nome="ceva" /> {{ ceva.nome || 'Ceva' }}</h3>
           <div class="meta"><span class="pill">{{ ceva.tipo }}</span></div>
         </div>
-        <NuxtLink :to="{ path: '/ceva', query: { id } }" class="ib" title="Editar">✏️</NuxtLink>
+        <NuxtLink :to="{ path: '/ceva', query: { id } }" class="ib" title="Editar"><Icone nome="editar" /></NuxtLink>
       </div>
 
       <ClientOnly>
@@ -156,8 +156,8 @@ onMounted(carregar)
       </div>
 
       <div class="tabs">
-        <button :class="{ on: aba === 'alimento' }" @click="aba = 'alimento'">🌽 Alimento</button>
-        <button :class="{ on: aba === 'nivel' }" @click="aba = 'nivel'">📊 Nível</button>
+        <button :class="{ on: aba === 'alimento' }" @click="aba = 'alimento'"><Icone nome="ceva" /> Alimento</button>
+        <button :class="{ on: aba === 'nivel' }" @click="aba = 'nivel'"><Icone nome="grafico" /> Nível</button>
       </div>
 
       <!-- ───────── ALIMENTO ───────── -->
@@ -204,7 +204,7 @@ onMounted(carregar)
               <template v-if="a.obs"> · {{ a.obs }}</template>
             </div>
           </div>
-          <button class="ib" title="Excluir" @click="excluir('alimento', a.id)">🗑️</button>
+          <button class="ib" title="Excluir" @click="excluir('alimento', a.id)"><Icone nome="excluir" /></button>
         </div>
 
         <button v-if="!fAlim" class="btn" @click="fAlim = true">＋ Registrar alimento</button>
@@ -243,7 +243,7 @@ onMounted(carregar)
             {{ dataBR(n.data) }} — <b>{{ n.percentual }}%</b>
             <template v-if="n.obs"> · {{ n.obs }}</template>
           </div>
-          <button class="ib" title="Excluir" @click="excluir('nivel', n.id)">🗑️</button>
+          <button class="ib" title="Excluir" @click="excluir('nivel', n.id)"><Icone nome="excluir" /></button>
         </div>
 
         <button v-if="!fNivel" class="btn" @click="fNivel = true">＋ Registrar nível</button>
@@ -263,7 +263,7 @@ h3 { margin: 0 0 4px; }
 .tabs { display: flex; gap: 6px; margin: 10px 0; }
 .tabs button {
   flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--txt);
 }
 .tabs button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 .linha { display: flex; align-items: center; gap: 8px; }

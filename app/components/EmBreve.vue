@@ -9,7 +9,7 @@ defineProps<{ titulo: string; lote: string; descricao: string }>()
 
 <template>
   <div class="card obra">
-    <div class="big">🚧</div>
+    <div class="big"><Icone nome="ferramenta" /></div>
     <h2>{{ titulo }}</h2>
     <p>{{ descricao }}</p>
     <div class="meta">Chega no <b>{{ lote }}</b> da migração.</div>

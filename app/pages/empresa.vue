@@ -71,13 +71,13 @@ onMounted(carregar)
     <template v-else>
       <div v-if="e.bloqueado === 'Sim'" class="card bloqueado">
         <div class="meta">
-          🚩 Sua empresa está bloqueada por denúncias e está em análise.
+          <Icone nome="denuncia" /> Sua empresa está bloqueada por denúncias e está em análise.
         </div>
       </div>
 
       <div class="card">
         <h3>Minha empresa</h3>
-        <div v-if="e.visitas" class="meta">👁️ {{ e.visitas }} visita(s) ao seu perfil</div>
+        <div v-if="e.visitas" class="meta"><Icone nome="ver" /> {{ e.visitas }} visita(s) ao seu perfil</div>
 
         <label for="e_nome">Nome da empresa *</label>
         <input id="e_nome" v-model="e.nome" class="no-i18n">
@@ -144,6 +144,6 @@ h3 { margin: 0 0 6px; }
 .menu-card { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--txt); }
 .menu-card .txt { flex: 1; }
 .menu-card h3 { margin: 0 0 2px; font-size: 15px; }
-.menu-card p { margin: 0; font-size: 12.5px; color: #7a7466; }
+.menu-card p { margin: 0; font-size: 12.5px; color: var(--osso-2); }
 .chev { font-size: 22px; color: var(--linha); }
 </style>

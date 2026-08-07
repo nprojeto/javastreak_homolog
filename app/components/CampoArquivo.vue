@@ -61,7 +61,7 @@ async function abrir() {
   <input ref="input" type="file" accept="application/pdf,image/*" @change="escolheu">
 
   <div v-if="props.temArquivo && !dados" class="anexo">
-    <span>📎</span>
+    <span><Icone nome="link" /></span>
     <span class="nome no-i18n" :title="props.arquivoNome">{{ props.arquivoNome || 'arquivo' }}</span>
     <button type="button" class="btn sm sec" :disabled="abrindo" @click="abrir">
       {{ abrindo ? '…' : 'Abrir' }}
@@ -77,7 +77,7 @@ async function abrir() {
 <style scoped>
 .anexo {
   display: flex; align-items: center; gap: 8px; margin: 6px 0;
-  padding: 8px 10px; border: 1px solid var(--linha); border-radius: 10px; background: #fffdf8;
+  padding: 8px 10px; border: 1px solid var(--linha); border-radius: 10px; background: var(--carvao-3);
 }
 .anexo .nome { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .anexo .btn { width: auto; margin: 0; flex: none; }

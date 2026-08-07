@@ -185,7 +185,7 @@ async function salvar() {
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
 
     <div v-else-if="!manejoId" class="card vazio">
-      <div class="big">🎯</div>
+      <div class="big"><Icone nome="pino" /></div>
       O abate pertence a uma caçada. Abra a caçada em que ele aconteceu e
       registre por lá.
       <NuxtLink to="/cacadas" class="btn">Ver minhas caçadas</NuxtLink>
@@ -236,7 +236,7 @@ async function salvar() {
         <h3>Condições</h3>
         <div class="modos">
           <button :class="{ on: modo === 'passado' }" @click="modo = 'passado'">
-            🗓️ Aconteceu antes
+            <Icone nome="calendario" />️ Aconteceu antes
           </button>
           <button :class="{ on: modo === 'tempoReal' }" @click="modo = 'tempoReal'">
             ⏱ Agora (tempo real)
@@ -257,7 +257,7 @@ async function salvar() {
             </div>
           </div>
           <div v-else class="meta ruim">
-            ⚠️ Não foi possível consultar o tempo. Use o modo "Aconteceu antes"
+            <Icone nome="alerta" /> Não foi possível consultar o tempo. Use o modo "Aconteceu antes"
             ou tente de novo.
             <button class="btn sm sec" @click="verClima">Tentar de novo</button>
           </div>
@@ -331,7 +331,7 @@ async function salvar() {
         <template v-if="mostraLocal">
           <BotaoGps v-model:lat="lat" v-model:lng="lng" />
         </template>
-        <div v-else class="meta local">📍 O local do abate é o da ceva escolhida.</div>
+        <div v-else class="meta local"><Icone nome="pino" /> O local do abate é o da ceva escolhida.</div>
 
         <label class="check">
           <input v-model="amostra" type="checkbox">
@@ -369,10 +369,10 @@ h3 { margin: 0 0 8px; }
 .modos { display: flex; gap: 6px; margin-bottom: 10px; }
 .modos button {
   flex: 1; padding: 9px 6px; border-radius: 10px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
 }
 .modos button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
-.clima { border-left: 4px solid var(--verde); padding: 8px 10px; background: #fffdf8; border-radius: 8px; }
+.clima { border-left: 4px solid var(--verde); padding: 8px 10px; background: var(--carvao-3); border-radius: 8px; }
 .clima .meta { margin: 3px 0 0; }
 .clima .btn { width: auto; margin-top: 6px; }
 .local { margin: 8px 0; }

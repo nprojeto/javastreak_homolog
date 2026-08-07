@@ -108,8 +108,8 @@ onBeforeUnmount(() => { map?.remove(); map = null })
     <div ref="el" class="mapa" />
 
     <div class="acoes">
-      <button type="button" class="btn sec" @click="desfazer">↶ Desfazer</button>
-      <button type="button" class="btn sec" @click="limpar">🗑️ Limpar</button>
+      <button type="button" class="btn sec" @click="desfazer"><Icone nome="desfazer" /> Desfazer</button>
+      <button type="button" class="btn sec" @click="limpar"><Icone nome="excluir" /> Limpar</button>
     </div>
   </div>
 </template>
@@ -117,9 +117,9 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 <style scoped>
 .mapa { height: 50vh; min-height: 300px; border-radius: 12px; border: 1px solid var(--linha); }
 .dash { display: flex; gap: 8px; margin: 8px 0; }
-.kpi { flex: 1; background: #fff; border: 1px solid var(--linha); border-radius: 12px; padding: 8px; text-align: center; }
+.kpi { flex: 1; background: var(--card); border: 1px solid var(--linha); border-radius: 12px; padding: 8px; text-align: center; }
 .kpi b { display: block; font-size: 17px; }
-.kpi span { font-size: 11px; color: #7a7466; }
+.kpi span { font-size: 11px; color: var(--osso-2); }
 .acoes { display: flex; gap: 8px; margin-top: 10px; }
 .acoes .btn { margin: 0; }
 </style>

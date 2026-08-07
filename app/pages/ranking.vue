@@ -60,13 +60,13 @@ onMounted(carregar)
           Troféus em disputa nas últimas 24 horas, ordenados pela média.
         </div>
         <div v-if="!dados.podeVotar" class="meta aviso">
-          ⚠️ Deixe a sua sala visível para poder avaliar os troféus dos outros.
+          <Icone nome="alerta" /> Deixe a sua sala visível para poder avaliar os troféus dos outros.
           <NuxtLink to="/trofeus">Abrir minha sala</NuxtLink>
         </div>
       </div>
 
       <div v-if="!dados.trofeus.length" class="card vazio">
-        <div class="big">🏆</div>
+        <div class="big"><Icone nome="trofeu" /></div>
         Nenhum troféu em disputa agora.
       </div>
 
@@ -80,7 +80,7 @@ onMounted(carregar)
               <div class="meta no-i18n">{{ t.autorNome || 'manejador' }}</div>
             </div>
             <div class="nota">
-              ⭐ {{ t.media ? t.media.toFixed(1).replace('.', ',') : '—' }}
+              <Icone nome="estrela" /> {{ t.media ? t.media.toFixed(1).replace('.', ',') : '—' }}
               <span class="meta">{{ t.votos }} voto(s)</span>
             </div>
           </div>

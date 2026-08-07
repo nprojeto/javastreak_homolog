@@ -82,7 +82,7 @@ function pegarGps() {
   </div>
   <div class="acoes">
     <button type="button" class="btn gps" :disabled="buscando" @click="pegarGps">
-      📍 {{ buscando ? 'Localizando…' : 'Minha localização' }}
+      <Icone nome="pino" /> {{ buscando ? 'Localizando…' : 'Minha localização' }}
     </button>
     <button
       v-if="temEndereco"
@@ -90,7 +90,7 @@ function pegarGps() {
       class="btn sec"
       :disabled="geocodando"
       @click="pelaAddress"
-    >🏠 {{ geocodando ? 'Buscando…' : 'Usar o endereço' }}</button>
+    ><Icone nome="canil" /> {{ geocodando ? 'Buscando…' : 'Usar o endereço' }}</button>
   </div>
   <div class="meta">
     O GPS precisa de HTTPS e de permissão do navegador. Sem ele, use o endereço

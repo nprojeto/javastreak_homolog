@@ -131,9 +131,9 @@ onMounted(carregar)
       </div>
 
       <div class="tabs">
-        <button :class="{ on: aba === 'abates' }" @click="aba = 'abates'">🐗 Abates</button>
-        <button :class="{ on: aba === 'amigos' }" @click="aba = 'amigos'">👥 Amigos</button>
-        <button :class="{ on: aba === 'docs' }" @click="aba = 'docs'">📄 Documentação</button>
+        <button :class="{ on: aba === 'abates' }" @click="aba = 'abates'"><Icone nome="abate" /> Abates</button>
+        <button :class="{ on: aba === 'amigos' }" @click="aba = 'amigos'"><Icone nome="amigos" /> Amigos</button>
+        <button :class="{ on: aba === 'docs' }" @click="aba = 'docs'"><Icone nome="documentos" /> Documentação</button>
       </div>
 
       <!-- ABATES -->
@@ -143,7 +143,7 @@ onMounted(carregar)
           <div class="meta">Nenhum abate registrado nesta caçada.</div>
         </div>
         <div v-for="a in abates || []" :key="a.id" class="card linha">
-          <span class="ic">🐗</span>
+          <span class="ic"><Icone nome="abate" /></span>
           <div class="grow">
             <b>{{ a.quantidade || 1 }} · {{ a.sexo || '—' }}</b>
             <div class="meta no-i18n">
@@ -161,7 +161,7 @@ onMounted(carregar)
           v-if="aberta"
           :to="{ path: '/abate', query: { manejo: id } }"
           class="btn"
-        >🐗 Registrar abate</NuxtLink>
+        ><Icone nome="abate" /> Registrar abate</NuxtLink>
       </template>
 
       <!-- AMIGOS -->
@@ -180,7 +180,7 @@ onMounted(carregar)
             {{ convidando ? 'Enviando…' : 'Convidar' }}
           </button>
           <div class="meta">
-            ⚠️ O CTF é conferido dos dois lados: quem convida e quem é convidado.
+            <Icone nome="alerta" /> O CTF é conferido dos dois lados: quem convida e quem é convidado.
           </div>
         </div>
 
@@ -193,7 +193,7 @@ onMounted(carregar)
             <span class="pill" :class="a.status === 'aceito' ? 'viva' : ''">{{ a.status }}</span>
             <div class="meta">{{ dataBR(a.criadoEm) }}</div>
           </div>
-          <button v-if="aberta" class="ib" title="Remover" @click="remover(a)">🗑️</button>
+          <button v-if="aberta" class="ib" title="Remover" @click="remover(a)"><Icone nome="excluir" /></button>
         </div>
       </template>
 
@@ -204,7 +204,7 @@ onMounted(carregar)
         </div>
         <template v-else>
           <div class="card">
-            <h3 class="no-i18n">🏞️ {{ prop.nome }}</h3>
+            <h3 class="no-i18n"><Icone nome="areas" /> {{ prop.nome }}</h3>
             <div v-if="prop.dono" class="meta no-i18n">Proprietário: {{ prop.dono }}</div>
             <div v-if="prop.car" class="meta no-i18n">CAR: {{ prop.car }}</div>
 
@@ -253,7 +253,7 @@ onMounted(carregar)
         </button>
       </div>
 
-      <NuxtLink to="/ibama" class="btn sec">📋 Fechamento IBAMA</NuxtLink>
+      <NuxtLink to="/ibama" class="btn sec"><Icone nome="arquivo" /> Fechamento IBAMA</NuxtLink>
       <NuxtLink to="/cacadas" class="btn sec">Voltar</NuxtLink>
     </template>
   </div>
@@ -267,13 +267,13 @@ h3 { margin: 0 0 4px; }
 .pill { font-size: 11px; padding: 2px 9px; border-radius: 999px; background: var(--linha); margin-right: 6px; }
 .pill.viva { background: var(--verde-claro); color: var(--verde-esc); }
 .dash { display: flex; gap: 8px; margin: 10px 0; }
-.kpi { flex: 1; background: #fff; border: 1px solid var(--linha); border-radius: 12px; padding: 10px; text-align: center; }
+.kpi { flex: 1; background: var(--card); border: 1px solid var(--linha); border-radius: 12px; padding: 10px; text-align: center; }
 .kpi b { display: block; font-size: 19px; }
-.kpi span { font-size: 11px; color: #7a7466; }
+.kpi span { font-size: 11px; color: var(--osso-2); }
 .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
 .tabs button {
   flex: 1; padding: 10px 6px; border-radius: 10px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
 }
 .tabs button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 .linha { display: flex; align-items: flex-start; gap: 10px; }
@@ -282,7 +282,7 @@ h3 { margin: 0 0 4px; }
 .linha .meta { margin: 3px 0 0; }
 .ib { border: 0; background: none; cursor: pointer; font-size: 17px; padding: 4px; flex: none; }
 .obra { border-left: 5px solid var(--alerta); }
-.aut { border-left: 4px solid var(--verde); padding: 8px 10px; margin: 10px 0 0; background: #fffdf8; border-radius: 8px; }
+.aut { border-left: 4px solid var(--verde); padding: 8px 10px; margin: 10px 0 0; background: var(--carvao-3); border-radius: 8px; }
 .aut.falta { border-left-color: var(--danger); }
 .encerrar { border-left: 5px solid var(--danger); }
 .encerrar .btn { background: var(--danger); }

@@ -69,7 +69,7 @@ onMounted(async () => {
 
     <div v-if="aberto" class="painel">
       <div class="cab">
-        <b>📢 Avisos</b>
+        <b><Icone nome="avisos" /> Avisos</b>
         <button class="ib" @click="aberto = false">✕</button>
       </div>
       <div v-if="!avisos.length" class="meta vazio">Nenhum aviso no momento.</div>
@@ -98,7 +98,7 @@ onMounted(async () => {
 }
 .painel {
   position: absolute; top: 38px; right: 0; width: min(84vw, 320px);
-  background: #fff; border: 1px solid var(--linha); border-radius: 12px;
+  background: var(--card); border: 1px solid var(--linha); border-radius: 12px;
   box-shadow: var(--sombra); z-index: 80; max-height: 60vh; overflow-y: auto;
   color: var(--txt);
 }

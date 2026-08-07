@@ -96,7 +96,7 @@ onMounted(carregar)
     <template v-else>
       <div class="card topo">
         <h3>
-          📄 Cadastro Técnico Federal
+          <Icone nome="documentos" /> Cadastro Técnico Federal
           <span class="doc-tag" :class="selo.classe">{{ selo.texto }}</span>
         </h3>
         <div class="meta">
@@ -104,11 +104,11 @@ onMounted(carregar)
           (código 21-58). O certificado de regularidade vale 3 meses.
         </div>
         <div v-if="ctf.existe && !ctf.emDia" class="meta ruim">
-          ⚠️ Enquanto estiver vencido você não abre caçada, não registra abate e
+          <Icone nome="alerta" /> Enquanto estiver vencido você não abre caçada, não registra abate e
           não pode ser convidado.
         </div>
         <div v-else-if="situacao && situacao.dias <= 30" class="meta alerta">
-          ⚠️ {{ situacao.texto }}. Renove antes de perder o acesso à caçada.
+          <Icone nome="alerta" /> {{ situacao.texto }}. Renove antes de perder o acesso à caçada.
         </div>
       </div>
 
@@ -145,5 +145,5 @@ h3 { margin: 0 0 6px; }
 .alerta { color: var(--laranja-esc); }
 .doc-tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--linha); vertical-align: middle; }
 .doc-tag.ok { background: var(--verde-claro); color: var(--verde-esc); }
-.doc-tag.venc { background: #ffdad3; color: #a33; }
+.doc-tag.venc { background: #3A1E1C; color: var(--danger); }
 </style>

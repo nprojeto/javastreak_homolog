@@ -147,7 +147,7 @@ async function salvar() {
       </div>
 
       <div class="card">
-        <h3>🗺️ Limite da propriedade</h3>
+        <h3><Icone nome="mapa" /> Limite da propriedade</h3>
         <div class="meta">
           {{ limite.length >= 3
             ? 'Desenhado com ' + limite.length + ' pontos.'

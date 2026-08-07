@@ -44,7 +44,7 @@ onMounted(async () => {
       </div>
 
       <div v-if="!lista.length" class="card vazio">
-        <div class="big">📋</div>
+        <div class="big"><Icone nome="arquivo" /></div>
         Nenhuma autorização do IBAMA cadastrada. Elas entram no cadastro da
         propriedade.
       </div>
@@ -56,7 +56,7 @@ onMounted(async () => {
         class="card aut"
       >
         <div class="grow">
-          <b class="no-i18n">📋 {{ d.propriedadeNome }}</b>
+          <b class="no-i18n"><Icone nome="arquivo" /> {{ d.propriedadeNome }}</b>
           <span v-if="d.encerradoEm" class="pill">fechada</span>
           <span
             v-else-if="statusVencimento(d.vencimento)"
@@ -73,7 +73,7 @@ onMounted(async () => {
             <b>{{ d.abates }}</b> {{ d.abates === 1 ? 'abate no período' : 'abates no período' }}
           </div>
           <div v-if="d.encerradoEm" class="meta">
-            🔒 fechada em {{ dataBR(d.encerradoEm) }}
+            <Icone nome="bloqueio" /> fechada em {{ dataBR(d.encerradoEm) }}
           </div>
         </div>
         <div class="chev">›</div>
@@ -91,7 +91,7 @@ onMounted(async () => {
 .aut .meta { margin: 3px 0 0; }
 .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--linha); margin-left: 6px; }
 .pill.ok { background: var(--verde-claro); color: var(--verde-esc); }
-.pill.perto { background: #ffe9c7; color: #8a5a10; }
-.pill.venc { background: #ffdad3; color: #a33; }
+.pill.perto { background: #3A2E13; color: var(--alerta); }
+.pill.venc { background: #3A1E1C; color: var(--danger); }
 .chev { font-size: 22px; color: var(--linha); }
 </style>

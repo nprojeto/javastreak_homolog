@@ -210,7 +210,7 @@ async function escolherIdioma(l: Idm) {
 
     <div v-if="m.bloqueado === 'Sim'" class="card bloqueado">
       <div class="meta">
-        🚩 <b>Seu perfil está bloqueado</b> por denúncias e está em análise.
+        <Icone nome="denuncia" /> <b>Seu perfil está bloqueado</b> por denúncias e está em análise.
         Enquanto isso, você não aparece na rede, no mapa nem no ranking.
       </div>
     </div>
@@ -227,7 +227,7 @@ async function escolherIdioma(l: Idm) {
         @click="alternarVisibilidade"
       >{{ visivel ? 'Ocultar da rede' : 'Aparecer na rede' }}</button>
       <div v-if="!temCoord" class="meta aviso">
-        ⚠️ Preencha a localização abaixo antes de aparecer na rede.
+        <Icone nome="alerta" /> Preencha a localização abaixo antes de aparecer na rede.
       </div>
     </div>
 
@@ -268,7 +268,7 @@ async function escolherIdioma(l: Idm) {
       <BotaoGps v-model:lat="lat" v-model:lng="lng" :endereco="[cidade]" />
 
       <div v-if="!temCoord" class="meta aviso">
-        ⚠️ Sem a localização preenchida você não aparece no mapa da rede e também
+        <Icone nome="alerta" /> Sem a localização preenchida você não aparece no mapa da rede e também
         não vê os outros manejadores. Lojistas você vê sempre.
       </div>
 
@@ -333,7 +333,7 @@ h3 { margin: 0 0 4px; }
 .lang-sel { display: flex; gap: 6px; }
 .lang-sel button {
   flex: 1; padding: 9px; border-radius: 10px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-weight: 600; font-size: 13px; color: var(--txt);
 }
 .lang-sel button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 .foto-prev { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; display: block; margin: 4px 0 8px; }

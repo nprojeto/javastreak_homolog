@@ -10,12 +10,14 @@
 import { useAuth } from '~/stores/auth'
 import { useSessaoApp } from '~/composables/useSessaoApp'
 import { useUi } from '~/stores/ui'
+import { useMarca } from '~/composables/useMarca'
 import { NAV_MANEJADOR, NAV_LOJISTA, TOP_KEYS } from '~/composables/useNavegacao'
 import { NAV_SVG } from '~/composables/useIcones'
 
 const auth = useAuth()
 const route = useRoute()
 const { carregarCreditos, carregarBoot } = useSessaoApp()
+const marca = useMarca()
 const ui = useUi()
 
 const menuAberto = ref(false)
@@ -48,7 +50,7 @@ watch(() => route.path, () => { menuAberto.value = false })
         <Icone nome="menu" :px="26" />
       </button>
       <div class="titulo">
-        <b>JavaStreak</b>
+        <img :src="marca.simbolo" :alt="marca.nome" class="tb-marca">
         <small>{{ auth.nome || '' }}</small>
       </div>
       <SinoAvisos />
@@ -94,17 +96,17 @@ watch(() => route.path, () => { menuAberto.value = false })
 }
 .btn-menu :deep(.ic-svg) { stroke: #fff; }
 .titulo { flex: 1; line-height: 1.15; min-width: 0; }
-.titulo b { display: block; font-size: 16px; }
+.tb-marca { display: block; height: 26px; width: auto; }
 .titulo small { display: block; font-size: 12px; opacity: .82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .atalhos {
   display: flex; gap: 6px; overflow-x: auto;
-  padding: 8px 10px; background: #fff; border-bottom: 1px solid var(--linha);
+  padding: 8px 10px; background: var(--card); border-bottom: 1px solid var(--linha);
 }
 .atalho {
   display: flex; align-items: center; gap: 6px; flex: none;
   padding: 7px 12px; border-radius: 999px; border: 1px solid var(--linha);
-  font-size: 12.5px; color: var(--txt); text-decoration: none; background: #fff;
+  font-size: 12.5px; color: var(--txt); text-decoration: none; background: var(--card);
 }
 .atalho.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); font-weight: 700; }
 

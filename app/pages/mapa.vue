@@ -98,19 +98,19 @@ const pinos = computed(() => {
   }
 
   if (ligados.espera) {
-    add(d.cevas || [], '#b8863b', (c) => '🌽 ' + (c.nome || 'Ceva'))
-    add(d.cevasCompart || [], '#c8a35c', (c) => '🌽 ' + (c.nome || 'Ceva') + ' · ' + (c.donoNome || ''))
+    add(d.cevas || [], '#b8863b', (c) => (c.nome || 'Ceva'))
+    add(d.cevasCompart || [], '#c8a35c', (c) => (c.nome || 'Ceva') + ' · ' + (c.donoNome || ''))
   }
   if (ligados.marcacao) {
     add(d.marcacoes || [], '#8a5a10', (m) => (m.tipo || 'Marcação') + (m.descricao ? ' — ' + m.descricao : ''))
-    add(d.armadilhas || [], '#b23b3b', (a) => '🪤 ' + (a.tipo || 'Armadilha'))
+    add(d.armadilhas || [], '#b23b3b', (a) => (a.tipo || 'Armadilha'))
   }
-  if (ligados.abate) add(d.abates || [], '#b23b3b', () => '🐗 Abate')
-  if (ligados.canil) add(d.canis || [], '#7a5c2e', (c) => '🏠 ' + (c.nome || 'Canil'))
+  if (ligados.abate) add(d.abates || [], '#b23b3b', () => 'Abate')
+  if (ligados.canil) add(d.canis || [], '#7a5c2e', (c) => (c.nome || 'Canil'))
 
   if (ligados.rede && rede.value) {
-    add(rede.value.empresas || [], '#e8552b', (e) => '🏪 ' + (e.nome || 'Empresa'))
-    add(rede.value.manejadores || [], '#2f7d3a', (m) => '👤 ' + (m.nome || 'Manejador'))
+    add(rede.value.empresas || [], '#e8552b', (e) => (e.nome || 'Empresa'))
+    add(rede.value.manejadores || [], '#2f7d3a', (m) => (m.nome || 'Manejador'))
   }
   return out
 })
@@ -167,7 +167,7 @@ onMounted(carregar)
         </div>
 
         <div v-if="ligados.rede && rede && !rede.verManejadores" class="meta aviso">
-          ⚠️ Você só vê os outros manejadores se o seu próprio perfil estiver
+          <Icone nome="alerta" /> Você só vê os outros manejadores se o seu próprio perfil estiver
           visível na rede. Lojistas você vê sempre.
         </div>
         <div
@@ -198,11 +198,11 @@ onMounted(carregar)
           :key="r.id"
           :to="{ path: '/rota-detalhe', query: { id: r.id } }"
           class="linha-rota no-i18n"
-        >🧭 {{ r.nome || 'Rota' }} ›</NuxtLink>
+        ><Icone nome="rotas" /> {{ r.nome || 'Rota' }} ›</NuxtLink>
       </div>
 
       <div v-if="!total" class="card vazio">
-        <div class="big">🗺️</div>
+        <div class="big"><Icone nome="mapa" /></div>
         Nada para mostrar ainda.
         <div class="meta">
           Cadastre uma propriedade, uma ceva ou uma rota — elas aparecem aqui.
@@ -225,7 +225,7 @@ onMounted(carregar)
 .chip {
   display: flex; align-items: center; gap: 6px;
   padding: 6px 11px; border-radius: 999px; border: 1.5px solid var(--linha);
-  background: #fff; cursor: pointer; font-size: 12.5px; color: var(--txt);
+  background: var(--card); cursor: pointer; font-size: 12.5px; color: var(--txt);
 }
 .chip.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); font-weight: 600; }
 .chip i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
