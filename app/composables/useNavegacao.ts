@@ -16,13 +16,13 @@ export interface ItemNav {
 }
 
 export const NAV_MANEJADOR: ItemNav[] = [
-  { chave: 'manejoHub', rota: '/cacar', label: 'CAÇAR', icon: 'abate', destaque: true },
+  { chave: 'manejoHub', rota: '/cacar', label: 'CAÇAR', icon: 'abate', destaque: true, pronta: true },
   { chave: 'inicio', rota: '/inicio', label: 'Início', icon: 'inicio', pronta: true },
   { chave: 'agenda', rota: '/agenda', label: 'Agenda', icon: 'agenda', pronta: true },
   { chave: 'manutencaoHub', rota: '/manutencao', label: 'Manutenção', icon: 'espreita' },
   { chave: 'saudeAnimal', rota: '/saude-animal', label: 'Saúde animal', icon: 'caes' },
-  { chave: 'documentacao', rota: '/documentacao', label: 'Documentação', icon: 'documentacao' },
-  { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte' },
+  { chave: 'documentacao', rota: '/documentacao', label: 'Documentação', icon: 'documentacao', pronta: true },
+  { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte', pronta: true },
   { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa' },
   { chave: 'trofeus', rota: '/trofeus', label: 'Sala de troféu', icon: 'trofeus' },
   { chave: 'ranking', rota: '/ranking', label: 'Ranking', icon: 'ranking' },
@@ -33,7 +33,7 @@ export const NAV_LOJISTA: ItemNav[] = [
   { chave: 'empresa', rota: '/empresa', label: 'Minha empresa', icon: 'inicio' },
   { chave: 'vitrine', rota: '/vitrine', label: 'Minha vitrine', icon: 'carrinho' },
   { chave: 'promocoes', rota: '/promocoes', label: 'Promoções', icon: 'avisos' },
-  { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte' },
+  { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte', pronta: true },
   { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa' },
   { chave: 'ranking', rota: '/ranking', label: 'Ranking', icon: 'ranking' }
 ]
