@@ -18,14 +18,17 @@
  * então a segunda passada não acha nada e para.
  */
 export default defineNuxtPlugin(() => {
-  const { lang, t } = useTraducao()
+  const { lang, t, versaoDic } = useTraducao()
 
   let agendado = false
   let observador: MutationObserver | null = null
 
-  /* Nós já traduzidos não voltam à varredura: sem isto, cada quadro relia a
-     página inteira e a troca de idioma ficava lenta em tela grande. */
-  const jaVisto = new WeakSet<Text>()
+  /* Nós já varridos não voltam: sem isto, cada quadro relia a página inteira
+     e a troca de idioma ficava lenta em tela grande.
+     ⚠️ A marca é ZERADA a cada troca de idioma e a cada dicionário que chega.
+     Sem isso, a varredura que roda antes do dicionário carimbava tudo como
+     visto e o texto nunca mais era traduzido. */
+  let jaVisto = new WeakSet<Text>()
 
   function traduzir(raiz: Node) {
     if (lang.value === 'pt') return
@@ -86,7 +89,10 @@ export default defineNuxtPlugin(() => {
        pela metade, a conta continuava no idioma antigo e o `apiBoot` devolvia
        tudo para trás — parecia que o botão Português não funcionava.
        Quem recarrega é a tela, depois de o salvamento terminar. */
-    watch(lang, () => { agendar() })
+    watch([lang, versaoDic], () => {
+      jaVisto = new WeakSet<Text>()
+      agendar()
+    })
     agendar()
   }
 })

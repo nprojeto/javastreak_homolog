@@ -56,17 +56,25 @@ const UI: Record<Idioma, Record<string, string>> = { pt: uiPt, en: uiEn, es: uiE
 /* Estado global: o idioma é um só para o app inteiro. */
 const lang = ref<Idioma>('pt')
 const dicionario = ref<Record<string, string>>({})
+/**
+ * Sobe a cada vez que um dicionário termina de carregar. É o sinal de que a
+ * tela pode ser varrida — sem ele, quem varre chega antes do dicionário,
+ * não acha nada e conclui que não há o que traduzir.
+ */
+const versaoDic = ref(0)
 const carregados = new Map<Idioma, Record<string, string>>()
 let iniciado = false
 
 async function carregar(l: Idioma) {
   if (l === 'pt') {
     dicionario.value = {}
+    versaoDic.value++
     return
   }
   const emCache = carregados.get(l)
   if (emCache) {
     dicionario.value = emCache
+    versaoDic.value++
     return
   }
   const mod =
@@ -76,7 +84,10 @@ async function carregar(l: Idioma) {
   const mapa = (mod.default || mod) as Record<string, string>
   carregados.set(l, mapa)
   // Só aplica se o usuário não trocou de idioma no meio do caminho.
-  if (lang.value === l) dicionario.value = mapa
+  if (lang.value === l) {
+    dicionario.value = mapa
+    versaoDic.value++
+  }
 }
 
 export function useTraducao() {
@@ -132,5 +143,9 @@ export function useTraducao() {
     await carregar(l)
   }
 
-  return { t, tk, lang: readonly(lang), setLang, IDIOMAS, BANDEIRA }
+  return {
+    t, tk, setLang, IDIOMAS, BANDEIRA,
+    lang: readonly(lang),
+    versaoDic: readonly(versaoDic)
+  }
 }
