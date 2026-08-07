@@ -110,6 +110,11 @@ watch(() => route.path, () => { menuAberto.value = false })
 
 /* Estreito: a faixa desce e ocupa a linha inteira. */
 .faixa-slot { order: 5; flex: 1 1 100%; min-width: 0; }
+@media (max-width: 640px) {
+  /* Alinhada à esquerda no celular: centralizar com poucos cartões deixava
+     um vão estranho entre o nome do usuário e a faixa. */
+  .faixa-slot :deep(.topstrip) { justify-content: flex-start; }
+}
 @media (min-width: 880px) {
   /* Largo: a faixa entra na mesma linha, entre o nome e o sino. */
   .faixa-slot { order: 2; flex: 1 1 auto; }

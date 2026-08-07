@@ -231,7 +231,11 @@ select option { background: var(--carvao-2); color: var(--osso); }
 }
 /* Fio laranja separando o cabeçalho: o detalhe que amarra a marca. */
 .topo { box-shadow: inset 0 -2px 0 var(--laranja); }
-.topstrip, .atalhos { background: var(--carvao); border-color: var(--linha-esc); }
+/* ⚠️ A faixa NÃO tem fundo próprio. Ela mora dentro do cabeçalho agora, e um
+   fundo aqui desenhava um retângulo escuro solto — que em tela estreita, com a
+   faixa quebrando de linha, ficava desalinhado do resto. */
+.topstrip { background: transparent; border: 0; }
+.atalhos { background: var(--carvao); border-color: var(--linha-esc); }
 .ts-card { background: var(--carvao-2); border-color: var(--linha-esc); color: var(--osso); }
 .ts-card .rot { color: var(--osso-2); }
 .ts-card b { color: var(--laranja-cl); }
@@ -327,3 +331,54 @@ html[data-marca='meateater'] {
    Telas de comparação (planos) precisam de mais largura que o resto do app.
    Quem pede é a própria página, com `bodyAttrs`; o layout só obedece.       */
 body.pagina-larga .miolo { max-width: 1040px; }
+
+
+/* ════════════════════════════════════════════════════════════════════════
+   CELULAR
+   O app é usado no mato, com uma mão, em tela pequena. Aqui vale mais o
+   espaço do que o alinhamento bonito de tela grande.
+   ════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  /* Cabeçalho compacto: a faixa vira uma linha rolável, sem caixa. */
+  .topo { padding: 6px 10px; gap: 6px; }
+  .topstrip { padding: 2px 0 0; }
+  .ts-card { padding: 4px 8px; font-size: 11px; }
+  .ts-card .rot { font-size: 9.5px; }
+
+  /* Miolo colado nas bordas: 14px de cada lado custavam 28px de conteúdo. */
+  .miolo { padding: 10px 10px 20px; }
+  .card { border-radius: 12px; padding: 12px; }
+
+  /* Dois campos lado a lado não cabem: viram um embaixo do outro. */
+  .two { flex-direction: column; gap: 0; }
+
+  /* Abas com muitos itens: rolagem em vez de encolher até virar ilegível. */
+  .subnav, .tabs, .abas, .modos, .subsub, .pl-per, .lang-sel {
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .subnav::-webkit-scrollbar, .tabs::-webkit-scrollbar,
+  .abas::-webkit-scrollbar { display: none; }
+  .subnav button, .tabs button, .abas button { flex: 0 0 auto; min-width: 96px; }
+
+  /* Tabela larga (relatório, limites) rola no dedo. */
+  .rel-scroll, .tab-scroll { -webkit-overflow-scrolling: touch; }
+
+  /* Alvo de toque: 44px é o mínimo para acertar com o polegar. */
+  .btn { min-height: 44px; }
+  .ib { min-width: 40px; min-height: 40px; display: inline-flex;
+        align-items: center; justify-content: center; }
+
+  /* Mapa mais alto: no celular ele é a tela, não um detalhe dela. */
+  .mapa { height: 56vh; }
+
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.02rem; }
+}
+
+/* Telas muito estreitas: o menu lateral ocupa quase tudo, e a faixa some da
+   linha do logo para não espremer o nome do usuário. */
+@media (max-width: 380px) {
+  .ts-card b { font-size: 11.5px; }
+  .titulo small { max-width: 40vw; }
+}
