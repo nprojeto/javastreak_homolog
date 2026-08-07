@@ -50,6 +50,13 @@ jobs:
       - name: Conferir dicionarios
         run: npm run conferir:frases
 
+      # Aponta texto de tela que ficou fora do dicionario. Nao derruba o build
+      # de proposito: avisa no log, para nao travar entrega por causa de uma
+      # frase nova. A varredura pega tambem os literais dentro de {{ }} — foi
+      # o que faltava e deixou os botoes sem traducao.
+      - name: Conferir textos das telas
+        run: npm run conferir:textos
+
       # Endereco base = subpasta do repositorio, porque o teste sai em
       # usuario.github.io/<repositorio>/ e nao no dominio proprio.
       # O nome vem do proprio GitHub, entao renomear o repositorio nao quebra
