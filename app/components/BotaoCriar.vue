@@ -14,8 +14,12 @@ const props = defineProps<{
   /** chave do limite no plano: 'cevas', 'rotas', 'documentos'… */
   chave: string
   quantidade?: number
-  para: string
+  /** Rota de destino. Sem ela, o botão emite `criar` — para telas em que o
+      formulário abre na própria página. */
+  para?: string
 }>()
+
+const emit = defineEmits<{ criar: [] }>()
 
 const cred = useCreditos()
 const bloqueio = computed(() =>
@@ -28,7 +32,8 @@ const bloqueio = computed(() =>
     <div class="meta">🔒 {{ bloqueio.motivo }}</div>
     <NuxtLink :to="bloqueio.rota" class="btn sec">{{ bloqueio.rotuloAcao }}</NuxtLink>
   </div>
-  <NuxtLink v-else :to="props.para" class="btn">{{ props.rotulo }}</NuxtLink>
+  <NuxtLink v-else-if="props.para" :to="props.para" class="btn">{{ props.rotulo }}</NuxtLink>
+  <button v-else class="btn" @click="emit('criar')">{{ props.rotulo }}</button>
 </template>
 
 <style scoped>

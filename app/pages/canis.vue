@@ -1,0 +1,123 @@
+<script setup lang="ts">
+/**
+ * Canis. Porte de VIEWS.caes + canilForm (index.html, 9180).
+ *
+ * ⚠️ Coordenada é obrigatória e o servidor recusa (0,0): o zero é o que sobra
+ * quando o campo vem vazio, e jogaria o pino no meio do Atlântico.
+ */
+import { useUi } from '~/stores/ui'
+
+definePageMeta({ layout: 'app' })
+
+export interface Canil {
+  id: string; nome?: string; lat?: number | string; lng?: number | string
+  obs?: string; qtdCaes?: number
+}
+
+const { server } = useServer()
+const ui = useUi()
+
+const lista = ref<Canil[] | null>(null)
+const erro = ref('')
+const form = ref(false)
+const nome = ref('')
+const lat = ref('')
+const lng = ref('')
+const obs = ref('')
+const salvando = ref(false)
+
+async function carregar() {
+  erro.value = ''
+  try {
+    lista.value = await server<Canil[]>('apiListarCanis')
+  } catch (e) {
+    erro.value = e instanceof Error ? e.message : 'Não foi possível carregar os canis'
+  }
+}
+
+async function salvar() {
+  if (!nome.value) { ui.avisar('Informe o nome do canil', 'erro'); return }
+  if (!lat.value || !lng.value) { ui.avisar('Informe a localização do canil', 'erro'); return }
+  salvando.value = true
+  try {
+    await server('apiCriarCanil', { nome: nome.value, lat: lat.value, lng: lng.value, obs: obs.value })
+    ui.avisar('Canil salvo ✔')
+    form.value = false; nome.value = ''; lat.value = ''; lng.value = ''; obs.value = ''
+    await carregar()
+  } catch { /* já avisado */ } finally {
+    salvando.value = false
+  }
+}
+
+async function excluir(k: Canil) {
+  if (!confirm('Excluir este canil?')) return
+  try {
+    await server('apiExcluir', 'canil', k.id)
+    ui.avisar('Excluído')
+    await carregar()
+  } catch { /* já avisado */ }
+}
+
+onMounted(carregar)
+</script>
+
+<template>
+  <div>
+    <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
+    <div v-else-if="lista === null" class="card"><div class="meta">Carregando…</div></div>
+
+    <template v-else>
+      <div class="card hero">
+        <h2>Cães</h2>
+        <div class="meta">Seus canis e a matilha de cada um.</div>
+      </div>
+
+      <div v-if="form" class="card">
+        <label for="k_nome">Nome do canil *</label>
+        <input id="k_nome" v-model="nome" class="no-i18n" placeholder="Ex: Canil da sede">
+        <BotaoGps v-model:lat="lat" v-model:lng="lng" />
+        <label for="k_obs">Observações</label>
+        <textarea id="k_obs" v-model="obs" class="no-i18n" />
+        <button class="btn" :disabled="salvando" @click="salvar">
+          {{ salvando ? 'Salvando…' : 'Salvar canil' }}
+        </button>
+        <button class="btn sec" @click="form = false">Cancelar</button>
+      </div>
+
+      <div v-if="!lista.length && !form" class="card vazio">
+        <div class="big">🏠</div>
+        Nenhum canil cadastrado.
+      </div>
+
+      <div v-for="k in lista" :key="k.id" class="card canil">
+        <NuxtLink :to="{ path: '/canil', query: { id: k.id } }" class="grow">
+          <b class="no-i18n">🏠 {{ k.nome || 'Canil' }}</b>
+          <div class="meta">{{ k.qtdCaes || 0 }} cão(es)</div>
+          <div v-if="k.obs" class="meta no-i18n">{{ k.obs }}</div>
+        </NuxtLink>
+        <button class="ib" title="Excluir" @click="excluir(k)">🗑️</button>
+      </div>
+
+      <BotaoCriar
+        v-if="!form"
+        rotulo="＋ Novo canil"
+        chave="canis"
+        :quantidade="lista.length"
+        @criar="form = true"
+      />
+    </template>
+  </div>
+</template>
+
+<style scoped>
+.hero { border-top: 4px solid var(--verde); }
+.hero h2 { margin: 0 0 4px; font-size: 20px; }
+.ruim { color: var(--danger); }
+.vazio { text-align: center; padding: 24px; }
+.vazio .big { font-size: 40px; margin-bottom: 6px; }
+.canil { display: flex; align-items: center; gap: 8px; }
+.canil .grow { flex: 1; min-width: 0; text-decoration: none; color: var(--txt); }
+.canil .meta { margin: 3px 0 0; }
+.ib { border: 0; background: none; cursor: pointer; font-size: 17px; padding: 4px; flex: none; }
+.btn.sec { margin-top: 8px; }
+</style>
