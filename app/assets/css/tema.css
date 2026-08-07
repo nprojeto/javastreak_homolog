@@ -340,9 +340,9 @@ body.pagina-larga .miolo { max-width: 1040px; }
    ════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 640px) {
-  /* Cabeçalho compacto: a faixa vira uma linha rolável, sem caixa. */
-  .topo { padding: 6px 10px; gap: 6px; }
-  .topstrip { padding: 2px 0 0; }
+  /* Cabeçalho compacto: a faixa vira uma tira rolável, na mesma linha. */
+  .topo { padding: 6px 8px; gap: 6px; }
+  .topstrip { padding: 0; }
   .ts-card { padding: 4px 8px; font-size: 11px; }
   .ts-card .rot { font-size: 9.5px; }
 

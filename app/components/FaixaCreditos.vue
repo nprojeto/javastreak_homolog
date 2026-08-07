@@ -61,9 +61,12 @@ async function copiarChave() {
 
 <style scoped>
 .topstrip {
-  display: flex; gap: 6px; overflow-x: auto; padding: 0;
+  display: flex; gap: 6px; padding: 0;
+  /* Rola dentro do cabeçalho em vez de empurrar os botões para fora. */
+  overflow-x: auto; overflow-y: hidden;
   justify-content: safe center;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 .topstrip::-webkit-scrollbar { display: none; }
 .ts-card {
