@@ -43,11 +43,14 @@ const cred = useCreditos()
       <div class="chev">›</div>
     </NuxtLink>
 
-    <EmBreve
-      titulo="Relatório do IBAMA"
-      lote="lote 7c"
-      descricao="Fechar uma autorização, juntar os abates do período e exportar em PDF e CSV."
-    />
+    <NuxtLink to="/ibama" class="card menu-card">
+      <Icone nome="arquivo" :px="34" />
+      <div class="txt">
+        <h3>Fechamento IBAMA</h3>
+        <p>Juntar os abates de uma autorização e prestar contas</p>
+      </div>
+      <div class="chev">›</div>
+    </NuxtLink>
   </div>
 </template>
 
