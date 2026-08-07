@@ -321,3 +321,9 @@ html[data-marca='meateater'] {
   --laranja-cl:  #FF7F42;
   --laranja-esc: #C4460D;
 }
+
+
+/* ── Página larga ────────────────────────────────────────────────────────
+   Telas de comparação (planos) precisam de mais largura que o resto do app.
+   Quem pede é a própria página, com `bodyAttrs`; o layout só obedece.       */
+body.pagina-larga .miolo { max-width: 1040px; }

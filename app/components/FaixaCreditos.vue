@@ -61,15 +61,16 @@ async function copiarChave() {
 
 <style scoped>
 .topstrip {
-  display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px;
-  border-bottom: 1px solid var(--linha);
+  display: flex; gap: 6px; overflow-x: auto; padding: 0;
   justify-content: safe center;
+  scrollbar-width: none;
 }
+.topstrip::-webkit-scrollbar { display: none; }
 .ts-card {
   display: flex; align-items: center; gap: 6px; flex: none;
-  background: var(--card); border: 1px solid var(--linha); border-radius: 10px;
-  padding: 6px 10px; font-size: 12px; color: var(--txt);
-  text-decoration: none; cursor: pointer; line-height: 1.25;
+  background: transparent; border: 1px solid var(--linha); border-radius: 10px;
+  padding: 5px 9px; font-size: 11.5px; color: var(--txt);
+  text-decoration: none; cursor: pointer; line-height: 1.2;
 }
 .ts-card .rot { color: var(--osso-2); font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px; }
 .ts-card b { font-size: 12.5px; }

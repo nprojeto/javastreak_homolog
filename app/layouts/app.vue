@@ -53,11 +53,15 @@ watch(() => route.path, () => { menuAberto.value = false })
         <img :src="marca.simbolo" :alt="marca.nome" class="tb-marca">
         <small>{{ auth.nome || '' }}</small>
       </div>
+
+      <!-- A faixa vive DENTRO do cabeçalho. Em tela estreita ela quebra para
+           a linha de baixo, ocupando a largura toda — por isso o `order` alto
+           e o `flex-basis: 100%`. -->
+      <div class="faixa-slot"><FaixaCreditos /></div>
+
       <SinoAvisos />
       <MenuConta />
     </header>
-
-    <FaixaCreditos />
 
     <nav class="atalhos">
       <NuxtLink
@@ -85,7 +89,8 @@ watch(() => route.path, () => { menuAberto.value = false })
 
 .topo {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 12px; color: var(--osso);
+  flex-wrap: wrap;
+  padding: 8px 12px; color: var(--osso);
   position: sticky; top: 0; z-index: 50;
   /* ⚠️ A cor vem do tema, não daqui. O estilo com `scoped` ganha do arquivo
      global, então deixar `background` fixo aqui fazia a faixa verde do tema
@@ -98,7 +103,17 @@ watch(() => route.path, () => { menuAberto.value = false })
   display: flex; align-items: center; padding: 4px; flex: none;
 }
 .btn-menu :deep(.ic-svg) { stroke: var(--osso); }
-.titulo { flex: 1; line-height: 1.15; min-width: 0; }
+.titulo { line-height: 1.15; min-width: 0; order: 2; }
+.btn-menu { order: 1; }
+:deep(.sino-wrap) { order: 3; }
+:deep(.conta-wrap) { order: 4; }
+
+/* Estreito: a faixa desce e ocupa a linha inteira. */
+.faixa-slot { order: 5; flex: 1 1 100%; min-width: 0; }
+@media (min-width: 880px) {
+  /* Largo: a faixa entra na mesma linha, entre o nome e o sino. */
+  .faixa-slot { order: 2; flex: 1 1 auto; }
+}
 .tb-marca { display: block; height: 26px; width: auto; }
 .titulo small { display: block; font-size: 12px; opacity: .82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 

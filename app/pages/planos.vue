@@ -14,6 +14,15 @@ import { dataBR } from '~/composables/useMascaras'
 
 definePageMeta({ layout: 'app' })
 
+/**
+ * ⚠️ Os planos precisam de mais largura que o resto do app. O miolo tem 720px
+ * e três cartões não cabiam — o terceiro caía para baixo, sozinho, e quebrava
+ * a comparação, que é justamente o trabalho desta tela.
+ *
+ * A classe entra no `<body>` e o Nuxt a remove ao sair da página.
+ */
+useHead({ bodyAttrs: { class: 'pagina-larga' } })
+
 interface Plano {
   plano: string
   nome: string
@@ -176,7 +185,8 @@ onMounted(carregar)
         >{{ p[1] }}</button>
       </div>
 
-      <div class="pl-grade">
+      <div class="pl-largo">
+        <div class="pl-grade" :class="{ dois: lista.length === 2 }">
         <div
           v-for="p in lista"
           :key="p.plano"
@@ -212,6 +222,7 @@ onMounted(carregar)
             @click="assinar(p.plano)"
           >{{ assinando === p.plano ? 'Abrindo…' : 'Assinar ' + p.nome }}</button>
         </div>
+        </div>
       </div>
 
       <div class="card rodape">
@@ -245,11 +256,28 @@ onMounted(carregar)
 }
 .pl-per button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 
-/* Em tela larga os planos ficavam encostados à esquerda. Grade centrada, com
-   largura máxima por cartão — dois ou três cabem lado a lado sem esticar. */
-.pl-grade { display: grid; gap: 12px; justify-content: center; }
-@media (min-width: 620px) {
-  .pl-grade { grid-template-columns: repeat(auto-fit, minmax(240px, 300px)); }
+/**
+ * Os três planos precisam caber LADO A LADO. O miolo do app tem 720px, e três
+ * cartões não entram ali — o terceiro caía para baixo. Esta faixa escapa da
+ * largura do miolo e vai a 1040px, centrada, sem passar da tela.
+ */
+.pl-largo {
+  width: min(1040px, 100vw - 28px);
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.pl-grade { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 560px) {
+  .pl-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 780px) {
+  .pl-grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Empresa tem dois planos: dois cartões centrados ficam melhor que três
+   colunas com um buraco. */
+@media (min-width: 780px) {
+  .pl-grade.dois { grid-template-columns: repeat(2, minmax(0, 300px)); }
 }
 .plano { background: var(--card); border: 1.5px solid var(--linha); border-radius: 16px; padding: 16px; }
 .plano.destaque { border-color: var(--laranja); }
