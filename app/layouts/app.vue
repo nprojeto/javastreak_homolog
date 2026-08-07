@@ -49,9 +49,10 @@ watch(() => route.path, () => { menuAberto.value = false })
       <button class="btn-menu" aria-label="Menu" @click="menuAberto = true">
         <Icone nome="menu" :px="26" />
       </button>
+      <!-- Só a marca. O nome do usuário fica no menu lateral, abaixo do logo:
+           repetir no topo custava largura numa linha que já está disputada. -->
       <div class="titulo">
         <img :src="marca.simbolo" :alt="marca.nome" class="tb-marca">
-        <small>{{ auth.nome || '' }}</small>
       </div>
 
       <!-- A faixa vive DENTRO do cabeçalho. Em tela estreita ela quebra para
@@ -120,7 +121,7 @@ watch(() => route.path, () => { menuAberto.value = false })
   .faixa-slot { order: 2; flex: 1 1 auto; }
 }
 .tb-marca { display: block; height: 26px; width: auto; }
-.titulo small { display: block; font-size: 12px; opacity: .82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 
 .atalhos {
   display: flex; gap: 6px; overflow-x: auto;

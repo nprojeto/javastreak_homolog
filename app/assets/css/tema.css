@@ -380,5 +380,4 @@ body.pagina-larga .miolo { max-width: 1040px; }
    linha do logo para não espremer o nome do usuário. */
 @media (max-width: 380px) {
   .ts-card b { font-size: 11.5px; }
-  .titulo small { max-width: 40vw; }
 }

@@ -20,7 +20,7 @@ export const NAV_MANEJADOR: ItemNav[] = [
   { chave: 'inicio', rota: '/inicio', label: 'Início', icon: 'inicio', pronta: true },
   { chave: 'agenda', rota: '/agenda', label: 'Agenda', icon: 'agenda', pronta: true },
   { chave: 'manutencaoHub', rota: '/manutencao', label: 'Manutenção', icon: 'espreita', pronta: true },
-  { chave: 'caes', rota: '/canis', label: 'Cães', icon: 'caes', pronta: true },
+  { chave: 'saudeAnimal', rota: '/saude-animal', label: 'Saúde animal', icon: 'caes', pronta: true },
   { chave: 'propriedades', rota: '/propriedades', label: 'Propriedades', icon: 'areas', pronta: true },
   { chave: 'espera', rota: '/espera', label: 'Cevas', icon: 'espera', pronta: true },
   { chave: 'rotas', rota: '/rotas', label: 'Rotas', icon: 'rotas', pronta: true },

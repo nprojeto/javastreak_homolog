@@ -42,10 +42,23 @@ function casaDe(tipo?: string): Casa {
 
 const { server } = useServer()
 const ui = useUi()
+const route = useRoute()
 
 const lista = ref<Transporte[] | null>(null)
 const erro = ref('')
-const casa = ref<Casa>('garagem')
+
+/**
+ * A casa pode vir pela URL. É assim que a Saúde animal abre o HARAS direto,
+ * sem a pessoa cair na garagem e ter que procurar a aba.
+ */
+const casa = ref<Casa>(
+  (['garagem', 'marina', 'haras'] as const).includes(route.query.casa as Casa)
+    ? (route.query.casa as Casa)
+    : 'garagem'
+)
+
+/** Veio da Saúde animal? Então o Voltar tem que devolver para lá. */
+const doHaras = computed(() => route.query.casa === 'haras')
 
 const form = ref(false)
 const tipo = ref('')
@@ -189,6 +202,8 @@ onMounted(carregar)
         :quantidade="(lista || []).length"
         @criar="form = true"
       />
+
+      <NuxtLink v-if="doHaras" to="/saude-animal" class="btn sec">Voltar</NuxtLink>
     </template>
   </div>
 </template>

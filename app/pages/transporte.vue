@@ -214,7 +214,10 @@ onMounted(carregar)
         :to="{ path: '/documentacao', query: { cat: 'veiculo' } }"
         class="btn sec"
       ><Icone nome="documentos" /> Documentos deste item</NuxtLink>
-      <NuxtLink to="/manutencao" class="btn sec">Voltar</NuxtLink>
+      <NuxtLink
+        :to="ehCavalo ? { path: '/manutencao', query: { casa: 'haras' } } : '/manutencao'"
+        class="btn sec"
+      >Voltar</NuxtLink>
     </template>
   </div>
 </template>
