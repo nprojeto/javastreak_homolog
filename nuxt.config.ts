@@ -72,7 +72,7 @@ export default defineNuxtConfig({
         || 'https://pbtgvllxjnumjiololio.supabase.co/functions/v1/api',
       apiKey: process.env.NUXT_PUBLIC_API_KEY
         || 'sb_publishable_y2bMte4WKgzlNNLAi9WtHQ_oWoA-oad',
-      appVer: 'vJS.070826.1533',
+      appVer: 'vJS.070826.1557',
       ambiente: 'homologacao'
     }
   },
