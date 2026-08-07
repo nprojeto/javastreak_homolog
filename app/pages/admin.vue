@@ -44,6 +44,7 @@ const ui = useUi()
 const { server } = useServer()
 const { carregarCreditos } = useSessaoApp()
 
+const aba = ref<'painel' | 'planos' | 'moderacao'>('painel')
 const painel = ref<Painel | null>(null)
 const busca = ref('')
 const usuarios = ref<Usuario[]>([])
@@ -221,6 +222,16 @@ onMounted(() => {
 
       <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
 
+      <nav class="abas">
+        <button :class="{ on: aba === 'painel' }" @click="aba = 'painel'">📊 Painel</button>
+        <button :class="{ on: aba === 'planos' }" @click="aba = 'planos'">🎫 Planos</button>
+        <button :class="{ on: aba === 'moderacao' }" @click="aba = 'moderacao'">🚩 Moderação</button>
+      </nav>
+
+      <AdminPlanos v-if="aba === 'planos'" />
+      <AdminModeracao v-else-if="aba === 'moderacao'" />
+
+      <template v-else>
       <!-- ───── PAINEL ───── -->
       <div class="card">
         <div class="topo">
@@ -395,12 +406,7 @@ onMounted(() => {
         <pre v-if="diagSaida" class="saida no-i18n">{{ diagSaida }}</pre>
       </div>
 
-      <div class="card obra">
-        <div class="meta">
-          🚧 Limites por plano, parâmetros, avisos, campanhas, patrocínios,
-          denúncias, artigos, chamados e pagamentos chegam na próxima entrega.
-        </div>
-      </div>
+      </template>
     </template>
   </div>
 </template>
@@ -447,5 +453,10 @@ h3 { margin: 0 0 4px; }
   background: #1c2a1c; color: #cfe6cf; border-radius: 10px; padding: 10px;
   font-size: 11px; overflow-x: auto; margin-top: 10px; white-space: pre-wrap;
 }
-.obra { border-left: 5px solid var(--alerta); }
+.abas { display: flex; gap: 6px; margin-bottom: 10px; }
+.abas button {
+  flex: 1; padding: 10px 6px; border-radius: 10px; border: 1.5px solid var(--linha);
+  background: #fff; cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
+}
+.abas button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
 </style>
