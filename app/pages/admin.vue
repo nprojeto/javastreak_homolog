@@ -44,7 +44,7 @@ const ui = useUi()
 const { server } = useServer()
 const { carregarCreditos } = useSessaoApp()
 
-const aba = ref<'painel' | 'planos' | 'moderacao'>('painel')
+const aba = ref<'painel' | 'planos' | 'moderacao' | 'ajustes'>('painel')
 const painel = ref<Painel | null>(null)
 const busca = ref('')
 const usuarios = ref<Usuario[]>([])
@@ -226,10 +226,12 @@ onMounted(() => {
         <button :class="{ on: aba === 'painel' }" @click="aba = 'painel'">📊 Painel</button>
         <button :class="{ on: aba === 'planos' }" @click="aba = 'planos'">🎫 Planos</button>
         <button :class="{ on: aba === 'moderacao' }" @click="aba = 'moderacao'">🚩 Moderação</button>
+        <button :class="{ on: aba === 'ajustes' }" @click="aba = 'ajustes'">🎛️ Ajustes</button>
       </nav>
 
       <AdminPlanos v-if="aba === 'planos'" />
       <AdminModeracao v-else-if="aba === 'moderacao'" />
+      <AdminAjustes v-else-if="aba === 'ajustes'" />
 
       <template v-else>
       <!-- ───── PAINEL ───── -->
