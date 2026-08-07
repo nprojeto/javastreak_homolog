@@ -1,0 +1,96 @@
+# Publica o app no GitHub Pages a cada push na main.
+# Custo zero: o Pages serve arquivo estático, que é o que `nuxt generate` gera.
+name: Publicar no GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# `cancel-in-progress: false` e o que o proprio modelo do GitHub para Pages
+# recomenda: cancelar uma publicacao no meio pode deixar o ambiente
+# github-pages travado, e as seguintes ficam esperando ate estourar o tempo.
+# Melhor deixar a atual terminar e enfileirar a proxima.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Sem `cache: npm` de proposito: o cache do setup-node procura um
+      # package-lock.json para montar a chave e falha quando ele nao existe.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Cache proprio, com chave no package.json em vez do lock. Sem ele, cada
+      # publicacao rebaixava os 868 pacotes do zero — mais de um minuto so ai.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: npm-${{ runner.os }}-
+
+      # `npm install` e nao `npm ci` de proposito: o ci exige um
+      # package-lock.json perfeito e recusa qualquer divergencia. Como as
+      # versoes diretas estao travadas exatas no package.json, o resultado e o
+      # mesmo sem a fragilidade do arquivo de lock.
+      - run: npm install --no-audit --no-fund
+
+      # Regra do dossie virada em porta de build: frase sem os tres idiomas
+      # nao passa daqui.
+      - name: Conferir dicionarios
+        run: npm run conferir:frases
+
+      # Aponta texto de tela que ficou fora do dicionario. Nao derruba o build
+      # de proposito: avisa no log, para nao travar entrega por causa de uma
+      # frase nova. A varredura pega tambem os literais dentro de {{ }} — foi
+      # o que faltava e deixou os botoes sem traducao.
+      - name: Conferir textos das telas
+        run: npm run conferir:textos
+
+      # Endereco base = subpasta do repositorio, porque o teste sai em
+      # usuario.github.io/<repositorio>/ e nao no dominio proprio.
+      # O nome vem do proprio GitHub, entao renomear o repositorio nao quebra
+      # nada. No dia do corte, apagar estas duas linhas.
+      - run: npm run generate
+        env:
+          NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
+
+      # O Nuxt escreve a casca dentro de .output/public/<repositorio>/,
+      # porque foi esse o endereco pedido no prerender. O Pages ja serve a
+      # pasta como /<repositorio>/, entao o arquivo tem que subir um nivel
+      # para nao virar /<repositorio>/<repositorio>/.
+      # O 404.html e a mesma casca: e ele que faz o Pages devolver o app em
+      # qualquer rota funda (/propriedades/123) em vez da pagina de erro.
+      # No dia do corte, apagar este passo inteiro.
+      - name: Ajustar para a subpasta do Pages
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          test -f ".output/public/$REPO/index.html" \
+            || { echo "casca HTML nao foi gerada - build invalido"; exit 1; }
+          mv ".output/public/$REPO/index.html" .output/public/index.html
+          rmdir ".output/public/$REPO"
+          cp .output/public/index.html .output/public/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .output/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v4

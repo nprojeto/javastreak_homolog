@@ -9,7 +9,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "extrair": "node scripts/extrair-do-html.mjs ../index.html",
-    "conferir:frases": "node scripts/conferir-frases.mjs"
+    "conferir:frases": "node scripts/conferir-frases.mjs",
+    "conferir:textos": "node scripts/conferir-textos.mjs"
   },
   "dependencies": {
     "nuxt": "4.5.1",
