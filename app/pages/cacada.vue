@@ -253,6 +253,7 @@ onMounted(carregar)
         </button>
       </div>
 
+      <NuxtLink to="/ibama" class="btn sec">📋 Fechamento IBAMA</NuxtLink>
       <NuxtLink to="/cacadas" class="btn sec">Voltar</NuxtLink>
     </template>
   </div>
