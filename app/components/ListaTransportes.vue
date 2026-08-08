@@ -1,17 +1,17 @@
 <script setup lang="ts">
 /**
- * Haras — os cavalos. Vive sob Saúde animal, não sob Manutenção.
+ * Lista de uma casa (garagem ou marina), com o formulário de cadastro.
  *
- * ⚠️ O cavalo continua sendo uma linha em `transportes`, distinguido pelo
- * tipo. Isso é modelo de banco, e mudar exigiria migração sem ganho nenhum.
- * O que a pessoa vê é que ele está com os cães, junto do que se vacina — e é
- * isso que precisa estar certo.
+ * ⚠️ Um componente para as duas, e não duas telas parecidas. Elas só diferem
+ * nos tipos aceitos e no rótulo — duplicar seria garantir que uma receba um
+ * conserto que a outra não recebe.
  */
 import { useUi } from '~/stores/ui'
 import { lerArquivo, FOTO_MAX_MB } from '~/composables/useArquivo'
-import type { Transporte } from '~/composables/useTransportes'
+import { TIPOS, CASAS, casaDe } from '~/composables/useTransportes'
+import type { Casa, Transporte } from '~/composables/useTransportes'
 
-definePageMeta({ layout: 'app' })
+const props = defineProps<{ casa: Casa }>()
 
 const { server } = useServer()
 const ui = useUi()
@@ -20,22 +20,21 @@ const lista = ref<Transporte[] | null>(null)
 const erro = ref('')
 
 const form = ref(false)
+const tipo = ref(TIPOS[props.casa][0] || '')
 const identificacao = ref('')
-const nasc = ref('')
 const obs = ref('')
 const foto = ref('')
 const salvando = ref(false)
 
-const cavalos = computed(() =>
-  (lista.value || []).filter((t) => String(t.tipo) === 'Cavalo')
-)
+const info = computed(() => CASAS.find((c) => c.k === props.casa)!)
+const daCasa = computed(() => (lista.value || []).filter((t) => casaDe(t.tipo) === props.casa))
 
 async function carregar() {
   erro.value = ''
   try {
     lista.value = await server<Transporte[]>('apiListarTransportes')
   } catch (e) {
-    erro.value = e instanceof Error ? e.message : 'Não foi possível carregar os cavalos'
+    erro.value = e instanceof Error ? e.message : 'Não foi possível carregar a lista'
   }
 }
 
@@ -52,16 +51,15 @@ async function escolheuFoto(e: Event) {
 }
 
 async function salvar() {
-  if (!identificacao.value) { ui.avisar('Informe o nome do cavalo', 'erro'); return }
+  if (!tipo.value) { ui.avisar('Escolha o tipo', 'erro'); return }
   salvando.value = true
   try {
     await server('apiCriarTransporte', {
-      tipo: 'Cavalo', identificacao: identificacao.value,
-      dataNascimento: nasc.value, obs: obs.value, foto: foto.value, meio: 'aras'
+      tipo: tipo.value, identificacao: identificacao.value, obs: obs.value,
+      foto: foto.value, meio: props.casa === 'marina' ? 'maritimo' : 'terrestre'
     })
-    ui.avisar('Cavalo salvo ✔')
-    form.value = false
-    identificacao.value = ''; nasc.value = ''; obs.value = ''; foto.value = ''
+    ui.avisar('Salvo ✔')
+    form.value = false; identificacao.value = ''; obs.value = ''; foto.value = ''
     await carregar()
   } catch { /* já avisado */ } finally {
     salvando.value = false
@@ -69,19 +67,11 @@ async function salvar() {
 }
 
 async function excluir(t: Transporte) {
-  if (!confirm('Excluir este cavalo?')) return
+  if (!confirm('Excluir este item?')) return
   try {
     await server('apiExcluir', 'transporte', t.id)
     await carregar()
   } catch { /* já avisado */ }
-}
-
-function idade(iso?: string) {
-  if (!iso) return ''
-  const d = new Date(String(iso).slice(0, 10) + 'T12:00:00')
-  if (isNaN(d.getTime())) return ''
-  const anos = Math.floor((Date.now() - d.getTime()) / 31557600000)
-  return anos ? anos + ' ano(s)' : 'menos de 1 ano'
 }
 
 onMounted(carregar)
@@ -93,37 +83,39 @@ onMounted(carregar)
     <div v-else-if="lista === null" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Haras</h2>
-        <div class="meta">Cavalos: saúde, vacinas e casqueamento.</div>
-      </div>
-
       <div v-if="form" class="card">
-        <label for="h_nome">Nome do cavalo *</label>
-        <input id="h_nome" v-model="identificacao" class="no-i18n">
-        <CampoData v-model="nasc" label="Data de nascimento" />
-        <label for="h_obs">Observações</label>
-        <textarea id="h_obs" v-model="obs" class="no-i18n" />
-        <label for="h_foto">Foto</label>
+        <label for="t_tipo">Tipo *</label>
+        <select id="t_tipo" v-model="tipo">
+          <option v-for="t in TIPOS[props.casa]" :key="t">{{ t }}</option>
+        </select>
+
+        <label for="t_id">Identificação</label>
+        <input id="t_id" v-model="identificacao" class="no-i18n" placeholder="Placa, nome ou apelido">
+
+        <label for="t_obs">Observações</label>
+        <textarea id="t_obs" v-model="obs" class="no-i18n" />
+
+        <label for="t_foto">Foto</label>
         <img v-if="foto" :src="foto" class="prev" alt="Prévia">
-        <input id="h_foto" type="file" accept="image/*" @change="escolheuFoto">
+        <input id="t_foto" type="file" accept="image/*" @change="escolheuFoto">
+
         <button class="btn" :disabled="salvando" @click="salvar">
-          {{ salvando ? 'Salvando…' : 'Salvar cavalo' }}
+          {{ salvando ? 'Salvando…' : 'Salvar' }}
         </button>
         <button class="btn sec" @click="form = false">Cancelar</button>
       </div>
 
-      <div v-if="!cavalos.length && !form" class="card vazio">
-        <div class="big"><Icone nome="ferradura" /></div>
-        Nenhum cavalo cadastrado.
+      <div v-if="!daCasa.length && !form" class="card vazio">
+        <div class="big"><Icone :nome="info.ic" /></div>
+        Nada cadastrado aqui ainda.
       </div>
 
-      <div v-for="t in cavalos" :key="t.id" class="card item">
+      <div v-for="t in daCasa" :key="t.id" class="card item">
         <img v-if="t.fotoUrl" :src="String(t.fotoUrl)" class="thumb" alt="">
-        <div v-else class="ic"><Icone nome="ferradura" :px="26" /></div>
+        <div v-else class="ic"><Icone :nome="info.ic" :px="26" /></div>
         <NuxtLink :to="{ path: '/transporte', query: { id: t.id } }" class="grow">
-          <b class="no-i18n">{{ t.identificacao || 'Cavalo' }}</b>
-          <div v-if="idade(t.dataNascimento)" class="meta">{{ idade(t.dataNascimento) }}</div>
+          <b class="no-i18n">{{ t.identificacao || t.tipo }}</b>
+          <div class="meta"><span class="pill">{{ t.tipo }}</span></div>
           <div v-if="t.obs" class="meta no-i18n">{{ t.obs }}</div>
         </NuxtLink>
         <button class="ib" title="Excluir" @click="excluir(t)">
@@ -133,19 +125,17 @@ onMounted(carregar)
 
       <BotaoCriar
         v-if="!form"
-        rotulo="＋ Novo cavalo"
+        rotulo="＋ Adicionar"
         chave="transportes"
         :quantidade="(lista || []).length"
         @criar="form = true"
       />
-      <NuxtLink to="/saude-animal" class="btn sec">Voltar</NuxtLink>
+      <NuxtLink to="/manutencao" class="btn sec">Voltar</NuxtLink>
     </template>
   </div>
 </template>
 
 <style scoped>
-.hero { border-left: 3px solid var(--laranja); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .ruim { color: var(--danger); }
 .vazio { text-align: center; padding: 24px; }
 .vazio .big :deep(.ic-svg) { width: 42px; height: 42px; }
@@ -154,6 +144,7 @@ onMounted(carregar)
 .ic { width: 58px; height: 58px; border-radius: 10px; background: var(--carvao-3); display: flex; align-items: center; justify-content: center; flex: none; }
 .item .grow { flex: 1; min-width: 0; text-decoration: none; color: var(--txt); }
 .item .meta { margin: 3px 0 0; }
+.pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; }
 .ib { border: 0; background: none; cursor: pointer; padding: 4px; flex: none; }
 .prev { max-width: 140px; border-radius: 10px; display: block; margin: 4px 0 8px; }
 .btn.sec { margin-top: 8px; text-decoration: none; }

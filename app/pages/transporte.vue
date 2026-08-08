@@ -10,7 +10,8 @@
  */
 import { useUi } from '~/stores/ui'
 import { dataBR } from '~/composables/useMascaras'
-import type { Transporte } from '~/pages/manutencao.vue'
+import type { Transporte } from '~/composables/useTransportes'
+import { casaDe } from '~/composables/useTransportes'
 
 definePageMeta({ layout: 'app' })
 
@@ -40,6 +41,8 @@ const saude = ref<SaudeT[] | null>(null)
 const erro = ref('')
 
 const ehCavalo = computed(() => String(t.value?.tipo) === 'Cavalo')
+/** Voltar devolve para a casa de onde o item veio, não para o portal. */
+const casaDoItem = computed(() => casaDe(t.value?.tipo))
 
 const hoje = new Date().toISOString().slice(0, 10)
 const form = ref(false)
@@ -215,7 +218,7 @@ onMounted(carregar)
         class="btn sec"
       ><Icone nome="documentos" /> Documentos deste item</NuxtLink>
       <NuxtLink
-        :to="ehCavalo ? '/haras' : '/manutencao'"
+        :to="ehCavalo ? '/haras' : (casaDoItem === 'marina' ? '/marina' : '/garagem')"
         class="btn sec"
       >Voltar</NuxtLink>
     </template>
