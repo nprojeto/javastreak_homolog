@@ -134,14 +134,6 @@ onMounted(carregar)
     <div v-else-if="lista === null" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Manutenção</h2>
-        <div class="meta">
-          Veículos e embarcações: revisão, peças, licenciamento e quilometragem.
-          Cavalo fica em Saúde animal.
-        </div>
-      </div>
-
       <nav class="subnav">
         <button
           v-for="c in CASAS"

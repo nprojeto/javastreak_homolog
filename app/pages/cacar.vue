@@ -1,68 +1,86 @@
 <script setup lang="ts">
 /**
- * Portal do CAÇAR. Por enquanto só o CTF, que é a porta de tudo — o ciclo de
- * caça, os convites e o abate chegam no lote 5.
+ * CAÇAR — o portal. Porte de VIEWS.manejoHub (index.html, 9526).
+ *
+ * ⚠️ Propriedades, Cevas e Rotas vivem AQUI, não como itens soltos no menu
+ * lateral. A ordem dos cartões é a ordem da dependência: sem CTF não se caça;
+ * sem propriedade regular não há ceva nem rota; sem uma das duas não há
+ * caçada. Quem abre a tela vê o caminho.
  */
 import { useCreditos } from '~/stores/creditos'
 
 definePageMeta({ layout: 'app' })
 
 const cred = useCreditos()
+const { server } = useServer()
+
+const abertas = ref<number | null>(null)
+
+const ctfOk = computed(() => cred.dados?.ctfEmDia === true)
+
+onMounted(async () => {
+  try {
+    const l = await server<Array<{ status?: string }>>('apiListarManejos')
+    abertas.value = (l || []).filter((m) => m.status === 'aberto').length
+  } catch {
+    /* O contador é acessório: falhar aqui não pode esconder o portal. */
+  }
+})
 </script>
 
 <template>
   <div>
-    <div class="card hero">
-      <h2>CAÇAR</h2>
-      <div class="meta">
-        Tudo começa pelo CTF: sem ele em dia não se abre caçada, não se registra
-        abate e não se entra na caçada de ninguém.
-      </div>
+    <div class="mod-grade">
+      <CartaoModulo
+        icone="documentos"
+        titulo="CTF"
+        descricao="Envie o documento para liberar"
+        para="/ctf"
+        :selo="cred.dados ? (ctfOk ? 'EM DIA' : 'SEM CTF') : undefined"
+        :selo-tipo="ctfOk ? 'ok' : 'danger'"
+        coluna
+      />
+      <CartaoModulo
+        icone="areas"
+        titulo="Propriedades"
+        descricao="Áreas de manejo e autorizações"
+        para="/propriedades"
+        coluna
+      />
+      <CartaoModulo
+        icone="ceva"
+        titulo="Espera (ceva)"
+        descricao="Cevas, alimento e nível"
+        para="/espera"
+        coluna
+      />
+      <CartaoModulo
+        icone="rotas"
+        titulo="Rotas"
+        descricao="Trajetos dentro da propriedade"
+        para="/rotas"
+        coluna
+      />
     </div>
 
-    <NuxtLink to="/ctf" class="card menu-card">
-      <Icone nome="documentos" :px="34" />
-      <div class="txt">
-        <h3>
-          CTF — Cadastro Técnico Federal
-          <span v-if="cred.dados" class="doc-tag" :class="cred.dados.ctfEmDia ? 'ok' : 'venc'">
-            {{ cred.dados.ctfEmDia ? 'em dia' : 'pendente' }}
-          </span>
-        </h3>
-        <p>Número, emissão, validade e o anexo que comprova o registro</p>
-      </div>
-      <div class="chev">›</div>
-    </NuxtLink>
+    <CartaoModulo
+      icone="painel"
+      titulo="Caçar agora"
+      descricao="Abertas e encerradas · abates de cada uma"
+      para="/cacadas"
+      :selo="abertas ? abertas + ' aberta(s)' : undefined"
+      selo-tipo="ok"
+    />
 
-    <NuxtLink to="/cacadas" class="card menu-card">
-      <Icone nome="painel" :px="34" />
-      <div class="txt">
-        <h3>Caçadas</h3>
-        <p>Abrir ciclo, convidar amigos e acompanhar os abates</p>
-      </div>
-      <div class="chev">›</div>
-    </NuxtLink>
-
-    <NuxtLink to="/ibama" class="card menu-card">
-      <Icone nome="arquivo" :px="34" />
-      <div class="txt">
-        <h3>Fechamento IBAMA</h3>
-        <p>Juntar os abates de uma autorização e prestar contas</p>
-      </div>
-      <div class="chev">›</div>
-    </NuxtLink>
+    <CartaoModulo
+      icone="grafico"
+      titulo="Relatório Fechamento IBAMA"
+      descricao="Abates por autorização, para prestar contas"
+      para="/ibama"
+    />
   </div>
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid var(--laranja); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: 1px; }
-.menu-card { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--txt); }
-.menu-card .txt { flex: 1; }
-.menu-card h3 { margin: 0 0 2px; font-size: 15px; }
-.menu-card p { margin: 0; font-size: 12.5px; color: var(--osso-2); }
-.chev { font-size: 22px; color: var(--linha); }
-.doc-tag { font-size: 10.5px; padding: 2px 7px; border-radius: 999px; background: var(--linha); }
-.doc-tag.ok { background: var(--verde-claro); color: var(--verde-esc); }
-.doc-tag.venc { background: #3A1E1C; color: var(--danger); }
+.mod-grade { margin-bottom: 12px; }
 </style>

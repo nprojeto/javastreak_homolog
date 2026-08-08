@@ -15,34 +15,41 @@ export interface ItemNav {
   pronta?: boolean
 }
 
+/**
+ * ⚠️ MENU CURTO, de propósito. Propriedades, Cevas e Rotas NÃO ficam aqui —
+ * elas vivem dentro de CAÇAR, porque só fazem sentido em sequência: sem CTF
+ * não se caça, sem propriedade regular não há ceva nem rota. Espalhar tudo no
+ * menu escondia essa ordem e enchia a lateral com onze itens.
+ *
+ * Os quatro do fim (`TOP_KEYS`) moram na barra de atalhos, não na lateral.
+ */
 export const NAV_MANEJADOR: ItemNav[] = [
   { chave: 'manejoHub', rota: '/cacar', label: 'CAÇAR', icon: 'abate', destaque: true, pronta: true },
   { chave: 'inicio', rota: '/inicio', label: 'Início', icon: 'inicio', pronta: true },
   { chave: 'agenda', rota: '/agenda', label: 'Agenda', icon: 'agenda', pronta: true },
   { chave: 'manutencaoHub', rota: '/manutencao', label: 'Manutenção', icon: 'espreita', pronta: true },
   { chave: 'saudeAnimal', rota: '/saude-animal', label: 'Saúde animal', icon: 'caes', pronta: true },
-  { chave: 'propriedades', rota: '/propriedades', label: 'Propriedades', icon: 'areas', pronta: true },
-  { chave: 'espera', rota: '/espera', label: 'Cevas', icon: 'espera', pronta: true },
-  { chave: 'rotas', rota: '/rotas', label: 'Rotas', icon: 'rotas', pronta: true },
   { chave: 'documentacao', rota: '/documentacao', label: 'Documentação', icon: 'documentacao', pronta: true },
   { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte', pronta: true },
-  { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa', pronta: true },
+
   { chave: 'trofeus', rota: '/trofeus', label: 'Sala de troféu', icon: 'trofeus', pronta: true },
   { chave: 'ranking', rota: '/ranking', label: 'Ranking', icon: 'ranking', pronta: true },
-  { chave: 'promocoes', rota: '/promocoes', label: 'Promoções', icon: 'avisos', pronta: true }
+  { chave: 'promocoes', rota: '/promocoes', label: 'Promoções', icon: 'avisos', pronta: true },
+  { chave: 'mapaGeral', rota: '/mapa', label: 'Rede', icon: 'network', pronta: true }
 ]
 
 export const NAV_LOJISTA: ItemNav[] = [
   { chave: 'empresa', rota: '/empresa', label: 'Minha empresa', icon: 'inicio', pronta: true },
   { chave: 'vitrine', rota: '/vitrine', label: 'Minha vitrine', icon: 'carrinho', pronta: true },
   { chave: 'patrocinio', rota: '/patrocinio', label: 'Patrocínio', icon: 'patrocinio', pronta: true },
-  { chave: 'promocoes', rota: '/promocoes', label: 'Promoções', icon: 'avisos', pronta: true },
   { chave: 'suporte', rota: '/suporte', label: 'Suporte', icon: 'suporte', pronta: true },
-  { chave: 'mapaGeral', rota: '/mapa', label: 'Mapa', icon: 'mapa', pronta: true },
-  { chave: 'ranking', rota: '/ranking', label: 'Ranking', icon: 'ranking' }
+
+  { chave: 'promocoes', rota: '/promocoes', label: 'Promoções', icon: 'avisos', pronta: true },
+  { chave: 'ranking', rota: '/ranking', label: 'Ranking', icon: 'ranking', pronta: true },
+  { chave: 'mapaGeral', rota: '/mapa', label: 'Rede', icon: 'network', pronta: true }
 ]
 
-/** Estes quatro moram na barra de cima, não na lateral. */
+/** Estes moram na barra de atalhos, acima do conteúdo. */
 export const TOP_KEYS = ['trofeus', 'ranking', 'promocoes', 'mapaGeral']
 
 /** Qual limite do plano controla cada item. */

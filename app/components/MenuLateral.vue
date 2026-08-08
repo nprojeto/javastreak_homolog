@@ -60,14 +60,20 @@ async function sair() {
     <div class="sb-topo">
       <img :src="marca.lockup" :alt="marca.nome" class="sb-logo">
       <div class="sb-nome">{{ auth.nome || '—' }}</div>
-      <NuxtLink
-        v-if="cred.dados"
-        to="/planos"
-        class="sb-plano"
-        :class="{ pago: cred.dados.plano !== 'free' }"
-        @click="aberto = false"
-      >{{ cred.dados.planoNome }}</NuxtLink>
+      <div v-if="cred.dados" class="sb-plano" :class="{ pago: cred.dados.plano !== 'free' }">
+        {{ cred.dados.planoNome }}
+      </div>
     </div>
+
+    <!-- Chamada de plano no topo, como no legado: é o primeiro item porque é
+         o que destrava o resto quando algum limite bate. -->
+    <NuxtLink to="/planos" class="sb-planos" @click="aberto = false">
+      <Icone nome="estrela" :px="20" />
+      <span>
+        <b>Ver planos</b>
+        <small>Comparar e renovar</small>
+      </span>
+    </NuxtLink>
 
     <nav class="sb-nav">
       <button
@@ -110,9 +116,17 @@ async function sair() {
 .sb-nome { font-weight: 700; margin-top: 6px; font-size: 15px; }
 .sb-plano {
   display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 700;
-  padding: 3px 10px; border-radius: 999px; text-decoration: none;
+  padding: 3px 10px; border-radius: 999px;
   background: var(--linha); color: var(--txt);
 }
+.sb-planos {
+  display: flex; align-items: center; gap: 10px;
+  margin: 10px 12px 4px; padding: 11px 12px; border-radius: 12px;
+  background: var(--laranja); color: #fff; text-decoration: none;
+}
+.sb-planos :deep(.ic-svg) { stroke: #fff; }
+.sb-planos b { display: block; font-size: 14px; line-height: 1.2; text-transform: uppercase; }
+.sb-planos small { display: block; font-size: 10.5px; opacity: .85; text-transform: uppercase; letter-spacing: .05em; }
 .sb-plano.pago { background: var(--verde); color: #fff; }
 
 .sb-nav { flex: 1; padding: 8px 0; }

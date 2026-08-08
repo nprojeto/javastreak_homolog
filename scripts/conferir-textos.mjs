@@ -42,7 +42,10 @@ for (const f of vue('app')) {
     const t = m[1].replace(/\s+/g, ' ').trim()
     if (t.length > 1 && /[A-Za-zÀ-ÿ]/.test(t)) achadas.add(t)
   }
-  for (const m of tpl.matchAll(/'([^'\\]{2,120})'/g)) {
+  /* ⚠️ `[^'\\\n]` — sem o \n a expressão casava de uma aspa numa linha até
+     outra dez linhas abaixo, e devolvia um pedaço de HTML como se fosse
+     frase. Foi um falso alarme que quase me fez "consertar" um arquivo são. */
+  for (const m of tpl.matchAll(/'([^'\\\n]{2,120})'/g)) {
     const t = m[1].trim()
     if (/[A-Za-zÀ-ÿ]/.test(t) && t.includes(' ')) achadas.add(t)
   }

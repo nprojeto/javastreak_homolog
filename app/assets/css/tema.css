@@ -381,3 +381,11 @@ body.pagina-larga .miolo { max-width: 1040px; }
 @media (max-width: 380px) {
   .ts-card b { font-size: 11.5px; }
 }
+
+
+/* ── Grade de módulos (CAÇAR) ────────────────────────────────────────────
+   Quatro cartões lado a lado em tela larga; dois no tablet; um no celular.  */
+.mod-grade { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 520px) { .mod-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .mod-grade { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.mod-grade > .card { margin-top: 0; display: flex; }
