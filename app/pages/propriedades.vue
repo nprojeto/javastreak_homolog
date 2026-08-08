@@ -106,6 +106,9 @@ onMounted(carregar)
         </div>
 
         <div class="acoes">
+          <NuxtLink :to="{ path: '/propriedade-detalhe', query: { id: p.id } }" class="btn sm">
+            <Icone nome="mapa" /> Abrir
+          </NuxtLink>
           <NuxtLink :to="{ path: '/propriedade', query: { id: p.id } }" class="btn sm sec">
             <Icone nome="editar" /> Editar
           </NuxtLink>

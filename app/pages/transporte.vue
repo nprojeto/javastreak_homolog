@@ -215,7 +215,7 @@ onMounted(carregar)
         class="btn sec"
       ><Icone nome="documentos" /> Documentos deste item</NuxtLink>
       <NuxtLink
-        :to="ehCavalo ? { path: '/manutencao', query: { casa: 'haras' } } : '/manutencao'"
+        :to="ehCavalo ? '/haras' : '/manutencao'"
         class="btn sec"
       >Voltar</NuxtLink>
     </template>

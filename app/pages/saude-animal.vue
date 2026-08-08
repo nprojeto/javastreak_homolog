@@ -59,7 +59,7 @@ onMounted(async () => {
       <div class="chev">›</div>
     </NuxtLink>
 
-    <NuxtLink :to="{ path: '/manutencao', query: { casa: 'haras' } }" class="card menu-card">
+    <NuxtLink to="/haras" class="card menu-card">
       <span class="ic"><Icone nome="ferradura" :px="34" /></span>
       <div class="txt">
         <h3>Haras</h3>

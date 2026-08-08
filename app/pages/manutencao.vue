@@ -21,21 +21,28 @@ export interface Transporte {
   dataNascimento?: string
 }
 
+/**
+ * ⚠️ DUAS casas, não três. O haras saiu daqui e vive em Saúde animal.
+ *
+ * O critério não é onde o bicho ou a máquina fica — é O QUE SE REGISTRA.
+ * Manutenção é o que quebra, desgasta e precisa de revisão: óleo, pneu,
+ * correia, licenciamento, quilometragem. Cavalo não tem nada disso; tem
+ * vacina e casqueamento, que é a mesma natureza do cão.
+ */
 const CASAS = [
   { k: 'garagem', rot: 'Garagem', ic: 'garagem' },
-  { k: 'marina', rot: 'Marina', ic: 'marina' },
-  { k: 'haras', rot: 'Haras', ic: 'ferradura' }
+  { k: 'marina', rot: 'Marina', ic: 'marina' }
 ] as const
 type Casa = (typeof CASAS)[number]['k']
 
 const TIPOS: Record<Casa, string[]> = {
   garagem: ['Carro', 'Moto', 'Quadriciclo', 'Caminhonete', 'Outro'],
-  marina: ['Barco', 'Lancha', 'Bote', 'Caiaque', 'Canoa', 'Jet ski', 'Outra embarcação'],
-  haras: ['Cavalo']
+  marina: ['Barco', 'Lancha', 'Bote', 'Caiaque', 'Canoa', 'Jet ski', 'Outra embarcação']
 }
+const TIPOS_HARAS = ['Cavalo']
 
-function casaDe(tipo?: string): Casa {
-  if (TIPOS.haras.includes(String(tipo))) return 'haras'
+function casaDe(tipo?: string): Casa | 'haras' {
+  if (TIPOS_HARAS.includes(String(tipo))) return 'haras'
   if (TIPOS.marina.includes(String(tipo))) return 'marina'
   return 'garagem'
 }
@@ -52,13 +59,10 @@ const erro = ref('')
  * sem a pessoa cair na garagem e ter que procurar a aba.
  */
 const casa = ref<Casa>(
-  (['garagem', 'marina', 'haras'] as const).includes(route.query.casa as Casa)
+  (['garagem', 'marina'] as const).includes(route.query.casa as Casa)
     ? (route.query.casa as Casa)
     : 'garagem'
 )
-
-/** Veio da Saúde animal? Então o Voltar tem que devolver para lá. */
-const doHaras = computed(() => route.query.casa === 'haras')
 
 const form = ref(false)
 const tipo = ref('')
@@ -133,7 +137,8 @@ onMounted(carregar)
       <div class="card hero">
         <h2>Manutenção</h2>
         <div class="meta">
-          Veículos, embarcações e cavalos, cada um com o cuidado que lhe cabe.
+          Veículos e embarcações: revisão, peças, licenciamento e quilometragem.
+          Cavalo fica em Saúde animal.
         </div>
       </div>
 
@@ -161,7 +166,7 @@ onMounted(carregar)
           id="t_id"
           v-model="identificacao"
           class="no-i18n"
-          :placeholder="casa === 'haras' ? 'Nome do cavalo' : 'Placa, nome ou apelido'"
+          placeholder="Placa, nome ou apelido"
         >
 
         <label for="t_obs">Observações</label>
@@ -203,7 +208,7 @@ onMounted(carregar)
         @criar="form = true"
       />
 
-      <NuxtLink v-if="doHaras" to="/saude-animal" class="btn sec">Voltar</NuxtLink>
+
     </template>
   </div>
 </template>

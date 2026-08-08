@@ -18,7 +18,7 @@ const IGNORAR = [
   /^https?:/, /^@/, /^•+$/,
   /^[a-z][A-Za-z0-9_.]*$/,     // nomes de variável que escaparam
   /\?|\|\||=>|===/,            // pedaço de expressão, não texto
-  /^(JavaStreak|CPF|CNPJ|CR|JS-XXXX-XXXX)$/, // nomes e siglas iguais nos 3 idiomas
+  /^(JavaStreak|CPF|CNPJ|CR|CAR|JS-XXXX-XXXX)$/, // siglas iguais nos 3 idiomas
   /^HOMOLOGAÇÃO$/              // faixa de ambiente: some no dia do corte
 ]
 
