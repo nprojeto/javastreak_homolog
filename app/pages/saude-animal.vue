@@ -34,6 +34,8 @@ onMounted(async () => {
 
 <template>
   <div>
+    <TituloTela titulo="Saúde animal" descricao="Cães e cavalos: vacinas e retornos entram na Agenda." />
+
     <CartaoModulo
       icone="canil"
       titulo="CANIL"

@@ -98,6 +98,8 @@ onMounted(carregar)
 
 <template>
   <div>
+    <TituloTela titulo="Sala de troféu" />
+
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
     <div v-else-if="!sala" class="card"><div class="meta">Carregando…</div></div>
 

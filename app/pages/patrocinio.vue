@@ -105,14 +105,7 @@ onMounted(carregar)
     </div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Patrocínio</h2>
-        <div class="meta">
-          Apareça no cartão de destaque da plataforma ou premie o 1º do ranking
-          de troféus. Você propõe; o administrador avalia e decide por quantos
-          dias fica no ar.
-        </div>
-      </div>
+      <TituloTela titulo="Patrocínio" descricao="Apareça no cartão de destaque da plataforma ou premie o 1º do ranking de troféus. Você propõe; o administrador avalia e decide por quantos dias fica no ar." />
 
       <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
 
@@ -186,8 +179,6 @@ onMounted(carregar)
 </template>
 
 <style scoped>
-.hero { border-left: 3px solid var(--laranja); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .ruim { color: var(--danger); }
 .vazio { text-align: center; padding: 24px; }
 .vazio .big :deep(.ic-svg) { width: 42px; height: 42px; }

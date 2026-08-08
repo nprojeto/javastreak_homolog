@@ -54,15 +54,17 @@ onMounted(carregar)
     <div v-else-if="!dados" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Ranking</h2>
+      <TituloTela
+        titulo="Ranking"
+        descricao="Troféus em disputa nas últimas 24 horas, ordenados pela média."
+      />
+
+      <div v-if="!dados.podeVotar" class="card aviso-sala">
         <div class="meta">
-          Troféus em disputa nas últimas 24 horas, ordenados pela média.
+          <Icone nome="alerta" /> Deixe a sua sala visível para poder avaliar os
+          troféus dos outros.
         </div>
-        <div v-if="!dados.podeVotar" class="meta aviso">
-          <Icone nome="alerta" /> Deixe a sua sala visível para poder avaliar os troféus dos outros.
-          <NuxtLink to="/trofeus">Abrir minha sala</NuxtLink>
-        </div>
+        <NuxtLink to="/trofeus" class="btn sec">Abrir minha sala</NuxtLink>
       </div>
 
       <ClientOnly><CartaoDestaque /></ClientOnly>
@@ -105,9 +107,9 @@ onMounted(carregar)
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid var(--laranja); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .ruim { color: var(--danger); }
+.aviso-sala { border-left: 3px solid var(--alerta); }
+.aviso-sala .btn { margin-top: 8px; text-decoration: none; width: auto; }
 .aviso { color: var(--laranja-esc); margin-top: 6px; }
 .aviso a { color: var(--laranja); font-weight: 600; }
 .vazio { text-align: center; padding: 24px; }

@@ -182,6 +182,8 @@ async function salvar() {
 
 <template>
   <div>
+    <TituloTela titulo="Registrar abate" />
+
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
 
     <div v-else-if="!manejoId" class="card vazio">

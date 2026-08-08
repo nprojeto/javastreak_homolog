@@ -135,6 +135,8 @@ onMounted(async () => {
 
 <template>
   <div>
+    <TituloTela titulo="Agenda" />
+
     <div v-if="erro" class="card">
       <div class="meta erro">{{ erro }}</div>
     </div>

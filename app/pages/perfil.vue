@@ -194,6 +194,8 @@ async function escolherIdioma(l: Idm) {
 
 <template>
   <div>
+    <TituloTela titulo="Meu perfil" />
+
     <div class="card">
       <h3>Idioma</h3>
       <div class="meta">O idioma fica salvo na sua conta e acompanha você em qualquer aparelho.</div>

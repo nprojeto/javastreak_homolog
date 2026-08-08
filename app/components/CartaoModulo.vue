@@ -49,7 +49,7 @@ defineProps<{
     </div>
 
     <span class="btn sm sec mod-btn">{{ travado ? 'Resolver' : 'Abrir' }}</span>
-    <span v-if="!coluna" class="mod-chev">›</span>
+    <span class="mod-chev" :class="{ 'so-estreito': coluna }">›</span>
   </NuxtLink>
 </template>
 
@@ -75,6 +75,8 @@ defineProps<{
 .mod-selo.ok { background: var(--verde-claro); color: var(--verde-esc); }
 .mod-btn { flex: none; width: auto; margin: 0; }
 .mod-chev { flex: none; font-size: 20px; color: var(--linha); }
+/* A seta só faz sentido quando o cartão é uma linha. */
+@media (min-width: 520px) { .mod-chev.so-estreito { display: none; } }
 
 /* Travado: o cartão apaga, mas continua legível e clicável. */
 .mod.bloq { border-left: 3px solid var(--alerta); }
@@ -82,9 +84,24 @@ defineProps<{
 .mod.bloq h3 { color: var(--osso-2); }
 .mod.bloq .mod-ic :deep(.ic-svg) { stroke: var(--alerta); }
 
-/* Em grade: o conteúdo empilha e o botão vai para o fim do cartão. */
-.mod.col {
-  flex-direction: column; align-items: stretch; text-align: left; gap: 10px;
+/**
+ * Em grade, o cartão vira uma coluna — mas SÓ quando há largura para ele ser
+ * estreito de verdade.
+ *
+ * ⚠️ Abaixo de 520px a grade já é de uma coluna só, e empilhar ali colocava o
+ * ícone sozinho em cima de um cartão da largura da tela: uma pilha alta, com
+ * o botão ocupando a linha inteira. Nessa faixa o cartão volta a ser linha,
+ * igual aos dos outros portais — que é justamente a padronização que o resto
+ * do app segue.
+ */
+@media (min-width: 520px) {
+  .mod.col {
+    flex-direction: column; align-items: stretch; text-align: left; gap: 10px;
+  }
+  .mod.col .mod-btn { width: 100%; margin-top: auto; }
 }
-.mod.col .mod-btn { width: 100%; margin-top: auto; }
+/* Estreito: mesma linha dos demais cartões, com a seta de volta. */
+@media (max-width: 519px) {
+  .mod.col .mod-chev { display: inline; }
+}
 </style>

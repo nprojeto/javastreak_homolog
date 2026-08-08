@@ -53,6 +53,18 @@ for (const f of vue('app')) {
     const t = m[1].trim()
     if (t.length > 1) achadas.add(t)
   }
+  /**
+   * ⚠️ Atributo de COMPONENTE também é texto de tela. `<TituloTela titulo="…">`
+   * e `<CartaoModulo descricao="…">` passavam batidos, e o título de metade
+   * das telas ficou fora do dicionário sem ninguém notar.
+   *
+   * O `(?<![:@])` exclui `:titulo="expressao"` — ali o valor é código, não
+   * frase, e incluir traria `c.rot` como se fosse texto para traduzir.
+   */
+  for (const m of tpl.matchAll(/(?<![:@\w-])(?:titulo|descricao|rotulo|label)="([^"{}]+)"/g)) {
+    const t = m[1].replace(/\s+/g, ' ').trim()
+    if (t.length > 1 && /[A-Za-zÀ-ÿ]/.test(t)) achadas.add(t)
+  }
 }
 
 const falta = [...achadas]

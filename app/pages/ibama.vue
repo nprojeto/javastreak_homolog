@@ -32,6 +32,8 @@ onMounted(async () => {
 
 <template>
   <div>
+    <TituloTela titulo="Fechamento IBAMA" />
+
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
     <div v-else-if="lista === null" class="card"><div class="meta">Carregando…</div></div>
 

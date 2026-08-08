@@ -118,6 +118,8 @@ onMounted(carregar)
 
 <template>
   <div>
+    <TituloTela titulo="Relatório IBAMA" />
+
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
     <div v-else-if="!r" class="card"><div class="meta">Gerando relatório…</div></div>
 

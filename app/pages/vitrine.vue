@@ -100,12 +100,10 @@ onMounted(carregar)
     <div v-else-if="!dados" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Minha vitrine</h2>
-        <div class="meta">
-          {{ dados.produtos.length }} de {{ dados.limite }} produto(s)
-          <template v-if="dados.nomePlano"> · plano {{ dados.nomePlano }}</template>
-        </div>
+      <TituloTela titulo="Minha vitrine" />
+      <div class="meta contagem">
+        {{ dados.produtos.length }} de {{ dados.limite }} produto(s)
+        <template v-if="dados.nomePlano"> · plano {{ dados.nomePlano }}</template>
       </div>
 
       <div v-if="form" class="card">
@@ -155,9 +153,8 @@ onMounted(carregar)
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid #ee8a2e; }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .ruim { color: var(--danger); }
+.contagem { margin: -8px 2px 12px; }
 .travado { border-left: 5px solid var(--alerta); }
 .travado .btn { margin-top: 8px; text-decoration: none; }
 .vazio { text-align: center; padding: 24px; }

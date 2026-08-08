@@ -159,10 +159,7 @@ onMounted(carregar)
     <div v-else-if="!lista || !meu" class="card"><div class="meta">Carregando planos…</div></div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Escolha seu plano</h2>
-        <div class="meta">Comece grátis e evolua quando precisar de mais.</div>
-      </div>
+      <TituloTela titulo="Escolha seu plano" descricao="Comece grátis e evolua quando precisar de mais." />
 
       <div
         v-if="meu.plano !== 'free' && meu.diasRestantes !== null && meu.diasRestantes <= 15"
@@ -244,8 +241,6 @@ onMounted(carregar)
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid var(--verde); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .venc { border-left: 5px solid var(--alerta); }
 .ruim { color: var(--danger); }
 

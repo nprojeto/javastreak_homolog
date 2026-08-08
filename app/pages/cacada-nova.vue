@@ -117,6 +117,8 @@ async function salvar() {
 
 <template>
   <div>
+    <TituloTela titulo="Nova caçada" />
+
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
     <div v-else-if="!pronto" class="card"><div class="meta">Carregando opções…</div></div>
 

@@ -118,12 +118,7 @@ onMounted(carregar)
     <div v-else-if="promos === null" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Promoções relâmpago</h2>
-        <div class="meta">
-          Ofertas com validade curta das lojas parceiras da sua região.
-        </div>
-      </div>
+      <TituloTela titulo="Promoções relâmpago" descricao="Ofertas com validade curta das lojas parceiras da sua região." />
 
       <!-- ───── EMPRESA ───── -->
       <template v-if="ehEmpresa">
@@ -226,8 +221,6 @@ onMounted(carregar)
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid var(--laranja); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .ruim { color: var(--danger); }
 .travado { border-left: 5px solid var(--alerta); }
 .travado .btn { margin-top: 8px; text-decoration: none; }

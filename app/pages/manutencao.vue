@@ -31,6 +31,8 @@ onMounted(async () => {
 
 <template>
   <div>
+    <TituloTela titulo="Manutenção" descricao="Veículos e embarcações: revisão, peças e licenciamento." />
+
     <CartaoModulo
       v-for="c in CASAS"
       :key="c.k"

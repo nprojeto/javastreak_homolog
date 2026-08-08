@@ -58,10 +58,10 @@ onMounted(async () => {
 
 <template>
   <div>
-    <div class="card hero">
-      <h2>Bem-vindo{{ primeiroNome ? ', ' + primeiroNome : '' }}</h2>
-      <div class="meta">Registre, acompanhe e comprove o seu manejo.</div>
-    </div>
+    <TituloTela
+      :titulo="primeiroNome ? 'Bem-vindo, ' + primeiroNome : 'Bem-vindo'"
+      descricao="Registre, acompanhe e comprove o seu manejo."
+    />
 
     <div
       v-if="atrasadas || proximas"
@@ -123,8 +123,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid var(--verde); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .alerta { border-left: 5px solid var(--alerta); }
 .alerta.vermelho { border-left-color: var(--danger); }
 .alerta h3 { margin: 0 0 4px; }

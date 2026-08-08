@@ -173,14 +173,12 @@ onMounted(carregar)
     <div v-else-if="docs === null" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Documentação</h2>
-        <div class="meta">
-          Guarde seus documentos e acompanhe os vencimentos. Tudo entra na Agenda.
-        </div>
-        <div v-if="cred.dados" class="meta">
-          {{ cred.dados.docsContados }} documento(s) contando para o seu plano.
-        </div>
+      <TituloTela
+        titulo="Documentação"
+        descricao="Guarde seus documentos e acompanhe os vencimentos. Tudo entra na Agenda."
+      />
+      <div v-if="cred.dados" class="meta contagem">
+        {{ cred.dados.docsContados }} documento(s) contando para o seu plano.
       </div>
 
       <nav class="subnav">
@@ -300,9 +298,8 @@ onMounted(carregar)
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid var(--verde); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .ruim { color: var(--danger); }
+.contagem { margin: -8px 2px 12px; }
 
 .subnav { display: flex; gap: 6px; margin-bottom: 10px; }
 .subnav button {

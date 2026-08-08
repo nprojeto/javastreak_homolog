@@ -67,13 +67,7 @@ onMounted(carregar)
     <div v-else-if="lista === null" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Propriedades</h2>
-        <div class="meta">
-          É a propriedade que libera o resto: sem limite desenhado e as duas
-          autorizações válidas, ela não recebe ceva, rota nem caçada.
-        </div>
-      </div>
+      <TituloTela titulo="Propriedades" descricao="É a propriedade que libera o resto: sem limite desenhado e as duas autorizações válidas, ela não recebe ceva, rota nem caçada." />
 
       <div v-if="!lista.length" class="card vazio">
         <div class="big"><Icone nome="areas" /></div>
@@ -122,8 +116,6 @@ onMounted(carregar)
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid var(--verde); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .ruim { color: var(--danger); }
 .vazio { text-align: center; padding: 24px 16px; }
 .vazio .big { font-size: 40px; margin-bottom: 6px; }

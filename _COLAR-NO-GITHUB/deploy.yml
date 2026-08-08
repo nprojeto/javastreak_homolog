@@ -57,6 +57,12 @@ jobs:
       - name: Conferir textos das telas
         run: npm run conferir:textos
 
+      # Compila cada .vue sozinho para dizer QUAL arquivo quebrou. O erro do
+      # build diz "26 erros" e nao diz onde — procurar a mao em 51 telas ja
+      # levou a consertar o arquivo errado.
+      - name: Conferir telas
+        run: npm run conferir:telas
+
       # Endereco base = subpasta do repositorio, porque o teste sai em
       # usuario.github.io/<repositorio>/ e nao no dominio proprio.
       # O nome vem do proprio GitHub, entao renomear o repositorio nao quebra

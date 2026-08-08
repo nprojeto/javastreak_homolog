@@ -140,6 +140,8 @@ onMounted(carregar)
 
 <template>
   <div>
+    <TituloTela titulo="Rede" />
+
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
     <div v-else-if="!dados" class="card"><div class="meta">Carregando mapa…</div></div>
 

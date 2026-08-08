@@ -45,6 +45,8 @@ onMounted(async () => {
 
 <template>
   <div>
+    <TituloTela titulo="CAÇAR" descricao="Sem CTF em dia, nada aqui dentro abre." />
+
     <div class="mod-grade">
       <CartaoModulo
         icone="documentos"

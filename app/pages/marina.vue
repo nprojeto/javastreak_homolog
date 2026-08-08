@@ -3,5 +3,8 @@ definePageMeta({ layout: 'app' })
 </script>
 
 <template>
-  <ListaTransportes casa="marina" />
+  <div>
+    <TituloTela titulo="Marina" />
+    <ListaTransportes casa="marina" />
+  </div>
 </template>

@@ -123,6 +123,8 @@ onMounted(async () => {
 
 <template>
   <div>
+    <TituloTela titulo="Propriedade" />
+
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
     <div v-else-if="carregando || !p" class="card"><div class="meta">Carregando…</div></div>
 

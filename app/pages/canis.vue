@@ -67,10 +67,7 @@ onMounted(carregar)
     <div v-else-if="lista === null" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div class="card hero">
-        <h2>Cães</h2>
-        <div class="meta">Seus canis e a matilha de cada um.</div>
-      </div>
+      <TituloTela titulo="Cães" descricao="Seus canis e a matilha de cada um." />
 
       <div v-if="form" class="card">
         <label for="k_nome">Nome do canil *</label>
@@ -110,8 +107,6 @@ onMounted(carregar)
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid var(--verde); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 .ruim { color: var(--danger); }
 .vazio { text-align: center; padding: 24px; }
 .vazio .big { font-size: 40px; margin-bottom: 6px; }

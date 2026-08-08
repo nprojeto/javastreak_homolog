@@ -215,10 +215,7 @@ onMounted(() => {
     </div>
 
     <template v-else>
-      <div class="card hero">
-        <h2><Icone nome="bloqueio" /> Administração</h2>
-        <div class="meta">Painel, usuários, cortesia e diagnósticos.</div>
-      </div>
+      <TituloTela titulo="Administração" descricao="Painel, usuários, cortesia e diagnósticos." />
 
       <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
 
@@ -414,8 +411,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.hero { border-top: 4px solid var(--verde-esc); }
-.hero h2 { margin: 0 0 4px; font-size: 20px; }
 h3 { margin: 0 0 4px; }
 .sub { margin: 14px 0 6px; font-size: 13px; color: var(--verde); }
 .ruim, .dan { color: var(--danger); }

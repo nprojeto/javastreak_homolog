@@ -90,6 +90,8 @@ onMounted(carregar)
 
 <template>
   <div>
+    <TituloTela titulo="CTF" />
+
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
     <div v-else-if="!ctf" class="card"><div class="meta">Carregando…</div></div>
 
