@@ -9,7 +9,7 @@ import { useMarca } from '~/composables/useMarca'
  */
 import { useAuth } from '~/stores/auth'
 import { useCreditos } from '~/stores/creditos'
-import { NAV_MANEJADOR, NAV_LOJISTA, TOP_KEYS, MODULO_LIMITE } from '~/composables/useNavegacao'
+import { NAV_MANEJADOR, NAV_LOJISTA, TOP_KEYS, CONTA_KEYS, MODULO_LIMITE } from '~/composables/useNavegacao'
 import { NAV_SVG } from '~/composables/useIcones'
 
 const aberto = defineModel<boolean>('aberto', { default: false })
@@ -18,13 +18,12 @@ const auth = useAuth()
 const cred = useCreditos()
 const route = useRoute()
 const router = useRouter()
-const { server } = useServer()
 const cfg = useRuntimeConfig()
 const marca = useMarca()
 
 const itens = computed(() => {
   const base = auth.tipo === 'empresa' ? NAV_LOJISTA : NAV_MANEJADOR
-  const lista = base.filter((n) => !TOP_KEYS.includes(n.chave))
+  const lista = base.filter((n) => !TOP_KEYS.includes(n.chave) && !CONTA_KEYS.includes(n.chave))
   return auth.admin
     ? lista.concat([{ chave: 'admin', rota: '/admin', label: 'Administração', icon: 'admin' }])
     : lista
@@ -39,17 +38,6 @@ function bloqueado(chave: string) {
 function ir(rota: string) {
   aberto.value = false
   router.push(rota)
-}
-
-async function sair() {
-  aberto.value = false
-  try {
-    await server('apiLogout')
-  } catch { /* a sessão local morre de qualquer jeito */ }
-  auth.encerrar()
-  auth.reconhecerExpiracao()
-  cred.limpar()
-  await router.push('/')
 }
 </script>
 
@@ -89,8 +77,9 @@ async function sair() {
       </button>
     </nav>
 
+    <!-- ⚠️ Sem "Sair" e sem "Suporte" aqui: os dois moram no menu da conta,
+         ao lado do sino. O rodapé fica só com o carimbo de versão. -->
     <div class="sb-pe">
-      <button class="btn sec sair" @click="sair">Sair</button>
       <div class="sb-ver">{{ cfg.public.appVer }}</div>
     </div>
   </aside>
@@ -143,7 +132,6 @@ async function sair() {
 .sb-label { flex: 1; }
 .sb-lock { font-size: 12px; }
 
-.sb-pe { padding: 12px 14px 18px; border-top: 1px solid var(--linha); }
-.sair { margin: 0; }
-.sb-ver { text-align: center; font-size: 10.5px; color: var(--osso-2); margin-top: 10px; }
+.sb-pe { padding: 10px 14px 16px; border-top: 1px solid var(--linha); }
+.sb-ver { text-align: center; font-size: 10.5px; color: var(--osso-2); }
 </style>

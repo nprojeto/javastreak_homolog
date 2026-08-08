@@ -21,7 +21,10 @@ export interface ItemNav {
  * não se caça, sem propriedade regular não há ceva nem rota. Espalhar tudo no
  * menu escondia essa ordem e enchia a lateral com onze itens.
  *
- * Os quatro do fim (`TOP_KEYS`) moram na barra de atalhos, não na lateral.
+ * Os quatro do fim (`TOP_KEYS`) moram na barra de atalhos, não na lateral, e
+ * o `suporte` (`CONTA_KEYS`) mora no menu da conta, ao lado do sino. Os itens
+ * continuam declarados aqui de propósito: é a lista única de rotas do menu, e
+ * apagá-los daqui esconderia que a rota existe.
  */
 export const NAV_MANEJADOR: ItemNav[] = [
   { chave: 'manejoHub', rota: '/cacar', label: 'CAÇAR', icon: 'abate', destaque: true, pronta: true },
@@ -51,6 +54,13 @@ export const NAV_LOJISTA: ItemNav[] = [
 
 /** Estes moram na barra de atalhos, acima do conteúdo. */
 export const TOP_KEYS = ['trofeus', 'ranking', 'promocoes', 'mapaGeral']
+
+/**
+ * Estes moram no menu da conta (`MenuConta`), ao lado do sino, e por isso são
+ * peneirados da lateral. Duas portas para a mesma tela, uma acima da outra,
+ * só ocupam espaço — o mesmo motivo que juntou perfil, planos e compras lá.
+ */
+export const CONTA_KEYS = ['suporte']
 
 /** Qual limite do plano controla cada item. */
 export const MODULO_LIMITE: Record<string, string> = {
