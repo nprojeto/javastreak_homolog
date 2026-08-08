@@ -19,20 +19,36 @@ defineProps<{
   seloTipo?: 'ok' | 'alerta' | 'danger'
   /** Empilha em grade em vez de ocupar a linha inteira. */
   coluna?: boolean
+  /**
+   * Motivo do bloqueio. Preenchido, o cartão não abre o destino: leva ao
+   * `paraDestravar` e diz por quê.
+   */
+  travado?: string
+  paraDestravar?: string
 }>()
 </script>
 
 <template>
-  <NuxtLink :to="para" class="card mod" :class="{ col: coluna }">
-    <span class="mod-ic"><Icone :nome="icone" :px="26" /></span>
+  <!--
+    ⚠️ Cartão travado NÃO é cartão desabilitado. Ele continua clicável, mas
+    leva para onde se resolve o problema. Um cartão morto deixa a pessoa
+    batendo nele sem saber o que fazer; este responde a pergunta.
+  -->
+  <NuxtLink
+    :to="travado ? (paraDestravar || para) : para"
+    class="card mod"
+    :class="{ col: coluna, bloq: !!travado }"
+  >
+    <span class="mod-ic"><Icone :nome="travado ? 'bloqueio' : icone" :px="26" /></span>
 
     <div class="mod-txt">
       <h3>{{ titulo }}</h3>
-      <p v-if="descricao">{{ descricao }}</p>
+      <p v-if="travado">{{ travado }}</p>
+      <p v-else-if="descricao">{{ descricao }}</p>
       <span v-if="selo" class="mod-selo" :class="seloTipo || 'alerta'">{{ selo }}</span>
     </div>
 
-    <span class="btn sm sec mod-btn">Abrir</span>
+    <span class="btn sm sec mod-btn">{{ travado ? 'Resolver' : 'Abrir' }}</span>
     <span v-if="!coluna" class="mod-chev">›</span>
   </NuxtLink>
 </template>
@@ -59,6 +75,12 @@ defineProps<{
 .mod-selo.ok { background: var(--verde-claro); color: var(--verde-esc); }
 .mod-btn { flex: none; width: auto; margin: 0; }
 .mod-chev { flex: none; font-size: 20px; color: var(--linha); }
+
+/* Travado: o cartão apaga, mas continua legível e clicável. */
+.mod.bloq { border-left: 3px solid var(--alerta); }
+.mod.bloq .mod-ic { background: transparent; border: 1px dashed var(--linha); }
+.mod.bloq h3 { color: var(--osso-2); }
+.mod.bloq .mod-ic :deep(.ic-svg) { stroke: var(--alerta); }
 
 /* Em grade: o conteúdo empilha e o botão vai para o fim do cartão. */
 .mod.col {

@@ -18,6 +18,21 @@ const abertas = ref<number | null>(null)
 
 const ctfOk = computed(() => cred.dados?.ctfEmDia === true)
 
+/**
+ * ⚠️ Sem CTF em dia, NADA dentro do CAÇAR abre. É a mesma regra do servidor:
+ * `exigirCtfEmDia_()` recusa criar propriedade, ceva, rota, caçada e abate.
+ * A tela dizer o mesmo evita a pessoa preencher um cadastro inteiro para
+ * levar o "não" no fim.
+ *
+ * Enquanto os créditos não chegam (`cred.dados` nulo), nada é travado — travar
+ * por falta de informação seria pior que não travar.
+ */
+const bloqueio = computed(() =>
+  cred.dados && !ctfOk.value
+    ? 'Cadastre o CTF para liberar'
+    : undefined
+)
+
 onMounted(async () => {
   try {
     const l = await server<Array<{ status?: string }>>('apiListarManejos')
@@ -45,6 +60,8 @@ onMounted(async () => {
         titulo="Propriedades"
         descricao="Áreas de manejo e autorizações"
         para="/propriedades"
+        :travado="bloqueio"
+        para-destravar="/ctf"
         coluna
       />
       <CartaoModulo
@@ -52,6 +69,8 @@ onMounted(async () => {
         titulo="Espera (ceva)"
         descricao="Cevas, alimento e nível"
         para="/espera"
+        :travado="bloqueio"
+        para-destravar="/ctf"
         coluna
       />
       <CartaoModulo
@@ -59,6 +78,8 @@ onMounted(async () => {
         titulo="Rotas"
         descricao="Trajetos dentro da propriedade"
         para="/rotas"
+        :travado="bloqueio"
+        para-destravar="/ctf"
         coluna
       />
     </div>
@@ -68,6 +89,8 @@ onMounted(async () => {
       titulo="Caçar agora"
       descricao="Abertas e encerradas · abates de cada uma"
       para="/cacadas"
+      :travado="bloqueio"
+      para-destravar="/ctf"
       :selo="abertas ? abertas + ' aberta(s)' : undefined"
       selo-tipo="ok"
     />
