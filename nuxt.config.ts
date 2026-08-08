@@ -84,12 +84,13 @@ export default defineNuxtConfig({
       apiKey: process.env.NUXT_PUBLIC_API_KEY
         || 'sb_publishable_y2bMte4WKgzlNNLAi9WtHQ_oWoA-oad',
       /**
-       * MARCA DO APP. `meateater` durante a demonstração; `javastreak` depois.
-       * Uma linha muda logo, cor de acento e nome em todas as telas.
+       * MARCA DO APP. Uma linha muda logo, cor de acento e nome em todas as
+       * telas. `javastreak` é a marca de casa; `meateater` era a roupa da
+       * demonstração e continua disponível para vestir de novo.
        * Ver app/composables/useMarca.ts.
        */
-      marca: process.env.NUXT_PUBLIC_MARCA || 'meateater',
-      appVer: 'vJS.070826.2224',
+      marca: process.env.NUXT_PUBLIC_MARCA || 'javastreak',
+      appVer: 'vJS.070826.2306',
       ambiente: 'homologacao'
     }
   },

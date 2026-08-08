@@ -6,12 +6,14 @@
  * cabeçalho, logo das telas de entrada, cor de acento, nome exibido e o
  * ícone do PWA.
  *
- * ⚠️ Existe por causa da demonstração: o app está vestido com a marca do
- * cliente para a apresentação, e depois volta a ser JavaStreak. Sem isto,
- * a volta significaria caçar arquivo por arquivo — que é exatamente o tipo
- * de trabalho que some quando alguém esquece um.
+ * ⚠️ Nasceu por causa de uma demonstração: o app foi vestido com a marca do
+ * cliente e depois voltou a ser JavaStreak — a volta custou uma linha, e não
+ * caçar arquivo por arquivo, que é exatamente o tipo de trabalho que some
+ * quando alguém esquece um. `meateater` fica no mapa para a próxima.
  *
- * As imagens ficam em `public/marca/`, já sem fundo.
+ * As imagens ficam em `public/marca/`, já sem fundo. ⚠️ Elas são desenhadas
+ * para o TEMA CARVÃO: o traço é osso (`#EDE7D6`), não preto. Arte preta sobre
+ * o fundo escuro do app desaparece sem dar erro nenhum.
  */
 export interface Marca {
   chave: string
