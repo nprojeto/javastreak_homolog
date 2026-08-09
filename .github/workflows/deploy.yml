@@ -23,6 +23,18 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # Endereco base do app, no NIVEL DO JOB de proposito.
+    # Ja esteve so no passo do generate, e o passo que confere o service
+    # worker rodava sem ela — lia a base como "/" e reprovava um build
+    # correto, acusando escopo, manifesto e icones todos errados. Dois passos
+    # lendo a mesma verdade de lugares diferentes e so questao de tempo ate
+    # discordarem; declarada aqui, nao ha como.
+    # O nome vem do proprio GitHub, entao renomear o repositorio nao quebra.
+    # No dia do corte (dominio proprio), apagar estas duas linhas.
+    env:
+      NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
+
     steps:
       - uses: actions/checkout@v4
       # Sem `cache: npm` de proposito: o cache do setup-node procura um
@@ -63,13 +75,8 @@ jobs:
       - name: Conferir telas
         run: npm run conferir:telas
 
-      # Endereco base = subpasta do repositorio, porque o teste sai em
-      # usuario.github.io/<repositorio>/ e nao no dominio proprio.
-      # O nome vem do proprio GitHub, entao renomear o repositorio nao quebra
-      # nada. No dia do corte, apagar estas duas linhas.
+      # A base vem do env do job, logo acima.
       - run: npm run generate
-        env:
-          NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
 
       # Agora que `app.baseURL` acompanha a subpasta, o Nuxt ja escreve a
       # casca em .output/public/index.html — sem a pasta aninhada que existia
