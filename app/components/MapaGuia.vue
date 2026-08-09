@@ -38,7 +38,13 @@ const props = defineProps<{
   eu?: { lat: number; lng: number; precisao?: number } | null
   /** Recentrar sozinho a cada passo. */
   seguir?: boolean
+  /** Ligado, o toque no mapa vira escolha de ponto em vez de arrastar. */
+  escolhendo?: boolean
+  /** Ponto em edição, desenhado como alvo até ser salvo. */
+  pontoNovo?: Ponto | null
 }>()
+
+const emit = defineEmits<{ escolher: [Ponto] }>()
 
 /** Cor por tipo de aviso. Perigo e armadilha puxam vermelho de propósito. */
 const COR_MARCA: Record<string, string> = {
@@ -51,6 +57,7 @@ const el = ref<HTMLElement | null>(null)
 let map: MapaLeaflet | null = null
 let base: FeatureGroup | null = null      // limite, rota, cevas, avisos
 let camadaEu: FeatureGroup | null = null  // posição — redesenhada sozinha
+let camadaNovo: FeatureGroup | null = null // ponto em edição
 let pinoEu: CircleMarker | null = null
 let halo: Circle | null = null
 let enquadrou = false
@@ -160,6 +167,21 @@ async function desenharEu() {
   if (props.seguir) map.panTo(centro, { animate: true, duration: 0.5 })
 }
 
+/** Alvo do ponto em edição: um anel, para não se confundir com pino salvo. */
+async function desenharNovo() {
+  const L = await carregarLeaflet()
+  if (!map || !camadaNovo) return
+  camadaNovo.clearLayers()
+  const p = props.pontoNovo
+  if (!p) return
+  L.circleMarker([p.lat, p.lng], {
+    radius: 13, color: '#e8552b', weight: 3, fill: false, interactive: false
+  }).addTo(camadaNovo)
+  L.circleMarker([p.lat, p.lng], {
+    radius: 4, color: '#e8552b', weight: 2, fillColor: '#e8552b', fillOpacity: 1, interactive: false
+  }).addTo(camadaNovo)
+}
+
 /** Enquadra o caminho todo. Exposto: o botão "ver tudo" chama de fora. */
 function enquadrar() {
   if (!map || !base) return
@@ -178,6 +200,7 @@ defineExpose({ enquadrar })
 
 watch(() => [props.limites, props.rotas, props.cevas, props.marcacoes], desenharBase, { deep: true })
 watch(() => props.eu, desenharEu, { deep: true })
+watch(() => props.pontoNovo, desenharNovo, { deep: true })
 
 onMounted(async () => {
   const L = await carregarLeaflet()
@@ -187,14 +210,21 @@ onMounted(async () => {
   await addBase(map, 'sat')
   base = L.featureGroup().addTo(map)
   camadaEu = L.featureGroup().addTo(map)
-  setTimeout(() => { map?.invalidateSize(); desenharBase(); desenharEu() }, 150)
+  camadaNovo = L.featureGroup().addTo(map)
+  /* ⚠️ O toque só vira ponto no modo de escolha. Fora dele, tocar no mapa não
+     pode marcar nada: quem está andando encosta na tela o tempo todo. */
+  map.on('click', (ev: { latlng: { lat: number; lng: number } }) => {
+    if (!props.escolhendo) return
+    emit('escolher', { lat: ev.latlng.lat, lng: ev.latlng.lng })
+  })
+  setTimeout(() => { map?.invalidateSize(); desenharBase(); desenharEu(); desenharNovo() }, 150)
 })
 
 onBeforeUnmount(() => { map?.remove(); map = null })
 </script>
 
 <template>
-  <div ref="el" class="mapa" :style="{ height: props.altura || '58vh' }" />
+  <div ref="el" class="mapa" :class="{ escolhendo: props.escolhendo }" :style="{ height: props.altura || '58vh' }" />
 </template>
 
 <style>
@@ -211,4 +241,5 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 
 <style scoped>
 .mapa { border-radius: 12px; border: 1px solid var(--linha); }
+.mapa.escolhendo { border-color: var(--laranja-cl); box-shadow: 0 0 0 2px rgba(255, 122, 26, .25); cursor: crosshair; }
 </style>

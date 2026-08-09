@@ -13,11 +13,20 @@
  * uma tela que trava quem já está andando não ajuda ninguém. Mesma escolha
  * da caçada livre, que grava o percurso avisando.
  *
- * ⚠️ Esta tela NÃO grava nada. É leitura pura sobre `apiManejoGuia`. Marcar
- * aviso novo continua sendo na tela da rota.
+ * ⚠️ O ABATE NÃO É GRAVADO AQUI. Ele leva para a tela própria, com a
+ * coordenada já preenchida. Registrar abate por um segundo caminho, mais
+ * curto, criaria duas portas para o dado que vai ao relatório do IBAMA — e a
+ * curta pularia o clima em tempo real, o teto do plano, peso, sexo, método e
+ * amostra. O mapa da rota já tem um pino chamado "Abate": aquilo é
+ * referência visual, não registro legal, e os dois não podem se confundir.
+ *
+ * ⚠️ O que se grava aqui é MARCAÇÃO — inclusive avistamento. É a mesma
+ * entidade que a tela da rota cria, então o que for marcado no campo aparece
+ * lá também.
  */
 import { useUi } from '~/stores/ui'
 import { distanciaM, distanciaARota, fmtDist, pontoDentro } from '~/composables/useMapa'
+import { lerArquivo, FOTO_MAX_MB } from '~/composables/useArquivo'
 import type { Ponto } from '~/composables/useMapa'
 import type { LimiteGuia, RotaGuia, CevaGuia, MarcaGuia } from '~/components/MapaGuia.vue'
 
@@ -30,6 +39,7 @@ interface Guia {
 }
 
 const route = useRoute()
+const router = useRouter()
 const { server } = useServer()
 const ui = useUi()
 
@@ -43,6 +53,111 @@ const mapa = ref<{ enquadrar: () => void } | null>(null)
 
 let observador: number | null = null
 let travaTela: WakeLockSentinel | null = null
+
+/* ── registro de evento ─────────────────────────────────────────────────── */
+
+/**
+ * Tipos oferecidos no campo. Espelham a lista fechada do servidor, menos
+ * "Abate": aquele tem tela própria, e um pino não substitui o registro que
+ * vai ao IBAMA.
+ */
+const TIPOS = ['Avistamento', 'Rastro', 'Perigo', 'Armadilha', 'Água',
+  'Comida/isca', 'Referência', 'Foto/registro', 'Aviso', 'Outro']
+
+const painel = ref(false)
+const escolhendo = ref(false)
+const pontoNovo = ref<Ponto | null>(null)
+const tipoNovo = ref('Avistamento')
+const descNovo = ref('')
+const statusNovo = ref<'Ativa' | 'Inativa'>('Ativa')
+const fotoNova = ref('')
+const salvando = ref(false)
+
+/** Rota a que a marcação se prende, quando a caçada tem exatamente uma. */
+const rotaAlvo = computed(() => {
+  const rs = g.value?.rotas || []
+  return rs.length === 1 ? rs[0]!.id : ''
+})
+
+const pontoForaDoLimite = computed(() => {
+  const p = pontoNovo.value
+  const ls = (g.value?.limites || []).filter((l) => (l.limite || []).length >= 3)
+  if (!p || !ls.length) return false
+  return !ls.some((l) => pontoDentro(p, l.limite))
+})
+
+function abrirPainel(usarGps: boolean) {
+  if (usarGps) {
+    if (!eu.value) { ui.avisar('Ainda sem posição do GPS', 'erro'); return }
+    pontoNovo.value = { lat: eu.value.lat, lng: eu.value.lng }
+    escolhendo.value = false
+  } else {
+    pontoNovo.value = null
+    escolhendo.value = true
+  }
+  painel.value = true
+  /* Seguir a posição brigaria com escolher o ponto: o mapa fugiria do dedo. */
+  seguir.value = false
+}
+
+function fecharPainel() {
+  painel.value = false
+  escolhendo.value = false
+  pontoNovo.value = null
+  descNovo.value = ''
+  fotoNova.value = ''
+  tipoNovo.value = 'Avistamento'
+  statusNovo.value = 'Ativa'
+}
+
+function escolheuNoMapa(p: Ponto) {
+  pontoNovo.value = p
+  escolhendo.value = false
+}
+
+async function escolheuFoto(e: Event) {
+  const f = (e.target as HTMLInputElement).files?.[0]
+  if (!f) { fotoNova.value = ''; return }
+  try {
+    const a = await lerArquivo(f, { tipos: ['image/jpeg', 'image/png', 'image/webp'], maxMb: FOTO_MAX_MB })
+    fotoNova.value = a.dados
+  } catch (err) {
+    fotoNova.value = ''
+    ui.avisar(err instanceof Error ? err.message : 'Imagem inválida', 'erro')
+  }
+}
+
+async function salvarEvento() {
+  const p = pontoNovo.value
+  if (!p) { ui.avisar('Escolha o ponto no mapa ou use a sua posição', 'erro'); return }
+  salvando.value = true
+  try {
+    const criada = await server<MarcaGuia>('apiCriarMarcacao', {
+      rotaId: rotaAlvo.value,
+      tipo: tipoNovo.value,
+      lat: p.lat,
+      lng: p.lng,
+      descricao: descNovo.value,
+      status: tipoNovo.value === 'Armadilha' ? statusNovo.value : '',
+      foto: fotoNova.value || ''
+    })
+    /* Entra no mapa na hora. Recarregar a tela inteira no meio do mato, com
+       sinal ruim, seria pagar caro para ver o que já se sabe. */
+    if (g.value) g.value.marcacoes = [...(g.value.marcacoes || []), criada]
+    ui.avisar(tipoNovo.value + ' registrado ✔')
+    fecharPainel()
+  } catch { /* já avisado, traduzido */ } finally {
+    salvando.value = false
+  }
+}
+
+/** Leva ao registro de abate com a coordenada já preenchida. */
+function irParaAbate() {
+  const p = pontoNovo.value || eu.value
+  const q: Record<string, string> = { manejo: id.value }
+  if (p) { q.lat = p.lat.toFixed(6); q.lng = p.lng.toFixed(6) }
+  router.push({ path: '/abate', query: q })
+}
 
 /** Todos os pontos do traçado, de todas as rotas atribuídas. */
 const traco = computed<Ponto[]>(() => (g.value?.rotas || []).flatMap((r) => r.pontos || []))
@@ -205,9 +320,75 @@ onBeforeUnmount(() => {
           :marcacoes="g.marcacoes || []"
           :eu="eu"
           :seguir="seguir"
+          :escolhendo="escolhendo"
+          :ponto-novo="pontoNovo"
           altura="56vh"
+          @escolher="escolheuNoMapa"
         />
       </ClientOnly>
+
+      <div v-if="escolhendo" class="card tocar">
+        <div class="meta"><Icone nome="pino" /> Toque no mapa para marcar o ponto.</div>
+        <button class="btn sec pequeno" @click="fecharPainel">Cancelar</button>
+      </div>
+
+      <!-- REGISTRAR: as duas ações que se faz andando -->
+      <div v-if="!painel" class="barra">
+        <button class="btn" @click="abrirPainel(true)">
+          <Icone nome="adicionar" /> Registrar aqui
+        </button>
+        <button class="btn sec" @click="abrirPainel(false)">
+          <Icone nome="pino" /> Marcar no mapa
+        </button>
+      </div>
+
+      <div v-if="painel" class="card painel">
+        <h3><Icone nome="adicionar" /> Registrar evento</h3>
+
+        <div class="ponto" :class="{ falta: !pontoNovo }">
+          <template v-if="pontoNovo">
+            <b class="no-i18n">{{ pontoNovo.lat.toFixed(5) }}, {{ pontoNovo.lng.toFixed(5) }}</b>
+            <div v-if="pontoForaDoLimite" class="meta alerta">
+              <Icone nome="alerta" /> Este ponto está fora do limite da propriedade.
+            </div>
+          </template>
+          <span v-else>Nenhum ponto escolhido ainda.</span>
+        </div>
+
+        <label for="g_tipo">O que você viu ou marcou *</label>
+        <select id="g_tipo" v-model="tipoNovo">
+          <option v-for="t in TIPOS" :key="t" :value="t">{{ t }}</option>
+        </select>
+
+        <template v-if="tipoNovo === 'Armadilha'">
+          <label for="g_st">Situação da armadilha</label>
+          <select id="g_st" v-model="statusNovo">
+            <option value="Ativa">Ativa</option>
+            <option value="Inativa">Inativa</option>
+          </select>
+        </template>
+
+        <label for="g_desc">Descrição</label>
+        <input id="g_desc" v-model="descNovo" class="no-i18n" placeholder="opcional">
+
+        <label for="g_foto">Foto</label>
+        <input id="g_foto" type="file" accept="image/*" capture="environment" @change="escolheuFoto">
+
+        <div class="acoes">
+          <button class="btn" :disabled="salvando || !pontoNovo" @click="salvarEvento">
+            {{ salvando ? 'Salvando…' : 'Salvar' }}
+          </button>
+          <button class="btn sec" :disabled="salvando" @click="fecharPainel">Cancelar</button>
+        </div>
+
+        <button class="btn sec ir-abate" @click="irParaAbate">
+          <Icone nome="abate" /> Foi um abate — abrir o registro completo
+        </button>
+        <div class="meta">
+          O abate tem tela própria: precisa de peso, sexo, método e do tempo
+          consultado na hora. A coordenada vai preenchida daqui.
+        </div>
+      </div>
 
       <div class="barra">
         <button class="btn" :class="{ sec: !seguir }" @click="centralizar">
@@ -271,6 +452,20 @@ onBeforeUnmount(() => {
 
 .barra { display: flex; gap: 8px; margin-top: 10px; }
 .barra .btn { flex: 1; margin: 0; }
+
+.tocar { display: flex; align-items: center; gap: 10px; margin-top: 10px; border-left: 4px solid var(--laranja-cl); }
+.tocar .meta { margin: 0; flex: 1; }
+.pequeno { width: auto; margin: 0; padding: 6px 12px; font-size: 12px; }
+
+.painel { margin-top: 10px; border-left: 4px solid var(--laranja-cl); }
+.painel h3 { margin: 0 0 8px; font-size: 15px; }
+.ponto { background: var(--carvao-3); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; font-size: 13px; }
+.ponto.falta { color: var(--osso-2); }
+.ponto .meta { margin: 4px 0 0; }
+.ponto .alerta { color: var(--alerta); }
+.acoes { display: flex; gap: 8px; margin-top: 12px; }
+.acoes .btn { flex: 1; margin: 0; }
+.ir-abate { margin-top: 12px; }
 
 .legenda { display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 11.5px; color: var(--osso-2); }
 .legenda span { display: flex; align-items: center; gap: 5px; }

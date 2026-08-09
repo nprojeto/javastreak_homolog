@@ -125,6 +125,16 @@ async function escolheuFoto(e: Event) {
 
 onMounted(async () => {
   dataHora.value = agoraLocal()
+  /**
+   * ⚠️ Coordenada vinda do guiamento. Ela só sobrevive se NÃO houver ceva:
+   * com ceva escolhida, o servidor grava o ponto da ceva por cima — é regra
+   * dele, e está certa. Preencher aqui serve à caçada de rota e à livre, que
+   * é justamente quando a pessoa está andando e marcou onde aconteceu.
+   */
+  if (route.query.lat && route.query.lng) {
+    lat.value = String(route.query.lat)
+    lng.value = String(route.query.lng)
+  }
   if (!manejoId.value) { pronto.value = true; return }
   try {
     const man = await server<Manejo>('apiManejo', manejoId.value)

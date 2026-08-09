@@ -49,6 +49,27 @@ const avistamentos = ref('0')
 
 const aberta = computed(() => m.value?.status === 'aberto')
 
+/**
+ * Avistamentos marcados no mapa durante o guiamento. O encerramento pergunta
+ * "quantos você avistou?", e deixar o campo em zero enquanto existem cinco
+ * pinos no mapa faria os dois números se contradizerem no mesmo registro.
+ * Aqui ele nasce preenchido — e continua editável, porque nem todo
+ * avistamento vira pino.
+ */
+const avistamentosNoMapa = ref<number | null>(null)
+
+async function contarAvistamentos() {
+  if (!aberta.value || !m.value?.souDono) return
+  try {
+    const g = await server<{ marcacoes?: Array<{ tipo?: string }> }>('apiManejoGuia', id.value)
+    const n = (g.marcacoes || []).filter((k) => k.tipo === 'Avistamento').length
+    avistamentosNoMapa.value = n
+    if (n > 0 && avistamentos.value === '0') avistamentos.value = String(n)
+  } catch {
+    /* Acessório: falhar aqui não pode impedir de encerrar a caçada. */
+  }
+}
+
 async function carregar() {
   erro.value = ''
   try {
@@ -98,7 +119,10 @@ async function encerrar() {
   }
 }
 
-onMounted(carregar)
+onMounted(async () => {
+  await carregar()
+  contarAvistamentos()
+})
 </script>
 
 <template>
@@ -263,6 +287,10 @@ onMounted(carregar)
         </div>
         <label for="m_avist">Quantos javalis você avistou?</label>
         <input id="m_avist" v-model="avistamentos" inputmode="numeric">
+        <div v-if="avistamentosNoMapa" class="meta">
+          <Icone nome="mapa" /> <b class="no-i18n">{{ avistamentosNoMapa }}</b>
+          marcados no mapa durante o guiamento. Ajuste se avistou mais.
+        </div>
         <button class="btn danger" :disabled="encerrando" @click="encerrar">
           {{ encerrando ? 'Encerrando…' : 'Encerrar caçada' }}
         </button>
