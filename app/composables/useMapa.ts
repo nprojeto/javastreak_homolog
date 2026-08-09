@@ -141,6 +141,52 @@ export function distanciaARota(pt: Ponto, rota: Ponto[]): number {
   return melhor
 }
 
+/**
+ * Ponto do traçado mais perto — o pé da perpendicular, não o vértice. É para
+ * onde a seta do guiamento aponta: mandar a pessoa ao vértice faria ela
+ * andar de lado num trecho reto que ela já está prestes a cruzar.
+ */
+export function maisPertoNaRota(pt: Ponto, rota: Ponto[]): { ponto: Ponto; dist: number } | null {
+  if (!rota || !rota.length) return null
+  if (rota.length === 1) return { ponto: rota[0]!, dist: distanciaM(pt, rota[0]!) }
+  const mLat = 110574
+  const mLng = 111320 * Math.cos((pt.lat * Math.PI) / 180)
+  const px = pt.lng * mLng, py = pt.lat * mLat
+  let melhor: { ponto: Ponto; dist: number } | null = null
+  for (let i = 1; i < rota.length; i++) {
+    const a = rota[i - 1]!, b = rota[i]!
+    const ax = a.lng * mLng, ay = a.lat * mLat
+    const bx = b.lng * mLng, by = b.lat * mLat
+    const dx = bx - ax, dy = by - ay
+    const len2 = dx * dx + dy * dy
+    const t = len2 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0
+    const qx = ax + t * dx, qy = ay + t * dy
+    const d = Math.sqrt((px - qx) * (px - qx) + (py - qy) * (py - qy))
+    if (!melhor || d < melhor.dist) {
+      melhor = { ponto: { lat: qy / mLat, lng: qx / mLng }, dist: d }
+    }
+  }
+  return melhor
+}
+
+/**
+ * Rumo de `a` para `b`, em graus de 0 a 360, contados do norte no sentido
+ * horário — a mesma convenção da bússola, para poder subtrair uma da outra.
+ */
+export function rumo(a: Ponto, b: Ponto): number {
+  const rad = Math.PI / 180
+  const f1 = a.lat * rad, f2 = b.lat * rad
+  const dl = (b.lng - a.lng) * rad
+  const y = Math.sin(dl) * Math.cos(f2)
+  const x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl)
+  return (Math.atan2(y, x) / rad + 360) % 360
+}
+
+/** Diferença entre dois rumos, de -180 a 180. Negativo é à esquerda. */
+export function difRumo(de: number, para: number): number {
+  return ((para - de + 540) % 360) - 180
+}
+
 /** Distância legível: metros até 1 km, depois km com uma casa. */
 export function fmtDist(m: number): string {
   if (!isFinite(m)) return '—'

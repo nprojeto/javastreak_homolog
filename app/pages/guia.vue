@@ -25,7 +25,8 @@
  * lá também.
  */
 import { useUi } from '~/stores/ui'
-import { distanciaM, distanciaARota, fmtDist, pontoDentro } from '~/composables/useMapa'
+import { distanciaM, distanciaARota, maisPertoNaRota, rumo, difRumo, fmtDist, pontoDentro } from '~/composables/useMapa'
+import { useBussola } from '~/composables/useBussola'
 import { lerArquivo, FOTO_MAX_MB } from '~/composables/useArquivo'
 import type { Ponto } from '~/composables/useMapa'
 import type { LimiteGuia, RotaGuia, CevaGuia, MarcaGuia } from '~/components/MapaGuia.vue'
@@ -42,6 +43,13 @@ const route = useRoute()
 const router = useRouter()
 const { server } = useServer()
 const ui = useUi()
+/* Desestruturado de propósito: ref dentro de objeto simples NÃO é
+   desembrulhada no template, e `bussola.graus` renderizaria [object Object].
+   Com nomes locais, o template lê o valor direto e a intenção fica clara. */
+const {
+  graus: rumoAparelho, fonte: fonteRumo, precisaPermissao,
+  erro: erroBussola, iniciar: iniciarBussola, pedirPermissao, daPosicao: rumoDoGps
+} = useBussola()
 
 const id = computed(() => String(route.query.manejo || route.query.id || ''))
 const g = ref<Guia | null>(null)
@@ -189,6 +197,51 @@ const desvio = computed(() => {
  */
 const noCaminho = computed(() => desvio.value !== null && desvio.value <= 25)
 
+/**
+ * Ponto da rota a alcançar. Some quando já se está nela: manter uma seta
+ * apontando para trás e para frente enquanto a pessoa caminha em cima do
+ * traçado só confunde.
+ */
+const alvo = computed(() => {
+  const p = eu.value
+  if (!p || !temRota.value || noCaminho.value) return null
+  let melhor: { ponto: { lat: number; lng: number }; dist: number } | null = null
+  for (const r of g.value?.rotas || []) {
+    if ((r.pontos || []).length < 2) continue
+    const c = maisPertoNaRota(p, r.pontos)
+    if (c && (!melhor || c.dist < melhor.dist)) melhor = c
+  }
+  return melhor ? melhor.ponto : null
+})
+
+/** Rumo absoluto até o alvo — é ele que a seta no mapa usa. */
+const rumoAlvo = computed(() => {
+  const p = eu.value, a = alvo.value
+  return p && a ? rumo(p, a) : null
+})
+
+/**
+ * A virada, em relação a para onde o aparelho aponta. É o que a bússola
+ * acrescenta: sem ela dá para saber a direção no mapa, mas não se ela fica à
+ * sua esquerda ou à sua direita sem girar o corpo até descobrir.
+ */
+const virada = computed(() => {
+  const r = rumoAlvo.value, h = rumoAparelho.value
+  if (r === null || h === null) return null
+  const d = difRumo(h, r)
+  const g = Math.round(Math.abs(d))
+  if (g <= 15) return { texto: 'Siga em frente', lado: '', graus: g }
+  if (g >= 160) return { texto: 'Dê meia-volta', lado: '', graus: g }
+  return { texto: d > 0 ? 'Vire à direita' : 'Vire à esquerda', lado: d > 0 ? 'dir' : 'esq', graus: g }
+})
+
+/** Onde o aparelho aponta, em nome de rosa dos ventos. */
+const ROSA = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO']
+const pontoCardeal = computed(() => {
+  const h = rumoAparelho.value
+  return h === null ? '' : ROSA[Math.round(h / 45) % 8]!
+})
+
 /** Cevas e avisos por perto, do mais próximo ao mais distante. */
 const perto = computed(() => {
   const p = eu.value
@@ -235,6 +288,8 @@ function ligarGps() {
         lat: p.coords.latitude, lng: p.coords.longitude,
         precisao: p.coords.accuracy ? Math.round(p.coords.accuracy) : undefined
       }
+      /* Reserva: só vale andando, e nunca sobrescreve o sensor. */
+      rumoDoGps(p.coords.heading)
     },
     (e) => {
       erroGps.value = e.code === e.PERMISSION_DENIED
@@ -265,6 +320,7 @@ onMounted(() => {
   if (!id.value) { erro.value = 'Caçada não informada.'; return }
   carregar()
   ligarGps()
+  iniciarBussola()
   travarTela()
 })
 
@@ -311,6 +367,36 @@ onBeforeUnmount(() => {
         <div class="meta"><Icone nome="pino" /> Procurando o sinal do GPS…</div>
       </div>
 
+      <!-- RUMO: a instrução que se lê de relance, sem parar de andar -->
+      <div v-if="alvo" class="rumo" :class="virada?.lado">
+        <div class="agulha" :style="{ transform: 'rotate(' + (virada ? (virada.lado === 'dir' ? virada.graus : -virada.graus) : 0) + 'deg)' }">
+          <Icone nome="avancar" :px="26" />
+        </div>
+        <div class="txt">
+          <b v-if="virada">{{ virada.texto }}</b>
+          <b v-else>Siga para a rota</b>
+          <span class="meta">
+            <template v-if="virada && virada.graus > 15"><span class="no-i18n">{{ virada.graus }}°</span> · </template>
+            <span class="no-i18n">{{ fmtDist(desvio || 0) }}</span> até o traçado
+          </span>
+        </div>
+        <div v-if="pontoCardeal" class="cardeal">
+          <b class="no-i18n">{{ pontoCardeal }}</b>
+          <span>{{ fonteRumo === 'gps' ? 'pelo GPS' : 'bússola' }}</span>
+        </div>
+      </div>
+
+      <div v-if="precisaPermissao" class="card bussola-off">
+        <div class="meta">
+          <Icone nome="alerta" /> Ative a bússola para a seta saber para que lado
+          você está virado.
+        </div>
+        <button class="btn pequeno" @click="pedirPermissao()">Ativar bússola</button>
+      </div>
+      <div v-else-if="erroBussola" class="card bussola-off">
+        <div class="meta"><Icone nome="alerta" /> {{ erroBussola }}</div>
+      </div>
+
       <ClientOnly>
         <MapaGuia
           ref="mapa"
@@ -322,6 +408,8 @@ onBeforeUnmount(() => {
           :seguir="seguir"
           :escolhendo="escolhendo"
           :ponto-novo="pontoNovo"
+          :rumo-aparelho="rumoAparelho"
+          :alvo="alvo"
           altura="56vh"
           @escolher="escolheuNoMapa"
         />
@@ -449,6 +537,31 @@ onBeforeUnmount(() => {
 
 .aviso-gps { border-left: 4px solid var(--alerta); }
 .aviso-gps .meta { margin: 0; }
+
+/* Faixa de rumo: grande, alto contraste, legível de relance com o celular
+   na mão e o sol batendo. A agulha gira pela VIRADA (rumo relativo), não
+   pelo rumo absoluto: aqui a referência é o corpo de quem lê, não o norte. */
+.rumo {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--carvao-3); border: 1px solid var(--linha);
+  border-left: 5px solid var(--laranja-cl);
+  border-radius: 12px; padding: 10px 12px; margin-bottom: 10px;
+}
+.rumo .agulha {
+  flex: none; width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--laranja); color: #fff;
+  transition: transform .25s linear;
+}
+.rumo .txt { flex: 1; min-width: 0; }
+.rumo .txt b { display: block; font-size: 15px; }
+.rumo .txt .meta { margin: 2px 0 0; }
+.rumo .cardeal { flex: none; text-align: center; }
+.rumo .cardeal b { display: block; font-size: 17px; color: var(--laranja-cl); }
+.rumo .cardeal span { font-size: 10px; color: var(--osso-2); }
+
+.bussola-off { border-left: 4px solid var(--alerta); display: flex; align-items: center; gap: 10px; }
+.bussola-off .meta { margin: 0; flex: 1; }
 
 .barra { display: flex; gap: 8px; margin-top: 10px; }
 .barra .btn { flex: 1; margin: 0; }

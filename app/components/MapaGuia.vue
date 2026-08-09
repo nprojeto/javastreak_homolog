@@ -16,8 +16,8 @@
  * ⚠️ O traçado ganha setas de sentido. Rota é caminho, não área: sem indicar
  * a direção, quem chega pelo meio não sabe para que lado seguir.
  */
-import type { Map as MapaLeaflet, FeatureGroup, CircleMarker, Circle, Polyline } from 'leaflet'
-import { addBase, carregarLeaflet } from '~/composables/useMapa'
+import type { Map as MapaLeaflet, FeatureGroup, CircleMarker, Circle, Polyline, Marker } from 'leaflet'
+import { addBase, carregarLeaflet, rumo } from '~/composables/useMapa'
 import type { Ponto } from '~/composables/useMapa'
 
 export interface LimiteGuia { id?: string; nome: string; limite: Ponto[] }
@@ -42,6 +42,10 @@ const props = defineProps<{
   escolhendo?: boolean
   /** Ponto em edição, desenhado como alvo até ser salvo. */
   pontoNovo?: Ponto | null
+  /** Para onde o aparelho aponta, 0–360 do norte. `null` = sem bússola. */
+  rumoAparelho?: number | null
+  /** Ponto da rota a alcançar. Vira a seta laranja e o tracejado. */
+  alvo?: Ponto | null
 }>()
 
 const emit = defineEmits<{ escolher: [Ponto] }>()
@@ -60,6 +64,9 @@ let camadaEu: FeatureGroup | null = null  // posição — redesenhada sozinha
 let camadaNovo: FeatureGroup | null = null // ponto em edição
 let pinoEu: CircleMarker | null = null
 let halo: Circle | null = null
+let cone: Marker | null = null        // setor da bússola
+let setaAlvo: Marker | null = null    // para onde caminhar
+let linhaAlvo: Polyline | null = null // tracejado até a rota
 let enquadrou = false
 
 async function desenharBase() {
@@ -140,21 +147,37 @@ function marcaLetra(L: Awaited<ReturnType<typeof carregarLeaflet>>, p: Ponto, le
   }).addTo(base)
 }
 
-/** Posição: pino + halo da precisão. Redesenhar tudo a cada passo pisca. */
+/**
+ * Posição: halo da precisão, cone da bússola, pino e a seta do rumo.
+ *
+ * ⚠️ O mapa é NORTE ACIMA (o Leaflet não gira), então tanto o cone quanto a
+ * seta usam o rumo ABSOLUTO, sem descontar nada. Girar por rumo relativo aqui
+ * é o erro clássico: funciona com o celular apontado ao norte e erra em todo
+ * o resto.
+ *
+ * ⚠️ Move em vez de redesenhar. Recriar as camadas a cada passo do GPS faz o
+ * pino piscar, e piscar de dois em dois segundos numa tela que fica aberta a
+ * caminhada inteira é insuportável.
+ */
 async function desenharEu() {
   const L = await carregarLeaflet()
   if (!map || !camadaEu) return
   const p = props.eu
   if (!p) {
     camadaEu.clearLayers()
-    pinoEu = null; halo = null
+    pinoEu = null; halo = null; cone = null; setaAlvo = null; linhaAlvo = null
     return
   }
   const centro: [number, number] = [p.lat, p.lng]
+
   if (!pinoEu) {
     halo = L.circle(centro, {
       radius: p.precisao || 0, color: '#e8552b', weight: 1,
       fillColor: '#e8552b', fillOpacity: 0.12, interactive: false
+    }).addTo(camadaEu)
+    cone = L.marker(centro, {
+      interactive: false, zIndexOffset: 500,
+      icon: L.divIcon({ className: 'guia-cone', html: htmlCone(), iconSize: [64, 64], iconAnchor: [32, 32] })
     }).addTo(camadaEu)
     pinoEu = L.circleMarker(centro, {
       radius: 8, color: '#fff', weight: 3, fillColor: '#e8552b', fillOpacity: 1, interactive: false
@@ -162,9 +185,77 @@ async function desenharEu() {
   } else {
     pinoEu.setLatLng(centro)
     halo?.setLatLng(centro)
+    cone?.setLatLng(centro)
     if (p.precisao) halo?.setRadius(p.precisao)
   }
+
+  /* O cone só existe quando há bússola: sem rumo, um cone apontando para um
+     lado qualquer é pior que cone nenhum — a pessoa acredita nele. */
+  const el = cone?.getElement()?.firstElementChild as HTMLElement | undefined
+  if (el) {
+    const r = props.rumoAparelho
+    el.style.display = r === null || r === undefined ? 'none' : 'block'
+    if (r !== null && r !== undefined) el.style.transform = 'rotate(' + r + 'deg)'
+  }
+
+  desenharAlvo(L, centro)
+
   if (props.seguir) map.panTo(centro, { animate: true, duration: 0.5 })
+}
+
+/** Cone de visada: um setor translúcido, como o dos apps de mapa. */
+function htmlCone() {
+  return '<div class="cone-gira"><svg viewBox="0 0 64 64" width="64" height="64">'
+    + '<defs><radialGradient id="jsCone" cx="50%" cy="50%" r="50%">'
+    + '<stop offset="35%" stop-color="#e8552b" stop-opacity=".55"/>'
+    + '<stop offset="100%" stop-color="#e8552b" stop-opacity="0"/>'
+    + '</radialGradient></defs>'
+    + '<path d="M32 32 L14 2 A34 34 0 0 1 50 2 Z" fill="url(#jsCone)"/>'
+    + '</svg></div>'
+}
+
+/**
+ * Seta laranja para onde caminhar, mais o tracejado até o ponto da rota.
+ * A seta fica NA BORDA do pino, não no meio do caminho: quem olha de relance
+ * lê "para lá", que é a única coisa que precisa ler.
+ */
+function desenharAlvo(L: Awaited<ReturnType<typeof carregarLeaflet>>, centro: [number, number]) {
+  if (!camadaEu) return
+  const alvo = props.alvo
+  if (!alvo) {
+    if (setaAlvo) { camadaEu.removeLayer(setaAlvo); setaAlvo = null }
+    if (linhaAlvo) { camadaEu.removeLayer(linhaAlvo); linhaAlvo = null }
+    return
+  }
+  const destino: [number, number] = [alvo.lat, alvo.lng]
+  const ang = rumo({ lat: centro[0], lng: centro[1] }, alvo)
+
+  if (!linhaAlvo) {
+    linhaAlvo = L.polyline([centro, destino], {
+      color: '#e8552b', weight: 2, dashArray: '6 6', opacity: 0.9, interactive: false
+    }).addTo(camadaEu)
+  } else {
+    linhaAlvo.setLatLngs([centro, destino])
+  }
+
+  /* O giro fica no invólucro e o deslocamento na seta: girando o conjunto,
+     ela descreve um anel em volta do pino e sempre aponta para fora. Girar a
+     seta já deslocada a faria orbitar sobre si mesma, apontando para dentro
+     em metade das direções. */
+  const html = '<div class="seta-gira" style="transform:rotate(' + ang + 'deg)">'
+    + '<svg viewBox="0 0 24 24" width="26" height="26">'
+    + '<path d="M12 1 L20 21 L12 16 L4 21 Z" fill="#e8552b" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>'
+    + '</svg></div>'
+  if (!setaAlvo) {
+    setaAlvo = L.marker(centro, {
+      interactive: false, zIndexOffset: 600,
+      icon: L.divIcon({ className: 'guia-seta-alvo', html, iconSize: [72, 72], iconAnchor: [36, 36] })
+    }).addTo(camadaEu)
+  } else {
+    setaAlvo.setLatLng(centro)
+    const e = setaAlvo.getElement()?.firstElementChild as HTMLElement | undefined
+    if (e) e.style.transform = 'rotate(' + ang + 'deg)'
+  }
 }
 
 /** Alvo do ponto em edição: um anel, para não se confundir com pino salvo. */
@@ -199,7 +290,7 @@ function escapar(s: string) {
 defineExpose({ enquadrar })
 
 watch(() => [props.limites, props.rotas, props.cevas, props.marcacoes], desenharBase, { deep: true })
-watch(() => props.eu, desenharEu, { deep: true })
+watch(() => [props.eu, props.rumoAparelho, props.alvo], desenharEu, { deep: true })
 watch(() => props.pontoNovo, desenharNovo, { deep: true })
 
 onMounted(async () => {
@@ -237,6 +328,17 @@ onBeforeUnmount(() => { map?.remove(); map = null })
   width: 22px; height: 22px; border-radius: 50%; color: #fff;
   font-size: 12px; font-weight: 700; border: 2px solid #fff;
 }
+
+/* Cone da bússola e seta do rumo. O giro é no invólucro; a seta fica
+   deslocada para cima DENTRO dele, e por isso orbita o pino. */
+.guia-cone, .guia-seta-alvo { background: none; border: 0; }
+.cone-gira { width: 64px; height: 64px; transform-origin: 50% 50%; transition: transform .25s linear; }
+.seta-gira {
+  width: 72px; height: 72px; transform-origin: 50% 50%;
+  display: flex; justify-content: center; align-items: flex-start;
+  transition: transform .25s linear;
+}
+.seta-gira svg { margin-top: 6px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
 </style>
 
 <style scoped>
