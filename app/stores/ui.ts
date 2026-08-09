@@ -18,6 +18,12 @@ export const useUi = defineStore('ui', {
     avisos: [] as Aviso[],
     /** null enquanto nenhuma chamada aconteceu ainda. */
     conectado: null as boolean | null,
+    /**
+     * Quando o app está servindo dado guardado por falta de rede, guarda o
+     * instante da leitura mais VELHA em uso. Zerado assim que uma chamada
+     * volta a dar certo. É o que a faixa de offline mostra.
+     */
+    dadoDe: null as number | null,
     /** Preenchido quando o servidor responde PLANO_NECESSARIO. */
     upgrade: null as PedidoUpgrade | null
   }),
@@ -34,6 +40,18 @@ export const useUi = defineStore('ui', {
 
     setConexao(ok: boolean) {
       this.conectado = ok
+      /* Voltou a rede: o que está na tela deixa de ser dado velho. */
+      if (ok) this.dadoDe = null
+    },
+
+    /**
+     * Marca que a tela está mostrando dado guardado. Fica com o instante
+     * MAIS ANTIGO em uso: se uma tela junta três leituras e uma é de ontem,
+     * é a de ontem que a pessoa precisa saber.
+     */
+    usandoCache(quando: number) {
+      this.conectado = false
+      if (this.dadoDe === null || quando < this.dadoDe) this.dadoDe = quando
     },
 
     pedirUpgrade(chave: string, precisa: string) {

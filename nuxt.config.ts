@@ -1,4 +1,18 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+/**
+ * ⚠️ ENDEREÇO BASE — lido UMA VEZ e reusado.
+ *
+ * Em homologação o app mora numa subpasta (`/javastreak_homolog/`), e o PWA
+ * precisa saber disso. Service worker não pode reivindicar escopo acima da
+ * própria pasta: registrar em `/` a partir de `/javastreak_homolog/sw.js` é
+ * recusado com `SecurityError` e o worker NUNCA instala — silenciosamente,
+ * sem nada no console do app. Foi o que manteve o offline em zero.
+ *
+ * O Pages não deixa mandar `Service-Worker-Allowed`, então a saída é o escopo
+ * certo, não um escopo maior.
+ */
+const BASE = process.env.NUXT_APP_BASE_URL || '/'
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-08-05',
 
@@ -33,7 +47,7 @@ export default defineNuxtConfig({
      * workflow; aqui fica só o padrão para rodar na máquina.
      * No dia do corte: variável apagada, baseURL volta a '/', CNAME criado.
      */
-    baseURL: '/',
+    baseURL: BASE,
     head: {
       htmlAttrs: { lang: 'pt-BR' },
       meta: [
@@ -90,27 +104,39 @@ export default defineNuxtConfig({
        * Ver app/composables/useMarca.ts.
        */
       marca: process.env.NUXT_PUBLIC_MARCA || 'javastreak',
-      appVer: 'vJS.070826.2317',
+      appVer: 'vJS.090826.1246',
       ambiente: 'homologacao'
     }
   },
 
   pwa: {
     registerType: 'autoUpdate',
+    /**
+     * ⚠️ `base` e `scope` PRECISAM ser o endereço base. O padrão do módulo é
+     * `/`, e em subpasta isso faz o registro do worker ser recusado — o app
+     * fica sem offline nenhum e sem erro visível. Ver o comentário do BASE.
+     */
+    base: BASE,
+    scope: BASE,
     manifest: {
+      id: BASE,
       name: 'JavaStreak',
       short_name: 'JavaStreak',
       description: 'Manejo de javali',
       lang: 'pt-BR',
-      start_url: '/',
+      /* Caminhos do manifesto são resolvidos contra a ORIGEM, não contra o
+         manifesto. Com `/` fixo, instalar em homologação dava ícone quebrado
+         e o atalho abria a raiz do github.io em vez do app. */
+      start_url: BASE,
+      scope: BASE,
       display: 'standalone',
       background_color: '#16150F',
       theme_color: '#16150F',
       icons: [
-        { src: '/icone-192.png', sizes: '192x192', type: 'image/png' },
-        { src: '/icone-512.png', sizes: '512x512', type: 'image/png' },
+        { src: BASE + 'icone-192.png', sizes: '192x192', type: 'image/png' },
+        { src: BASE + 'icone-512.png', sizes: '512x512', type: 'image/png' },
         {
-          src: '/icone-512.png',
+          src: BASE + 'icone-512.png',
           sizes: '512x512',
           type: 'image/png',
           purpose: 'maskable'
@@ -118,10 +144,58 @@ export default defineNuxtConfig({
       ]
     },
     workbox: {
-      // O app é offline-tolerante, não offline-first: mapa e API precisam de
-      // rede. Cacheamos só a casca.
-      navigateFallback: '/',
-      globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}']
+      navigateFallback: BASE,
+      globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+      /**
+       * ⚠️ `200.html` e `404.html` FORA do precache. O Workbox registra os
+       * dois sem a extensão (`200`, `404`), e nenhum servidor entrega um
+       * arquivo com esse nome — o Pages devolve a página de erro com status
+       * 404. **Uma única entrada que não baixa aborta a instalação inteira do
+       * worker**, e o app fica sem offline por causa de dois arquivos que
+       * ninguém pede. Os dois continuam publicados: quem os usa é o Pages,
+       * para devolver o app em rota funda, e isso é do servidor, não do
+       * cache.
+       */
+      globIgnores: ['**/200.html', '**/404.html'],
+      /**
+       * As telhas do mapa são o que separa "o app abre offline" de "o app
+       * serve no mato": sem elas o guiamento mostra rota e posição sobre um
+       * quadrado vazio. Guardar o que já foi visto significa que percorrer a
+       * área uma vez com sinal — ou só olhar o mapa em casa — deixa a região
+       * disponível depois.
+       *
+       * ⚠️ `statuses: [0, 200]` não é excesso de zelo: telha vem por `<img>`
+       * em requisição `no-cors`, e a resposta chega opaca, com status 0. Só
+       * com 200 na lista, nada é guardado e o cache parece não funcionar.
+       *
+       * Teto de 3.000 telhas (~60 MB) e 30 dias. O navegador ainda pode
+       * despejar tudo sob pressão de espaço — por isso o app nunca DEPENDE
+       * disso, só aproveita.
+       */
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/[a-c]\.tile\.openstreetmap\.org\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'mapa-telhas-ruas',
+            expiration: { maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            cacheableResponse: { statuses: [0, 200] }
+          }
+        },
+        {
+          urlPattern: /^https:\/\/server\.arcgisonline\.com\/ArcGIS\/rest\/services\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'mapa-telhas-sat',
+            expiration: { maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            cacheableResponse: { statuses: [0, 200] }
+          }
+        }
+      ]
+      /* A API NÃO entra aqui de propósito: são POST, que o Workbox não
+         cacheia, e a resposta depende do token. O cache de dados é do app,
+         em IndexedDB, dentro do `useServer` — onde dá para saber o que é
+         seguro reaproveitar. */
     },
     devOptions: { enabled: false }
   },

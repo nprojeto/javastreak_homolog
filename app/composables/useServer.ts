@@ -17,6 +17,7 @@
 import { useAuth } from '~/stores/auth'
 import { useUi } from '~/stores/ui'
 import { msgErro } from '~/composables/useMsgErro'
+import { LEITURAS_OFFLINE, chaveDe, guardar, recuperar } from '~/composables/useCacheOffline'
 
 const TEMPO_LIMITE = 25000 // igual ao legado
 
@@ -50,6 +51,15 @@ export function useServer() {
     const ctrl = new AbortController()
     const relogio = setTimeout(() => ctrl.abort(), TEMPO_LIMITE)
 
+    /**
+     * ⚠️ A chave carrega a IDENTIDADE de quem pede. Sem isso, dois usuários
+     * no mesmo aparelho compartilhariam cache — e o segundo veria as
+     * propriedades do primeiro. O token serve como identidade porque muda a
+     * cada login; sair da conta ainda apaga tudo, no `auth.encerrar()`.
+     */
+    const guardavel = LEITURAS_OFFLINE.has(acao)
+    const chave = guardavel ? chaveDe(auth.token || 'anon', acao, args) : ''
+
     let resposta: { ok?: boolean; data?: T; error?: string }
 
     try {
@@ -67,8 +77,23 @@ export function useServer() {
       resposta = await r.json()
     } catch (e: unknown) {
       clearTimeout(relogio)
-      ui.setConexao(false)
       const abortou = e instanceof Error && e.name === 'AbortError'
+
+      /**
+       * ⚠️ ESTE é o único lugar em que o cache entra: a rede falhou, o
+       * servidor não chegou a dizer nada. Se ele tivesse respondido `ok:false`
+       * o fluxo estaria lá embaixo, e uma recusa jamais pode virar dado
+       * velho — pela mesma razão que nunca pode virar lista vazia.
+       */
+      if (guardavel) {
+        const g = await recuperar<T>(chave)
+        if (g) {
+          ui.usandoCache(g.quando)
+          return g.dado
+        }
+      }
+
+      ui.setConexao(false)
       const msg = abortou
         ? 'Servidor não respondeu (tempo esgotado)'
         : e instanceof Error
@@ -116,6 +141,9 @@ export function useServer() {
     }
 
     ui.setConexao(true)
+    /* Deu certo: guarda para a próxima vez que faltar rede. Sem `await` de
+       propósito — a tela não espera o disco para mostrar o que já tem. */
+    if (guardavel) void guardar(chave, resposta.data)
     return resposta.data as T
   }
 

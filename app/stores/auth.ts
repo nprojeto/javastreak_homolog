@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { limparCache } from '~/composables/useCacheOffline'
 
 const CHAVE_TOKEN = 'mj_token' // mesma chave do index.html legado
 
@@ -89,6 +90,10 @@ export const useAuth = defineStore('auth', {
       this.admin = false
       this.login = ''
       this.expirouAgora = true
+      /* ⚠️ O cache offline morre junto com a sessão. Deixá-lo para trás faria
+         o próximo login no mesmo aparelho enxergar propriedade, ceva e
+         documento de quem saiu — vazamento, não falha de tela. */
+      void limparCache()
     },
 
     reconhecerExpiracao() {

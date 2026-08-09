@@ -11,7 +11,8 @@
     "extrair": "node scripts/extrair-do-html.mjs ../index.html",
     "conferir:frases": "node scripts/conferir-frases.mjs",
     "conferir:textos": "node scripts/conferir-textos.mjs",
-    "conferir:telas": "node scripts/conferir-telas.mjs"
+    "conferir:telas": "node scripts/conferir-telas.mjs",
+    "conferir:sw": "node scripts/conferir-sw.mjs"
   },
   "dependencies": {
     "@pinia/nuxt": "0.11.3",
