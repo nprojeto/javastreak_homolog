@@ -57,6 +57,12 @@ jobs:
       - name: Conferir textos das telas
         run: npm run conferir:textos
 
+      # Compila cada .vue sozinho para dizer QUAL arquivo quebrou. O erro do
+      # build diz "26 erros" e nao diz onde — procurar a mao em 51 telas ja
+      # levou a consertar o arquivo errado.
+      - name: Conferir telas
+        run: npm run conferir:telas
+
       # Endereco base = subpasta do repositorio, porque o teste sai em
       # usuario.github.io/<repositorio>/ e nao no dominio proprio.
       # O nome vem do proprio GitHub, entao renomear o repositorio nao quebra
@@ -65,21 +71,26 @@ jobs:
         env:
           NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
 
-      # O Nuxt escreve a casca dentro de .output/public/<repositorio>/,
-      # porque foi esse o endereco pedido no prerender. O Pages ja serve a
-      # pasta como /<repositorio>/, entao o arquivo tem que subir um nivel
-      # para nao virar /<repositorio>/<repositorio>/.
-      # O 404.html e a mesma casca: e ele que faz o Pages devolver o app em
-      # qualquer rota funda (/propriedades/123) em vez da pagina de erro.
-      # No dia do corte, apagar este passo inteiro.
-      - name: Ajustar para a subpasta do Pages
+      # Agora que `app.baseURL` acompanha a subpasta, o Nuxt ja escreve a
+      # casca em .output/public/index.html — sem a pasta aninhada que existia
+      # antes e sem o `mv` que a desfazia. Aquele `mv` acontecia DEPOIS do
+      # service worker ser gerado, e deixava o precache apontando para um
+      # caminho que nao existia mais: uma entrada 404 aborta a instalacao
+      # inteira do worker, e era por isso que o offline nunca funcionava.
+      # So resta duplicar a casca como 404.html, que e o que faz o Pages
+      # devolver o app em rota funda (/propriedades/123) no lugar do erro.
+      # No dia do corte, este passo continua valendo.
+      - name: Casca como pagina de erro do Pages
         run: |
-          REPO="${{ github.event.repository.name }}"
-          test -f ".output/public/$REPO/index.html" \
+          test -f .output/public/index.html \
             || { echo "casca HTML nao foi gerada - build invalido"; exit 1; }
-          mv ".output/public/$REPO/index.html" .output/public/index.html
-          rmdir ".output/public/$REPO"
           cp .output/public/index.html .output/public/404.html
+
+      # Porta de build para a armadilha acima: se alguma entrada do precache
+      # nao existir no disco, o worker nao instala e o app perde o offline sem
+      # dar erro nenhum em tela. Melhor quebrar a publicacao aqui.
+      - name: Conferir o precache do service worker
+        run: node scripts/conferir-sw.mjs
 
       - uses: actions/upload-pages-artifact@v3
         with:
