@@ -107,6 +107,47 @@ export function fmtArea(m2: number): string {
   return (ha / 100).toFixed(1).replace('.', ',') + ' km²'
 }
 
+/** Metros entre dois pontos, plano local. Basta: aqui nada passa de km. */
+export function distanciaM(a: Ponto, b: Ponto): number {
+  const dLat = (b.lat - a.lat) * 110574
+  const dLng = (b.lng - a.lng) * 111320 * Math.cos((a.lat * Math.PI) / 180)
+  return Math.sqrt(dLat * dLat + dLng * dLng)
+}
+
+/**
+ * Distância até o traçado — perpendicular ao segmento mais próximo, não ao
+ * vértice mais próximo. A diferença importa: num trecho reto e longo, medir
+ * pelo vértice diria "300 m fora da rota" para quem está caminhando em cima
+ * dela.
+ */
+export function distanciaARota(pt: Ponto, rota: Ponto[]): number {
+  if (!rota || !rota.length) return Infinity
+  if (rota.length === 1) return distanciaM(pt, rota[0]!)
+  const mLat = 110574
+  const mLng = 111320 * Math.cos((pt.lat * Math.PI) / 180)
+  const px = pt.lng * mLng, py = pt.lat * mLat
+  let melhor = Infinity
+  for (let i = 1; i < rota.length; i++) {
+    const ax = rota[i - 1]!.lng * mLng, ay = rota[i - 1]!.lat * mLat
+    const bx = rota[i]!.lng * mLng, by = rota[i]!.lat * mLat
+    const dx = bx - ax, dy = by - ay
+    const len2 = dx * dx + dy * dy
+    /* Segmento de comprimento zero (vértice repetido): cai no ponto. */
+    const t = len2 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0
+    const qx = ax + t * dx, qy = ay + t * dy
+    const d = Math.sqrt((px - qx) * (px - qx) + (py - qy) * (py - qy))
+    if (d < melhor) melhor = d
+  }
+  return melhor
+}
+
+/** Distância legível: metros até 1 km, depois km com uma casa. */
+export function fmtDist(m: number): string {
+  if (!isFinite(m)) return '—'
+  if (m < 1000) return Math.round(m) + ' m'
+  return (m / 1000).toFixed(1).replace('.', ',') + ' km'
+}
+
 /**
  * Ponto dentro do polígono, por lançamento de raio. Gêmeo do `pontoDentro_`
  * do backend — e é o do SERVIDOR que vale. Este aqui é conveniência: avisa

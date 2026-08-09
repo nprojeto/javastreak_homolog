@@ -98,26 +98,37 @@ onMounted(carregar)
       <div v-if="!abertas.length" class="card">
         <div class="meta">Nenhuma caçada aberta.</div>
       </div>
-      <NuxtLink
-        v-for="m in abertas"
-        :key="m.id"
-        :to="{ path: '/cacada', query: { id: m.id } }"
-        class="card cacada aberta"
-      >
-        <div class="grow">
-          <b class="no-i18n">{{ m.nome || 'Caçada' }}</b>
-          <span class="pill">{{ TIPO[m.tipo || ''] || m.tipo }}</span>
-          <span v-if="!m.souDono" class="pill">convidado</span>
-          <div class="meta no-i18n">
-            {{ m.propriedade?.nome || '—' }} · aberta em {{ dataBR(m.criadoEm) }}
+      <!--
+        ⚠️ O cartão é um NuxtLink inteiro, então um segundo link DENTRO dele
+        seria link aninhado — HTML inválido, e o toque cai no de fora. Por
+        isso o atalho fica num invólucro, ao lado do cartão, e não dentro.
+        Vale a duplicação: guiamento é a ação de quem já está no mato e quer
+        um toque, não três.
+      -->
+      <div v-for="m in abertas" :key="m.id" class="bloco-aberta">
+        <NuxtLink
+          :to="{ path: '/cacada', query: { id: m.id } }"
+          class="card cacada aberta"
+        >
+          <div class="grow">
+            <b class="no-i18n">{{ m.nome || 'Caçada' }}</b>
+            <span class="pill">{{ TIPO[m.tipo || ''] || m.tipo }}</span>
+            <span v-if="!m.souDono" class="pill">convidado</span>
+            <div class="meta no-i18n">
+              {{ m.propriedade?.nome || '—' }} · aberta em {{ dataBR(m.criadoEm) }}
+            </div>
+            <div class="meta">
+              {{ m.abates?.animais || 0 }} animal(is) ·
+              {{ (m.participantes || []).length }} participante(s)
+            </div>
           </div>
-          <div class="meta">
-            {{ m.abates?.animais || 0 }} animal(is) ·
-            {{ (m.participantes || []).length }} participante(s)
-          </div>
-        </div>
-        <div class="chev">›</div>
-      </NuxtLink>
+          <div class="chev">›</div>
+        </NuxtLink>
+        <NuxtLink
+          :to="{ path: '/guia', query: { manejo: m.id } }"
+          class="atalho-guia"
+        ><Icone nome="mapa" :px="16" /> Iniciar guiamento</NuxtLink>
+      </div>
 
       <BotaoCriar
         rotulo="＋ Caçar agora"
@@ -162,6 +173,20 @@ onMounted(carregar)
 .convite .btn { width: auto; margin: 0; }
 .cacada { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--txt); }
 .cacada.aberta { border-left: 5px solid var(--danger); }
+
+/* O atalho encosta no cartão de cima: os cantos de baixo do cartão e os de
+   cima do atalho ficam retos, e os dois lidos como uma peça só. */
+.bloco-aberta { margin-bottom: 10px; }
+.bloco-aberta .cacada { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.atalho-guia {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px; text-decoration: none;
+  font-size: 12.5px; font-weight: 700; color: var(--laranja-cl);
+  background: var(--carvao-3);
+  border: 1px solid var(--linha); border-top: 0;
+  border-radius: 0 0 12px 12px;
+}
+.atalho-guia:active { background: var(--linha); }
 .cacada .grow { flex: 1; min-width: 0; }
 .cacada .meta { margin: 3px 0 0; }
 .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--linha); margin-left: 6px; }

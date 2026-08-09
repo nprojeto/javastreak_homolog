@@ -124,6 +124,19 @@ onMounted(carregar)
         <div v-if="m.obs" class="meta no-i18n">{{ m.obs }}</div>
       </div>
 
+      <!--
+        ⚠️ FORA DAS ABAS, de propósito. Ele já esteve no fim da aba Abates,
+        depois da lista inteira, e simplesmente não era encontrado: a aba pode
+        nem ser a que está aberta, e numa caçada com abates a pessoa precisa
+        rolar a lista toda para achá-lo. Guiamento é o que se usa ANDANDO, com
+        o celular na mão — tem que ser a primeira coisa depois do cabeçalho.
+      -->
+      <NuxtLink
+        v-if="aberta"
+        :to="{ path: '/guia', query: { manejo: id } }"
+        class="btn guiar"
+      ><Icone nome="mapa" /> Iniciar guiamento</NuxtLink>
+
       <div class="dash">
         <div class="kpi"><b>{{ m.abates?.animais || 0 }}</b><span>animais</span></div>
         <div class="kpi"><b>{{ (m.participantes || []).length }}</b><span>participantes</span></div>
@@ -289,4 +302,5 @@ h3 { margin: 0 0 4px; }
 .encerrar { border-left: 5px solid var(--danger); }
 .encerrar .btn { background: var(--danger); }
 .btn.sec { margin-top: 14px; text-decoration: none; }
+.guiar { margin: 10px 0 0; text-decoration: none; }
 </style>
