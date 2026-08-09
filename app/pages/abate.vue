@@ -89,17 +89,43 @@ async function carregarAlimentos() {
   alimentos.value = await server<Alimento[]>('apiListarAlimentos', cevaId.value).catch(() => [])
 }
 
+/**
+ * ⚠️ RECUO PARA O MANUAL. A consulta é TENTADA; se ela não vier — sem rede,
+ * MET Norway fora do ar, `MET_UA` faltando —, a tela abre os campos de lua e
+ * condição para preencher à mão em vez de barrar o registro.
+ *
+ * O que NÃO muda: o registro sai marcado com `condFonte: 'manual'`, e é isso
+ * que separa um dado medido de um dado lembrado. O relatório do IBAMA guarda
+ * os dois, e quem for auditar consegue distinguir.
+ *
+ * Enquanto o clima do passado não existir, este é o recuo. Depois dele, o
+ * servidor busca o tempo do instante do abate na hora da sincronização e o
+ * manual deixa de ser necessário.
+ */
+const climaFalhou = ref(false)
+const motivoClima = ref('')
+
 async function verClima() {
   if (!cevaId.value) return
   buscandoClima.value = true
   clima.value = null
+  climaFalhou.value = false
+  motivoClima.value = ''
   try {
     clima.value = await server<Clima>('apiClimaCeva', cevaId.value)
     if (!clima.value?.ok) {
-      ui.avisar(clima.value?.erro || 'Não foi possível consultar o tempo', 'erro')
+      climaFalhou.value = true
+      motivoClima.value = clima.value?.erro || 'Não foi possível consultar o tempo'
+      modo.value = 'passado'
     }
-  } catch {
+  } catch (e) {
     clima.value = null
+    climaFalhou.value = true
+    motivoClima.value = e instanceof Error && e.message
+      ? 'Sem rede para consultar o tempo agora.'
+      : 'Não foi possível consultar o tempo'
+    /* Cai para o preenchimento à mão em vez de deixar a pessoa presa. */
+    modo.value = 'passado'
   } finally {
     buscandoClima.value = false
   }
@@ -167,7 +193,7 @@ async function salvar() {
 
   if (cevaId.value && modo.value === 'tempoReal') {
     if (!clima.value?.ok) {
-      ui.avisar('Aguarde a consulta do tempo ou use o modo Passado', 'erro')
+      ui.avisar('Aguarde a consulta do tempo ou preencha à mão', 'erro')
       return
     }
     d.modo = 'tempoReal'
@@ -269,13 +295,24 @@ async function salvar() {
             </div>
           </div>
           <div v-else class="meta ruim">
-            <Icone nome="alerta" /> Não foi possível consultar o tempo. Use o modo "Aconteceu antes"
-            ou tente de novo.
+            <Icone nome="alerta" /> Não foi possível consultar o tempo.
             <button class="btn sm sec" @click="verClima">Tentar de novo</button>
           </div>
         </template>
 
         <template v-else>
+          <!-- Recuo automático: a consulta foi tentada e não veio, então os
+               campos abrem em vez de barrar o registro. -->
+          <div v-if="climaFalhou" class="recuo">
+            <b><Icone nome="alerta" /> {{ motivoClima }}</b>
+            <div class="meta">
+              Preencha o tempo à mão para não perder o registro. Ele fica
+              marcado como informado por você, e não medido.
+            </div>
+            <button class="btn sm sec" @click="modo = 'tempoReal'; verClima()">
+              Tentar consultar de novo
+            </button>
+          </div>
           <div class="two">
             <div>
               <label for="ab_lua">Fase da lua</label>
@@ -384,6 +421,9 @@ h3 { margin: 0 0 8px; }
   background: var(--card); cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
 }
 .modos button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
+.recuo { border-left: 4px solid var(--alerta); background: var(--carvao-3); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+.recuo .meta { margin: 4px 0 0; }
+.recuo .btn { margin-top: 8px; }
 .clima { border-left: 4px solid var(--verde); padding: 8px 10px; background: var(--carvao-3); border-radius: 8px; }
 .clima .meta { margin: 3px 0 0; }
 .clima .btn { width: auto; margin-top: 6px; }

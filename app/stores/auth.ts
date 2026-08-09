@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { limparCache } from '~/composables/useCacheOffline'
+import { limparFila } from '~/composables/useFilaOffline'
 
 const CHAVE_TOKEN = 'mj_token' // mesma chave do index.html legado
 
@@ -94,6 +95,9 @@ export const useAuth = defineStore('auth', {
          o próximo login no mesmo aparelho enxergar propriedade, ceva e
          documento de quem saiu — vazamento, não falha de tela. */
       void limparCache()
+      /* A fila também. Um registro pendente do usuário que saiu subiria na
+         conta de quem entrar depois — o servidor grava por sessão. */
+      void limparFila()
     },
 
     reconhecerExpiracao() {

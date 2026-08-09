@@ -67,6 +67,7 @@ watch(() => route.path, () => { menuAberto.value = false })
     <!-- Abaixo do cabeçalho e acima de tudo o mais: quem abre a tela precisa
          saber que o dado é guardado ANTES de tomar decisão em cima dele. -->
     <FaixaSemRede />
+    <FaixaFila />
 
     <nav class="atalhos">
       <NuxtLink

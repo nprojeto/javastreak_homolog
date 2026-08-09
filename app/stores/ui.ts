@@ -24,6 +24,12 @@ export const useUi = defineStore('ui', {
      * volta a dar certo. É o que a faixa de offline mostra.
      */
     dadoDe: null as number | null,
+    /** Quantas gravações esperam a rede voltar. */
+    pendentes: 0,
+    /** Quantas o servidor recusou e continuam guardadas, esperando decisão. */
+    recusados: 0,
+    /** Sobe enquanto a fila está subindo, para a faixa mostrar. */
+    enviandoFila: false,
     /** Preenchido quando o servidor responde PLANO_NECESSARIO. */
     upgrade: null as PedidoUpgrade | null
   }),
@@ -52,6 +58,18 @@ export const useUi = defineStore('ui', {
     usandoCache(quando: number) {
       this.conectado = false
       if (this.dadoDe === null || quando < this.dadoDe) this.dadoDe = quando
+    },
+
+    setPendentes(n: number) {
+      this.pendentes = n
+    },
+
+    setRecusados(n: number) {
+      this.recusados = n
+    },
+
+    setEnviandoFila(v: boolean) {
+      this.enviandoFila = v
     },
 
     pedirUpgrade(chave: string, precisa: string) {
