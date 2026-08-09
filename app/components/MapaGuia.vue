@@ -203,14 +203,24 @@ async function desenharEu() {
   if (props.seguir) map.panTo(centro, { animate: true, duration: 0.5 })
 }
 
-/** Cone de visada: um setor translúcido, como o dos apps de mapa. */
+/**
+ * Cone de visada: setor translúcido mais uma ponta SÓLIDA.
+ *
+ * ⚠️ Só o gradiente não lê sobre imagem de satélite — verde escuro e sombra
+ * de mata comem um laranja a 55% de opacidade, e o que sobra é uma mancha que
+ * ninguém identifica como direção. A ponta sólida com contorno branco é o que
+ * faz a direção do aparelho ser vista de relance.
+ *
+ * O desenho aponta para CIMA em zero grau, igual à agulha da faixa.
+ */
 function htmlCone() {
   return '<div class="cone-gira"><svg viewBox="0 0 64 64" width="64" height="64">'
     + '<defs><radialGradient id="jsCone" cx="50%" cy="50%" r="50%">'
-    + '<stop offset="35%" stop-color="#e8552b" stop-opacity=".55"/>'
+    + '<stop offset="30%" stop-color="#e8552b" stop-opacity=".6"/>'
     + '<stop offset="100%" stop-color="#e8552b" stop-opacity="0"/>'
     + '</radialGradient></defs>'
     + '<path d="M32 32 L14 2 A34 34 0 0 1 50 2 Z" fill="url(#jsCone)"/>'
+    + '<path d="M32 3 L39 17 L32 13.5 L25 17 Z" fill="#e8552b" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>'
     + '</svg></div>'
 }
 

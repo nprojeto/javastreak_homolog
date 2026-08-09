@@ -224,15 +224,21 @@ const rumoAlvo = computed(() => {
  * A virada, em relação a para onde o aparelho aponta. É o que a bússola
  * acrescenta: sem ela dá para saber a direção no mapa, mas não se ela fica à
  * sua esquerda ou à sua direita sem girar o corpo até descobrir.
+ *
+ * ⚠️ `delta` é ASSINADO e é ele que gira a agulha — negativo à esquerda.
+ * A versão anterior girava por `graus` (sempre positivo) e recuperava o sinal
+ * a partir do rótulo; na meia-volta o rótulo não tem lado, o sinal sumia e a
+ * agulha apontava para o lado errado exatamente quando mais importava.
  */
 const virada = computed(() => {
   const r = rumoAlvo.value, h = rumoAparelho.value
   if (r === null || h === null) return null
   const d = difRumo(h, r)
   const g = Math.round(Math.abs(d))
-  if (g <= 15) return { texto: 'Siga em frente', lado: '', graus: g }
-  if (g >= 160) return { texto: 'Dê meia-volta', lado: '', graus: g }
-  return { texto: d > 0 ? 'Vire à direita' : 'Vire à esquerda', lado: d > 0 ? 'dir' : 'esq', graus: g }
+  const delta = Math.round(d)
+  if (g <= 15) return { texto: 'Siga em frente', lado: '', graus: g, delta }
+  if (g >= 160) return { texto: 'Dê meia-volta', lado: '', graus: g, delta }
+  return { texto: d > 0 ? 'Vire à direita' : 'Vire à esquerda', lado: d > 0 ? 'dir' : 'esq', graus: g, delta }
 })
 
 /** Onde o aparelho aponta, em nome de rosa dos ventos. */
@@ -369,8 +375,16 @@ onBeforeUnmount(() => {
 
       <!-- RUMO: a instrução que se lê de relance, sem parar de andar -->
       <div v-if="alvo" class="rumo" :class="virada?.lado">
-        <div class="agulha" :style="{ transform: 'rotate(' + (virada ? (virada.lado === 'dir' ? virada.graus : -virada.graus) : 0) + 'deg)' }">
-          <Icone nome="avancar" :px="26" />
+        <!--
+          ⚠️ A agulha é um SVG próprio, apontando para CIMA em zero grau.
+          Antes usava o ícone `avancar` do sprite, que aponta para a DIREITA —
+          então toda rotação saía 90° errada, e a agulha mandava para o lado
+          errado. Rotação só faz sentido com o repouso do desenho conhecido.
+        -->
+        <div class="agulha" :style="{ transform: 'rotate(' + (virada ? virada.delta : 0) + 'deg)' }">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M12 2 L20 21 L12 16.5 L4 21 Z" fill="currentColor" />
+          </svg>
         </div>
         <div class="txt">
           <b v-if="virada">{{ virada.texto }}</b>
