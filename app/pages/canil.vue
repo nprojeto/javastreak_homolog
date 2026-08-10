@@ -112,7 +112,33 @@ onMounted(carregar)
         <div v-if="canil.obs" class="meta no-i18n">{{ canil.obs }}</div>
       </div>
 
-      <div v-if="form" class="card">
+
+      <div v-if="caes === null" class="card"><div class="meta">Carregando…</div></div>
+      <div v-else-if="!caes.length && !form" class="card vazio">
+        <div class="big"><Icone nome="canil" /></div>
+        Nenhum cão neste canil.
+      </div>
+
+      <div v-for="c in caes || []" :key="c.id" class="card cao">
+        <img v-if="c.fotoUrl" :src="String(c.fotoUrl)" class="thumb" alt="">
+        <div v-else class="ic"><Icone nome="canil" /></div>
+        <NuxtLink :to="{ path: '/cao', query: { id: c.id, canil: id } }" class="grow">
+          <b class="no-i18n">{{ c.nome }}</b>
+          <div class="meta">
+            <span class="pill">{{ c.funcao || '—' }}</span>
+            <span v-if="c.raca" class="no-i18n"> {{ c.raca }}</span>
+          </div>
+          <div class="meta no-i18n">
+            {{ c.sexo }}<template v-if="idade(c.dataNascimento)"> · {{ idade(c.dataNascimento) }}</template>
+          </div>
+        </NuxtLink>
+        <button class="ib" title="Excluir" @click="excluir(c)"><Icone nome="excluir" /></button>
+      </div>
+
+      <!-- Fica AQUI, junto do botão que o abre: declarado antes da lista,
+           ele abria fora da tela em qualquer lista com alguns itens. -->
+      <div v-if="form" class="card form-novo">
+        <h3>Novo cão</h3>
         <label for="c_nome">Nome do cão *</label>
         <input id="c_nome" v-model="nome" class="no-i18n">
 
@@ -150,28 +176,6 @@ onMounted(carregar)
         <button class="btn sec" @click="form = false">Cancelar</button>
       </div>
 
-      <div v-if="caes === null" class="card"><div class="meta">Carregando…</div></div>
-      <div v-else-if="!caes.length && !form" class="card vazio">
-        <div class="big"><Icone nome="canil" /></div>
-        Nenhum cão neste canil.
-      </div>
-
-      <div v-for="c in caes || []" :key="c.id" class="card cao">
-        <img v-if="c.fotoUrl" :src="String(c.fotoUrl)" class="thumb" alt="">
-        <div v-else class="ic"><Icone nome="canil" /></div>
-        <NuxtLink :to="{ path: '/cao', query: { id: c.id, canil: id } }" class="grow">
-          <b class="no-i18n">{{ c.nome }}</b>
-          <div class="meta">
-            <span class="pill">{{ c.funcao || '—' }}</span>
-            <span v-if="c.raca" class="no-i18n"> {{ c.raca }}</span>
-          </div>
-          <div class="meta no-i18n">
-            {{ c.sexo }}<template v-if="idade(c.dataNascimento)"> · {{ idade(c.dataNascimento) }}</template>
-          </div>
-        </NuxtLink>
-        <button class="ib" title="Excluir" @click="excluir(c)"><Icone nome="excluir" /></button>
-      </div>
-
       <BotaoCriar
         v-if="!form"
         rotulo="＋ Novo cão"
@@ -185,6 +189,9 @@ onMounted(carregar)
 </template>
 
 <style scoped>
+/* O formulário de cadastro, agora ao pé da lista. */
+.form-novo { border-left: 4px solid var(--laranja); }
+.form-novo h3 { margin: 0 0 10px; font-size: 15px; }
 h3 { margin: 0 0 4px; }
 .ruim { color: var(--danger); }
 .vazio { text-align: center; padding: 24px; }

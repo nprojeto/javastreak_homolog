@@ -111,7 +111,31 @@ onMounted(carregar)
 
       <h3 class="sec"><Icone nome="saude" /> Saúde</h3>
 
-      <div v-if="form" class="card">
+
+      <div v-if="saude === null" class="card"><div class="meta">Carregando…</div></div>
+      <div v-else-if="!saude.length && !form" class="card">
+        <div class="meta">Nenhum registro de saúde ainda.</div>
+      </div>
+
+      <div v-for="s in saude || []" :key="s.id" class="card linha">
+        <div class="grow">
+          <b>{{ s.tipo }}</b>
+          <div class="meta no-i18n">
+            {{ dataBR(s.data) }}
+            <template v-if="s.descricao"> · {{ s.descricao }}</template>
+          </div>
+          <div v-if="s.proximaData" class="meta">
+            <Icone nome="calendario" /> próxima em {{ dataBR(s.proximaData) }}
+          </div>
+          <div v-if="s.obs" class="meta no-i18n">{{ s.obs }}</div>
+        </div>
+        <button class="ib" title="Excluir" @click="excluir(s)"><Icone nome="excluir" /></button>
+      </div>
+
+      <!-- Fica AQUI, junto do botão que o abre: declarado antes da lista,
+           ele abria fora da tela em qualquer lista com alguns itens. -->
+      <div v-if="form" class="card form-novo">
+        <h3>Novo registro de saúde</h3>
         <label for="s_tipo">Tipo *</label>
         <select id="s_tipo" v-model="tipo">
           <option v-for="t in TIPOS" :key="t">{{ t }}</option>
@@ -137,26 +161,6 @@ onMounted(carregar)
         <button class="btn sec" @click="form = false">Cancelar</button>
       </div>
 
-      <div v-if="saude === null" class="card"><div class="meta">Carregando…</div></div>
-      <div v-else-if="!saude.length && !form" class="card">
-        <div class="meta">Nenhum registro de saúde ainda.</div>
-      </div>
-
-      <div v-for="s in saude || []" :key="s.id" class="card linha">
-        <div class="grow">
-          <b>{{ s.tipo }}</b>
-          <div class="meta no-i18n">
-            {{ dataBR(s.data) }}
-            <template v-if="s.descricao"> · {{ s.descricao }}</template>
-          </div>
-          <div v-if="s.proximaData" class="meta">
-            <Icone nome="calendario" /> próxima em {{ dataBR(s.proximaData) }}
-          </div>
-          <div v-if="s.obs" class="meta no-i18n">{{ s.obs }}</div>
-        </div>
-        <button class="ib" title="Excluir" @click="excluir(s)"><Icone nome="excluir" /></button>
-      </div>
-
       <button v-if="!form" class="btn" @click="form = true">＋ Registrar saúde</button>
       <NuxtLink :to="{ path: '/canil', query: { id: canilId } }" class="btn sec">Voltar</NuxtLink>
     </template>
@@ -164,6 +168,9 @@ onMounted(carregar)
 </template>
 
 <style scoped>
+/* O formulário de cadastro, agora ao pé da lista. */
+.form-novo { border-left: 4px solid var(--laranja); }
+.form-novo h3 { margin: 0 0 10px; font-size: 15px; }
 h3 { margin: 0 0 4px; }
 .ruim { color: var(--danger); }
 .cab { display: flex; align-items: flex-start; gap: 12px; }

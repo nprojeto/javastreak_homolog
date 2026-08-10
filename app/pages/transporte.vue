@@ -129,47 +129,6 @@ onMounted(carregar)
         {{ ehCavalo ? 'Saúde e casqueamento' : 'Manutenções' }}
       </h3>
 
-      <div v-if="form" class="card">
-        <label for="x_tipo">Tipo *</label>
-        <select id="x_tipo" v-model="tipo">
-          <option v-for="x in tiposDisponiveis" :key="x">{{ x }}</option>
-        </select>
-
-        <template v-if="ehCavalo">
-          <label for="x_desc">Descrição</label>
-          <input id="x_desc" v-model="descricao" class="no-i18n">
-        </template>
-
-        <div class="two">
-          <div><CampoData v-model="data" label="Data" /></div>
-          <div><CampoData v-model="proxima" label="Próxima" /></div>
-        </div>
-
-        <template v-if="!ehCavalo">
-          <div class="two">
-            <div>
-              <label for="x_km">Km atual</label>
-              <input id="x_km" v-model="km" inputmode="numeric">
-            </div>
-            <div>
-              <label for="x_pkm">Próximo km</label>
-              <input id="x_pkm" v-model="proximoKm" inputmode="numeric">
-            </div>
-          </div>
-        </template>
-
-        <div class="meta dica">
-          Com a próxima data preenchida, o registro entra na sua Agenda.
-        </div>
-
-        <label for="x_obs">Observações</label>
-        <textarea id="x_obs" v-model="obs" class="no-i18n" />
-
-        <button class="btn" :disabled="salvando" @click="salvar">
-          {{ salvando ? 'Salvando…' : 'Salvar registro' }}
-        </button>
-        <button class="btn sec" @click="form = false">Cancelar</button>
-      </div>
 
       <!-- CAVALO -->
       <template v-if="ehCavalo">
@@ -213,6 +172,51 @@ onMounted(carregar)
         </div>
       </template>
 
+      <!-- Fica AQUI, junto do botão que o abre: declarado antes da lista,
+           ele abria fora da tela em qualquer lista com alguns itens. -->
+      <div v-if="form" class="card form-novo">
+        <h3>Novo registro</h3>
+        <label for="x_tipo">Tipo *</label>
+        <select id="x_tipo" v-model="tipo">
+          <option v-for="x in tiposDisponiveis" :key="x">{{ x }}</option>
+        </select>
+
+        <template v-if="ehCavalo">
+          <label for="x_desc">Descrição</label>
+          <input id="x_desc" v-model="descricao" class="no-i18n">
+        </template>
+
+        <div class="two">
+          <div><CampoData v-model="data" label="Data" /></div>
+          <div><CampoData v-model="proxima" label="Próxima" /></div>
+        </div>
+
+        <template v-if="!ehCavalo">
+          <div class="two">
+            <div>
+              <label for="x_km">Km atual</label>
+              <input id="x_km" v-model="km" inputmode="numeric">
+            </div>
+            <div>
+              <label for="x_pkm">Próximo km</label>
+              <input id="x_pkm" v-model="proximoKm" inputmode="numeric">
+            </div>
+          </div>
+        </template>
+
+        <div class="meta dica">
+          Com a próxima data preenchida, o registro entra na sua Agenda.
+        </div>
+
+        <label for="x_obs">Observações</label>
+        <textarea id="x_obs" v-model="obs" class="no-i18n" />
+
+        <button class="btn" :disabled="salvando" @click="salvar">
+          {{ salvando ? 'Salvando…' : 'Salvar registro' }}
+        </button>
+        <button class="btn sec" @click="form = false">Cancelar</button>
+      </div>
+
       <button v-if="!form" class="btn" @click="form = true">＋ Registrar</button>
 
       <NuxtLink
@@ -228,6 +232,9 @@ onMounted(carregar)
 </template>
 
 <style scoped>
+/* O formulário de cadastro, agora ao pé da lista. */
+.form-novo { border-left: 4px solid var(--laranja); }
+.form-novo h3 { margin: 0 0 10px; font-size: 15px; }
 h3 { margin: 0 0 4px; }
 .ruim { color: var(--danger); }
 .cab { display: flex; align-items: flex-start; gap: 12px; }

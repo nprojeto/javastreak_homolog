@@ -69,17 +69,6 @@ onMounted(carregar)
     <template v-else>
       <TituloTela titulo="Cães" descricao="Seus canis e a matilha de cada um." />
 
-      <div v-if="form" class="card">
-        <label for="k_nome">Nome do canil *</label>
-        <input id="k_nome" v-model="nome" class="no-i18n" placeholder="Ex: Canil da sede">
-        <BotaoGps v-model:lat="lat" v-model:lng="lng" />
-        <label for="k_obs">Observações</label>
-        <textarea id="k_obs" v-model="obs" class="no-i18n" />
-        <button class="btn" :disabled="salvando" @click="salvar">
-          {{ salvando ? 'Salvando…' : 'Salvar canil' }}
-        </button>
-        <button class="btn sec" @click="form = false">Cancelar</button>
-      </div>
 
       <div v-if="!lista.length && !form" class="card vazio">
         <div class="big"><Icone nome="canil" /></div>
@@ -95,6 +84,21 @@ onMounted(carregar)
         <button class="ib" title="Excluir" @click="excluir(k)"><Icone nome="excluir" /></button>
       </div>
 
+      <!-- Fica AQUI, junto do botão que o abre: declarado antes da lista,
+           ele abria fora da tela em qualquer lista com alguns itens. -->
+      <div v-if="form" class="card form-novo">
+        <h3>Novo canil</h3>
+        <label for="k_nome">Nome do canil *</label>
+        <input id="k_nome" v-model="nome" class="no-i18n" placeholder="Ex: Canil da sede">
+        <BotaoGps v-model:lat="lat" v-model:lng="lng" />
+        <label for="k_obs">Observações</label>
+        <textarea id="k_obs" v-model="obs" class="no-i18n" />
+        <button class="btn" :disabled="salvando" @click="salvar">
+          {{ salvando ? 'Salvando…' : 'Salvar canil' }}
+        </button>
+        <button class="btn sec" @click="form = false">Cancelar</button>
+      </div>
+
       <BotaoCriar
         v-if="!form"
         rotulo="＋ Novo canil"
@@ -107,6 +111,9 @@ onMounted(carregar)
 </template>
 
 <style scoped>
+/* O formulário de cadastro, agora ao pé da lista. */
+.form-novo { border-left: 4px solid var(--laranja); }
+.form-novo h3 { margin: 0 0 10px; font-size: 15px; }
 .ruim { color: var(--danger); }
 .vazio { text-align: center; padding: 24px; }
 .vazio .big { font-size: 40px; margin-bottom: 6px; }

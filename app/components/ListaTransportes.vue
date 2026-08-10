@@ -83,7 +83,29 @@ onMounted(carregar)
     <div v-else-if="lista === null" class="card"><div class="meta">Carregando…</div></div>
 
     <template v-else>
-      <div v-if="form" class="card">
+
+      <div v-if="!daCasa.length && !form" class="card vazio">
+        <div class="big"><Icone :nome="info.ic" /></div>
+        Nada cadastrado aqui ainda.
+      </div>
+
+      <div v-for="t in daCasa" :key="t.id" class="card item">
+        <img v-if="t.fotoUrl" :src="String(t.fotoUrl)" class="thumb" alt="">
+        <div v-else class="ic"><Icone :nome="info.ic" :px="26" /></div>
+        <NuxtLink :to="{ path: '/transporte', query: { id: t.id } }" class="grow">
+          <b class="no-i18n">{{ t.identificacao || t.tipo }}</b>
+          <div class="meta"><span class="pill">{{ t.tipo }}</span></div>
+          <div v-if="t.obs" class="meta no-i18n">{{ t.obs }}</div>
+        </NuxtLink>
+        <button class="ib" title="Excluir" @click="excluir(t)">
+          <Icone nome="excluir" />
+        </button>
+      </div>
+
+      <!-- Fica AQUI, junto do botão que o abre: declarado antes da lista,
+           ele abria fora da tela em qualquer lista com alguns itens. -->
+      <div v-if="form" class="card form-novo">
+        <h3>Novo item</h3>
         <label for="t_tipo">Tipo *</label>
         <select id="t_tipo" v-model="tipo">
           <option v-for="t in TIPOS[props.casa]" :key="t">{{ t }}</option>
@@ -105,24 +127,6 @@ onMounted(carregar)
         <button class="btn sec" @click="form = false">Cancelar</button>
       </div>
 
-      <div v-if="!daCasa.length && !form" class="card vazio">
-        <div class="big"><Icone :nome="info.ic" /></div>
-        Nada cadastrado aqui ainda.
-      </div>
-
-      <div v-for="t in daCasa" :key="t.id" class="card item">
-        <img v-if="t.fotoUrl" :src="String(t.fotoUrl)" class="thumb" alt="">
-        <div v-else class="ic"><Icone :nome="info.ic" :px="26" /></div>
-        <NuxtLink :to="{ path: '/transporte', query: { id: t.id } }" class="grow">
-          <b class="no-i18n">{{ t.identificacao || t.tipo }}</b>
-          <div class="meta"><span class="pill">{{ t.tipo }}</span></div>
-          <div v-if="t.obs" class="meta no-i18n">{{ t.obs }}</div>
-        </NuxtLink>
-        <button class="ib" title="Excluir" @click="excluir(t)">
-          <Icone nome="excluir" />
-        </button>
-      </div>
-
       <BotaoCriar
         v-if="!form"
         rotulo="＋ Adicionar"
@@ -136,6 +140,9 @@ onMounted(carregar)
 </template>
 
 <style scoped>
+/* O formulário de cadastro, agora ao pé da lista. */
+.form-novo { border-left: 4px solid var(--laranja); }
+.form-novo h3 { margin: 0 0 10px; font-size: 15px; }
 .ruim { color: var(--danger); }
 .vazio { text-align: center; padding: 24px; }
 .vazio .big :deep(.ic-svg) { width: 42px; height: 42px; }

@@ -95,20 +95,6 @@ onMounted(carregar)
     <template v-else>
       <TituloTela titulo="Haras" descricao="Cavalos: saúde, vacinas e casqueamento." />
 
-      <div v-if="form" class="card">
-        <label for="h_nome">Nome do cavalo *</label>
-        <input id="h_nome" v-model="identificacao" class="no-i18n">
-        <CampoData v-model="nasc" label="Data de nascimento" />
-        <label for="h_obs">Observações</label>
-        <textarea id="h_obs" v-model="obs" class="no-i18n" />
-        <label for="h_foto">Foto</label>
-        <img v-if="foto" :src="foto" class="prev" alt="Prévia">
-        <input id="h_foto" type="file" accept="image/*" @change="escolheuFoto">
-        <button class="btn" :disabled="salvando" @click="salvar">
-          {{ salvando ? 'Salvando…' : 'Salvar cavalo' }}
-        </button>
-        <button class="btn sec" @click="form = false">Cancelar</button>
-      </div>
 
       <div v-if="!cavalos.length && !form" class="card vazio">
         <div class="big"><Icone nome="ferradura" /></div>
@@ -128,6 +114,24 @@ onMounted(carregar)
         </button>
       </div>
 
+      <!-- Fica AQUI, junto do botão que o abre: declarado antes da lista,
+           ele abria fora da tela em qualquer lista com alguns itens. -->
+      <div v-if="form" class="card form-novo">
+        <h3>Novo cavalo</h3>
+        <label for="h_nome">Nome do cavalo *</label>
+        <input id="h_nome" v-model="identificacao" class="no-i18n">
+        <CampoData v-model="nasc" label="Data de nascimento" />
+        <label for="h_obs">Observações</label>
+        <textarea id="h_obs" v-model="obs" class="no-i18n" />
+        <label for="h_foto">Foto</label>
+        <img v-if="foto" :src="foto" class="prev" alt="Prévia">
+        <input id="h_foto" type="file" accept="image/*" @change="escolheuFoto">
+        <button class="btn" :disabled="salvando" @click="salvar">
+          {{ salvando ? 'Salvando…' : 'Salvar cavalo' }}
+        </button>
+        <button class="btn sec" @click="form = false">Cancelar</button>
+      </div>
+
       <BotaoCriar
         v-if="!form"
         rotulo="＋ Novo cavalo"
@@ -141,6 +145,9 @@ onMounted(carregar)
 </template>
 
 <style scoped>
+/* O formulário de cadastro, agora ao pé da lista. */
+.form-novo { border-left: 4px solid var(--laranja); }
+.form-novo h3 { margin: 0 0 10px; font-size: 15px; }
 .ruim { color: var(--danger); }
 .vazio { text-align: center; padding: 24px; }
 .vazio .big :deep(.ic-svg) { width: 42px; height: 42px; }
