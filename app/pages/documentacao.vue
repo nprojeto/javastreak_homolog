@@ -105,6 +105,25 @@ function montarLinhas() {
 
 watch(sub, montarLinhas)
 
+/**
+ * O que o cartão fechado mostra. Fechado ele precisa responder "é este?" sem
+ * abrir — número e validade bastam, e é o que a pessoa vem conferir.
+ */
+function resumoLinha(l: Linha): string {
+  const p: string[] = []
+  p.push(l.numero ? 'nº ' + l.numero : 'sem número')
+  if (l.vencimento) p.push('vence ' + dataBR(l.vencimento))
+  if (l.temArquivo || l.arquivo) p.push('com anexo')
+  return p.join(' · ')
+}
+
+/** Linha começada e incompleta merece destaque: é o que barra o salvamento. */
+function faltaAlgo(l: Linha): boolean {
+  const comecou = !!(l.numero || l.emissao || l.vencimento || l.obs || l.arquivo)
+  if (!comecou) return false
+  return !l.numero || !l.vencimento || !(l.temArquivo || l.arquivo)
+}
+
 function nomeTransporte(id?: string) {
   const t = transportes.value.find((x) => x.id === id)
   return t ? t.tipo + (t.identificacao ? ' · ' + t.identificacao : '') : ''
@@ -188,7 +207,7 @@ onMounted(carregar)
           :class="{ active: cat === c }"
           @click="cat = c as 'acervo' | 'veiculo' | 'pessoal'"
         >
-          <Icone :nome="ICONE[c]" :px="20" />
+          <Icone :nome="ICONE[c] || 'arquivo'" :px="20" />
           <span>{{ rot }}</span>
           <span v-if="contar(c)" class="num">{{ contar(c) }}</span>
         </button>
@@ -213,11 +232,24 @@ onMounted(carregar)
           </div>
         </div>
 
-        <div v-for="(l, i) in linhas" :key="i" class="card linha-acv">
-          <div class="cab">
-            <b>{{ sub }} {{ i + 1 }}</b>
+        <!--
+          ⚠️ Fechados por padrão, MENOS o primeiro quando a lista está vazia:
+          quem chega para cadastrar o primeiro documento não deveria ter de
+          descobrir que precisa tocar em algo. Ver CartaoDobra.
+        -->
+        <CartaoDobra
+          v-for="(l, i) in linhas"
+          :key="i"
+          :titulo="sub + ' ' + (i + 1)"
+          :resumo="resumoLinha(l)"
+          :selo="statusVencimento(l.vencimento)?.texto"
+          :selo-classe="statusVencimento(l.vencimento)?.classe"
+          :alerta="faltaAlgo(l)"
+          :aberto-inicial="linhas.length === 1 && !l.id"
+        >
+          <template #acoes>
             <button class="ib" title="Remover" @click="apagarLinha(i)"><Icone nome="excluir" /></button>
-          </div>
+          </template>
 
           <label>Número</label>
           <input v-model="l.numero" class="no-i18n" placeholder="Número do documento">
@@ -237,7 +269,7 @@ onMounted(carregar)
 
           <label>Observações</label>
           <input v-model="l.obs">
-        </div>
+        </CartaoDobra>
 
         <button class="btn sec" @click="linhas.push(vazio())">+ Acrescentar {{ sub }}</button>
         <button class="btn" :disabled="salvandoAcervo" @click="salvarAcervo">
@@ -317,9 +349,7 @@ onMounted(carregar)
 }
 .subsub button.on { border-color: var(--laranja); background: var(--carvao-3); color: var(--laranja-esc); }
 
-.linha-acv .cab { display: flex; align-items: center; margin-bottom: 6px; }
-.linha-acv .cab b { flex: 1; }
-.ib { border: 0; background: none; cursor: pointer; font-size: 17px; padding: 4px 6px; text-decoration: none; }
+.ib { border: 0; background: none; color: var(--laranja-cl); cursor: pointer; font-size: 17px; padding: 4px 6px; text-decoration: none; }
 
 .doc-linha { display: flex; align-items: flex-start; gap: 8px; text-decoration: none; color: var(--txt); }
 .doc-linha .grow { flex: 1; min-width: 0; }
