@@ -82,7 +82,7 @@ const reqProp = computed(() => {
 
 
 const descCevas = computed(() => {
-  if (!carregado.value) return 'Cevas, alimento e nível'
+  if (!carregado.value) return 'Pontos de espera'
   const n = (cevas.value || []).length
   return n ? n + ' ceva(s) cadastrada(s)' : 'Nenhuma ceva — opcional para caçar'
 })

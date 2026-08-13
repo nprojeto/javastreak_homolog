@@ -29,7 +29,6 @@ const LUAS = ['', 'Lua nova', 'Crescente inicial', 'Quarto crescente', 'Crescent
 const TEMPOS = ['', 'Aberto', 'Parcialmente nublado', 'Nublado', 'Neblina',
   'Garoa', 'Chuva', 'Tempestade']
 
-interface Alimento { id: string; tipo: string; data?: string }
 interface Clima {
   ok?: boolean; erro?: string; luaFase?: string; condicaoTempo?: string
   temp?: number | string; umidade?: number | string; vento?: number | string
@@ -43,13 +42,11 @@ const ui = useUi()
 
 const manejoId = computed(() => String(route.query.manejo || ''))
 const m = ref<Manejo | null>(null)
-const alimentos = ref<Alimento[]>([])
 const erro = ref('')
 const pronto = ref(false)
 
 const cevaId = ref('')
 const rotaId = ref('')
-const alimentoId = ref('')
 const quem = ref('')
 const dataHora = ref('')
 const quantidade = ref('1')
@@ -80,13 +77,6 @@ function agoraLocal() {
   const d = new Date()
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
   return d.toISOString().slice(0, 16)
-}
-
-async function carregarAlimentos() {
-  alimentoId.value = ''
-  alimentos.value = []
-  if (!cevaId.value) return
-  alimentos.value = await server<Alimento[]>('apiListarAlimentos', cevaId.value).catch(() => [])
 }
 
 /**
@@ -131,10 +121,9 @@ async function verClima() {
   }
 }
 
-watch(cevaId, async () => {
-  await carregarAlimentos()
-  if (!cevaId.value) modo.value = 'passado'
-})
+/* Sem ceva escolhida não há clima em tempo real: o servidor busca pela
+   coordenada dela. Cai para o preenchimento à mão. */
+watch(cevaId, () => { if (!cevaId.value) modo.value = 'passado' })
 watch(modo, (v) => { if (v === 'tempoReal') verClima() })
 
 async function escolheuFoto(e: Event) {
@@ -184,7 +173,7 @@ async function salvar() {
 
   const d: Record<string, unknown> = {
     manejoId: m.value.id, cevaId: cevaId.value, rotaId: rotaId.value,
-    alimentoId: alimentoId.value, abatidoPor: quem.value,
+    abatidoPor: quem.value,
     dataHora: dataHora.value, quantidade: quantidade.value, sexo: sexo.value,
     pesoAprox: peso.value, metodoAbate: metodo.value, desenvolvimento: desenv.value,
     comprimento: comprimento.value, obs: obs.value, foto: foto.value,
@@ -244,13 +233,6 @@ async function salvar() {
             <option v-for="c in m.cevas" :key="c.id" :value="c.id">{{ c.nome }}</option>
           </select>
 
-          <template v-if="cevaId">
-            <label for="ab_alim">Alimento na ceva</label>
-            <select id="ab_alim" v-model="alimentoId">
-              <option value="">—</option>
-              <option v-for="a in alimentos" :key="a.id" :value="a.id">{{ a.tipo }}</option>
-            </select>
-          </template>
         </template>
 
         <template v-if="(m.rotas || []).length">

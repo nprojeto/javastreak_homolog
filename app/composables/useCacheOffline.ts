@@ -40,7 +40,7 @@ export const LEITURAS_OFFLINE = new Set([
   'apiBoot', 'apiMeusCreditos', 'apiAvisos', 'apiAgenda',
   /* o caminho da caça */
   'apiMeuCtf', 'apiListarPropriedades', 'apiListarCevas', 'apiListarRotas',
-  'apiListarMarcacoes', 'apiListarAlimentos',
+  'apiListarMarcacoes',
   'apiListarManejos', 'apiManejo', 'apiManejoGuia',
   'apiAbatesDoManejo', 'apiAmigosDoManejo',
   /* documentação e bichos */

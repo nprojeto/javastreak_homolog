@@ -12,7 +12,7 @@
  *
  * ⚠️ Dimensão sem dado NÃO conta zero — sai da conta. Contar como zero
  * derrubaria o índice por falta de informação, não por condição desfavorável,
- * e a tela ainda diria "sem histórico para: Clima, Alimento" enquanto o
+ * e a tela ainda diria "sem histórico para: Clima" enquanto o
  * número já teria sido punido por isso.
  */
 
@@ -34,7 +34,6 @@ export interface Abate {
   vento?: number | string
   pressao?: number | string
   chuvaMm?: number | string
-  alimento?: string
   condFonte?: string
   abatidoPorNome?: string
 }
@@ -48,7 +47,6 @@ export interface Agora {
   vento?: number | string
   pressao?: number | string
   chuvaMm?: number | string
-  alimento?: string
   /** Instante de referência. Ausente, usa o relógio. */
   quando?: Date
 }
@@ -147,7 +145,6 @@ const DIMENSOES: Array<{ chave: string; rotulo: string; peso: number; de: (a: Ab
   { chave: 'periodo', rotulo: 'Período do dia', peso: 3,
     de: (x) => periodoDoDia(('dataHora' in x ? x.dataHora : undefined) || ('quando' in x ? x.quando : undefined)) },
   { chave: 'clima', rotulo: 'Clima', peso: 2, de: (x) => String(x.condicaoTempo || '') },
-  { chave: 'alimento', rotulo: 'Alimento', peso: 2, de: (x) => String(x.alimento || '') },
   { chave: 'temp', rotulo: 'Temperatura', peso: 2, de: (x) => faixaTemp(x.temp) },
   { chave: 'umidade', rotulo: 'Umidade', peso: 1, de: (x) => faixaUmidade(x.umidade) },
   { chave: 'vento', rotulo: 'Vento', peso: 1, de: (x) => faixaVento(x.vento) },
@@ -250,7 +247,6 @@ export const ABAS_RESUMO = [
   { chave: 'horario', rotulo: 'Horário' },
   { chave: 'clima', rotulo: 'Clima' },
   { chave: 'lua', rotulo: 'Lua' },
-  { chave: 'alimento', rotulo: 'Alimento' },
   { chave: 'temp', rotulo: 'Temperatura' },
   { chave: 'umidade', rotulo: 'Umidade' },
   { chave: 'vento', rotulo: 'Vento' },

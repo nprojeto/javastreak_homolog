@@ -25,8 +25,6 @@ import { dataBR } from '~/composables/useMascaras'
 const props = defineProps<{
   tipo: 'ceva' | 'rota'
   id: string
-  /** Alimento atual da ceva, para entrar como dimensão de agora. */
-  alimento?: string
 }>()
 
 interface Resposta {
@@ -48,7 +46,7 @@ const cab = ref<{ nome: string; tipo: string }>({ nome: '', tipo: '' })
 
 const agora = computed<Agora | null>(() => {
   if (!clima.value) return null
-  return { ...clima.value, alimento: props.alimento || '', quando: new Date() }
+  return { ...clima.value, quando: new Date() }
 })
 
 const est = computed(() => estatisticaDe(agora.value, abates.value || []))
@@ -175,7 +173,6 @@ onMounted(carregar)
               <div class="meta no-i18n">
                 {{ [a.condicaoTempo, a.luaFase, periodoDoDia(a.dataHora)].filter(Boolean).join(' · ') }}
               </div>
-              <div v-if="a.alimento" class="meta no-i18n">{{ a.alimento }}</div>
               <div v-if="a.obs" class="meta no-i18n">{{ a.obs }}</div>
             </div>
           </div>

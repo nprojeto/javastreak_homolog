@@ -114,7 +114,7 @@ const indicePorCeva = computed<Record<string, number | null>>(() => {
     /* Os abates daquela ceva, do lote que o mapa já tem. */
     const meus = (d.abates || []).filter((a) => String(a.cevaId || '') === String(c.id)) as unknown as Abate[]
     if (!meus.length) { out[c.id] = null; continue }
-    const e = estatisticaDe({ ...clima, alimento: alimentoAtual(c.id), quando: new Date() }, meus)
+    const e = estatisticaDe({ ...clima, quando: new Date() }, meus)
     out[c.id] = e.indice
   }
   return out
@@ -227,17 +227,11 @@ interface PinoMapa {
  * a pergunta "vale a pena ir nesta hoje?" nasce olhando o mapa, não dentro da
  * ficha da ceva, que ninguém abre no meio do mato.
  */
-const selecionado = ref<{ tipo: 'ceva' | 'rota'; id: string; nome: string; alimento?: string } | null>(null)
-const painelEl = ref<HTMLElement | null>(null)
+const selecionado = ref<{ tipo: 'ceva' | 'rota'; id: string; nome: string } | null>(null)
 
-async function selecionar(x: { tipo: 'ceva' | 'rota'; id: string; nome: string }) {
-  /* O alimento de agora vem do mapa (`ultimoAlimento`), não do abate: é a
-     condição atual da ceva, e é ela que entra como "agora" na estatística. */
-  selecionado.value = { ...x, alimento: alimentoAtual(x.id) }
-  /* O mapa ocupa 62vh: sem rolar até o painel, o toque parece não ter feito
-     nada. Espera o painel existir antes de rolar. */
-  await nextTick()
-  painelEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+/* A folha abre SOBRE o mapa: não há para onde rolar, e é esse o ponto. */
+function selecionar(x: { tipo: 'ceva' | 'rota'; id: string; nome: string }) {
+  selecionado.value = x
 }
 
 const pinos = computed(() => {
@@ -316,18 +310,6 @@ function acoesLoja(e: ItemMapa) {
   if (w) a.push({ rotulo: 'WhatsApp', url: w })
   a.push({ rotulo: 'Ver loja', url: base + 'loja?empresa=' + encodeURIComponent(e.id) })
   return a
-}
-
-/**
- * Alimento posto na ceva hoje. `apiMapaDados` guarda a LINHA inteira do último
- * alimento por ceva, então o tipo vem direto dela — não pelo `alimentoTipo`,
- * que é indexado por id do alimento e serve a outro uso.
- */
-function alimentoAtual(cevaId: string): string {
-  const d = dados.value as unknown as {
-    ultimoAlimento?: Record<string, { tipo?: string }>
-  } | null
-  return d?.ultimoAlimento?.[cevaId]?.tipo || ''
 }
 
 /** Centro aproximado do limite, para pousar o pino da propriedade. */
@@ -412,37 +394,46 @@ onMounted(carregar)
         </div>
       </div>
 
-      <ClientOnly>
-        <MapaPontos
-          ref="mapaRef"
-          :limites="limites"
-          :pinos="pinos"
-          :rotas="rotasNoMapa"
-          enquadrar-uma-vez
-          altura="62vh"
-          @selecionar="selecionar"
-        />
-      </ClientOnly>
+      <!--
+        ⚠️ O painel abre SOBRE o mapa, não abaixo. Embaixo, o mapa continuava
+        ocupando 62% da tela e a informação nascia fora do campo de visão —
+        era preciso rolar para ver o que o toque tinha aberto, e no mato isso
+        significa perder de vista onde se está.
+      -->
+      <div class="palco">
+        <ClientOnly>
+          <MapaPontos
+            ref="mapaRef"
+            :limites="limites"
+            :pinos="pinos"
+            :rotas="rotasNoMapa"
+            enquadrar-uma-vez
+            altura="62vh"
+            @selecionar="selecionar"
+          />
+        </ClientOnly>
 
-      <!-- PAINEL DA CEVA / ROTA tocada no mapa. -->
-      <div v-if="selecionado" ref="painelEl" class="sel">
-        <div class="sel-cab">
-          <b class="no-i18n">{{ selecionado.nome }}</b>
-          <NuxtLink
-            :to="{ path: selecionado.tipo === 'ceva' ? '/ceva-detalhe' : '/rota-detalhe',
-                   query: { id: selecionado.id } }"
-            class="sel-ir"
-          >Abrir ficha</NuxtLink>
-          <button class="sel-x" aria-label="Fechar" @click="selecionado = null">×</button>
+        <!-- Folha sobre o mapa: sobe de baixo e cobre até 70% da altura dele. -->
+        <div v-if="selecionado" class="folha">
+          <div class="folha-cab">
+            <b class="no-i18n">{{ selecionado.nome }}</b>
+            <NuxtLink
+              :to="{ path: selecionado.tipo === 'ceva' ? '/ceva-detalhe' : '/rota-detalhe',
+                     query: { id: selecionado.id } }"
+              class="folha-ir"
+            >Abrir ficha</NuxtLink>
+            <button class="folha-x" aria-label="Fechar" @click="selecionado = null">×</button>
+          </div>
+          <div class="folha-corpo">
+            <!-- `key` força recriar ao trocar de ceva: sem isso o painel
+                 manteria os dados da anterior enquanto os novos não chegam. -->
+            <PainelCeva
+              :key="selecionado.tipo + selecionado.id"
+              :tipo="selecionado.tipo"
+              :id="selecionado.id"
+            />
+          </div>
         </div>
-        <!-- `key` força recriar ao trocar de ceva: sem isso o painel manteria
-             os dados da anterior enquanto os novos não chegam. -->
-        <PainelCeva
-          :key="selecionado.tipo + selecionado.id"
-          :tipo="selecionado.tipo"
-          :id="selecionado.id"
-          :alimento="selecionado.alimento"
-        />
       </div>
 
       <div class="barra-mapa">
@@ -495,18 +486,37 @@ onMounted(carregar)
 .chip.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); font-weight: 600; }
 .chip i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .aviso { color: var(--laranja-esc); margin-top: 8px; }
-.sel { margin-top: 10px; scroll-margin-top: 12px; }
-.sel-cab { display: flex; align-items: center; gap: 8px; padding: 0 4px 6px; }
-.sel-cab b { flex: 1; min-width: 0; font-size: 15px; }
-.sel-ir {
-  font-size: 11.5px; font-weight: 700; color: var(--laranja-cl);
+/* ── folha sobre o mapa ── */
+.palco { position: relative; }
+.folha {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 600;
+  max-height: 72%; display: flex; flex-direction: column;
+  background: var(--card); border: 1px solid var(--linha);
+  border-radius: 14px 14px 12px 12px;
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, .5);
+  animation: sobe .18s ease-out;
+}
+@keyframes sobe { from { transform: translateY(14px); opacity: 0 } to { transform: none; opacity: 1 } }
+
+.folha-cab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-bottom: 1px solid var(--linha); flex: none;
+}
+.folha-cab b { flex: 1; min-width: 0; font-size: 15px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folha-ir {
+  flex: none; font-size: 11.5px; font-weight: 700; color: var(--laranja-cl);
   text-decoration: none; border: 1px solid var(--linha);
   border-radius: 999px; padding: 4px 10px;
 }
-.sel-x {
-  border: 0; background: none; color: var(--osso-2);
-  font-size: 24px; line-height: 1; cursor: pointer; padding: 0 4px;
+.folha-x {
+  flex: none; border: 0; background: none; color: var(--osso-2);
+  font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px;
 }
+/* ⚠️ A rolagem é do CORPO, não da página: rolar a folha não pode arrastar o
+   mapa por baixo nem mover a tela inteira. */
+.folha-corpo { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.folha-corpo :deep(.card) { background: none; border-radius: 0; }
 .barra-mapa { display: flex; gap: 8px; margin-top: 8px; }
 .barra-mapa .btn { flex: 1; margin: 0; }
 .linha-rota {
