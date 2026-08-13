@@ -64,5 +64,5 @@ export const CONTA_KEYS = ['suporte']
 
 /** Qual limite do plano controla cada item. */
 export const MODULO_LIMITE: Record<string, string> = {
-  espera: 'cevas', caes: 'canis', armadilha: 'armadilhas', documentacao: 'documentos'
+  espera: 'cevas', caes: 'caesPorCanil', armadilha: 'armadilhas', documentacao: 'documentos'
 }

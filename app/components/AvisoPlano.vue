@@ -19,7 +19,7 @@ const NOME: Record<string, string> = {
 }
 const ROTULO: Record<string, string> = {
   cevas: 'cevas', rotas: 'rotas', marcacoesPorRota: 'marcações por rota',
-  canis: 'canis', caesPorCanil: 'cães por canil', transportes: 'transportes',
+  caesPorCanil: 'cães no canil', transportes: 'transportes',
   armadilhas: 'armadilhas', abatesMes: 'abates por mês',
   trofeusRanking: 'troféus no ranking', documentos: 'documentos',
   propriedades: 'propriedades', compartilharRota: 'compartilhamento de rota',

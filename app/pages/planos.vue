@@ -38,8 +38,10 @@ interface MeuPlano {
 }
 
 const LIMROTULO: Record<string, string> = {
-  cevas: 'Cevas', rotas: 'Rotas', marcacoesPorRota: 'Pontos por rota', canis: 'Canis',
-  caesPorCanil: 'Cães por canil', transportes: 'Meios de transporte', armadilhas: 'Armadilhas',
+  /* `canis` saiu: o canil deixou de ser algo que se cadastra, então não há
+     quantidade para anunciar. Quem representa o módulo é `caesPorCanil`. */
+  cevas: 'Cevas', rotas: 'Rotas', marcacoesPorRota: 'Pontos por rota',
+  caesPorCanil: 'Cães no canil', transportes: 'Meios de transporte', armadilhas: 'Armadilhas',
   abatesMes: 'Abates por mês', trofeusRanking: 'Troféus no ranking',
   compartilharRota: 'Compartilhar rota', fotoPerfil: 'Trocar foto de perfil',
   verManejadores: 'Ver manejadores na rede', filtrarPromos: 'Filtrar promoções',
