@@ -63,6 +63,10 @@ onMounted(async () => {
       descricao="Registre, acompanhe e comprove o seu manejo."
     />
 
+    <!-- Convite de compartilhamento vem ANTES do lembrete: é ação de outra
+         pessoa esperando resposta, e some sozinho quando não há nenhum. -->
+    <FaixaConvitesCompart />
+
     <div
       v-if="atrasadas || proximas"
       class="card alerta"

@@ -75,6 +75,8 @@ onMounted(carregar)
         <p class="no-i18n">{{ ceva.obs }}</p>
       </div>
 
+      <PainelCompartilhar tipo="ceva" :id="id" :nome="ceva.nome" />
+
       <div class="card">
         <div class="meta">
           <Icone nome="grafico" /> O histórico de abates e as condições de hoje

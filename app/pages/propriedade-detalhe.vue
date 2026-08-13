@@ -141,6 +141,15 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!--
+        ⚠️ Quem NÃO é dono não vê ninguém aqui: o `apiCompartilhamentos`
+        devolve lista vazia para quem não for o dono do item, então o painel
+        abre vazio em vez de vazar quem mais tem acesso. A trava está no
+        servidor, que é onde ela precisa estar — repassar acesso alheio é
+        recusado lá, não escondido aqui.
+      -->
+      <PainelCompartilhar tipo="propriedade" :id="id" :nome="p.nome" />
+
       <!-- ───── MAPA ───── -->
       <div v-if="p.temLimite" class="card mapa-card">
         <ClientOnly>
