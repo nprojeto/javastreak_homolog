@@ -19,6 +19,9 @@ const ui = useUi()
 const lista = ref<Transporte[] | null>(null)
 const erro = ref('')
 
+/* Vazio cria; preenchido, altera pelo `apiEditar` — o mesmo editor genérico
+   que ceva e abate já usam. Nenhuma regra nova no servidor. */
+const editando = ref('')
 const form = ref(false)
 const tipo = ref(TIPOS[props.casa][0] || '')
 const identificacao = ref('')
@@ -50,16 +53,43 @@ async function escolheuFoto(e: Event) {
   }
 }
 
+function limpar() {
+  editando.value = ''
+  tipo.value = TIPOS[props.casa][0] || ''
+  identificacao.value = ''; obs.value = ''; foto.value = ''
+}
+
+function editar(t: Transporte) {
+  editando.value = t.id
+  tipo.value = t.tipo || TIPOS[props.casa][0] || ''
+  identificacao.value = t.identificacao || ''
+  obs.value = t.obs || ''
+  foto.value = ''
+  form.value = true
+}
+
+function fechar() { form.value = false; limpar() }
+
 async function salvar() {
   if (!tipo.value) { ui.avisar('Escolha o tipo', 'erro'); return }
   salvando.value = true
   try {
-    await server('apiCriarTransporte', {
-      tipo: tipo.value, identificacao: identificacao.value, obs: obs.value,
-      foto: foto.value, meio: props.casa === 'marina' ? 'maritimo' : 'terrestre'
-    })
-    ui.avisar('Salvo ✔')
-    form.value = false; identificacao.value = ''; obs.value = ''; foto.value = ''
+    if (editando.value) {
+      /* ⚠️ `meio` fica de fora na edição: ele foi gravado na criação e trocá-lo
+         não muda de casa (quem separa garagem, marina e haras é o `tipo`).
+         Sem foto nova, o `fotoUrl` não é tocado. */
+      await server('apiEditar', 'transporte', editando.value, {
+        tipo: tipo.value, identificacao: identificacao.value, obs: obs.value, foto: foto.value
+      })
+      ui.avisar('Atualizado ✔')
+    } else {
+      await server('apiCriarTransporte', {
+        tipo: tipo.value, identificacao: identificacao.value, obs: obs.value,
+        foto: foto.value, meio: props.casa === 'marina' ? 'maritimo' : 'terrestre'
+      })
+      ui.avisar('Salvo ✔')
+    }
+    fechar()
     await carregar()
   } catch { /* já avisado */ } finally {
     salvando.value = false
@@ -84,6 +114,12 @@ onMounted(carregar)
 
     <template v-else>
 
+      <div v-if="(lista || []).length > daCasa.length" class="meta total">
+        <Icone nome="alerta" /> Você tem <b class="no-i18n">{{ (lista || []).length }}</b>
+        meio(s) de transporte ao todo, somando garagem, marina e haras — é esse
+        número que conta para o limite do plano.
+      </div>
+
       <div v-if="!daCasa.length && !form" class="card vazio">
         <div class="big"><Icone :nome="info.ic" /></div>
         Nada cadastrado aqui ainda.
@@ -97,6 +133,7 @@ onMounted(carregar)
             <b class="no-i18n">{{ t.identificacao || t.tipo }}</b>
             <div class="meta"><span class="pill">{{ t.tipo }}</span></div>
           </NuxtLink>
+          <button class="lad-e" title="Editar" @click="editar(t)"><Icone nome="editar" /></button>
           <button class="lad-x" title="Excluir" @click="excluir(t)"><Icone nome="excluir" /></button>
         </div>
       </div>
@@ -104,7 +141,7 @@ onMounted(carregar)
       <!-- Fica AQUI, junto do botão que o abre: declarado antes da lista,
            ele abria fora da tela em qualquer lista com alguns itens. -->
       <div v-if="form" class="card form-novo">
-        <h3>Novo item</h3>
+        <h3>{{ editando ? 'Editar item' : 'Novo item' }}</h3>
         <label for="t_tipo">Tipo *</label>
         <select id="t_tipo" v-model="tipo">
           <option v-for="t in TIPOS[props.casa]" :key="t">{{ t }}</option>
@@ -119,11 +156,14 @@ onMounted(carregar)
         <label for="t_foto">Foto</label>
         <img v-if="foto" :src="foto" class="prev" alt="Prévia">
         <input id="t_foto" type="file" accept="image/*" @change="escolheuFoto">
+        <div v-if="editando" class="meta">
+          Escolher uma foto substitui a atual. Deixando em branco, ela continua.
+        </div>
 
         <button class="btn" :disabled="salvando" @click="salvar">
-          {{ salvando ? 'Salvando…' : 'Salvar' }}
+          {{ salvando ? 'Salvando…' : (editando ? 'Salvar alterações' : 'Salvar') }}
         </button>
-        <button class="btn sec" @click="form = false">Cancelar</button>
+        <button class="btn sec" @click="fechar">Cancelar</button>
       </div>
 
       <BotaoCriar
@@ -131,7 +171,8 @@ onMounted(carregar)
         rotulo="＋ Adicionar"
         chave="transportes"
         :quantidade="(lista || []).length"
-        @criar="form = true"
+        o-que-conta="somando garagem, marina e haras"
+        @criar="limpar(); form = true"
       />
       <NuxtLink to="/manutencao" class="btn sec">Voltar</NuxtLink>
     </template>
@@ -143,6 +184,7 @@ onMounted(carregar)
 .form-novo { border-left: 4px solid var(--laranja); }
 .form-novo h3 { margin: 0 0 10px; font-size: 15px; }
 .ruim { color: var(--danger); }
+.total { margin: 0 4px 10px; }
 .vazio { text-align: center; padding: 24px; }
 .vazio .big :deep(.ic-svg) { width: 42px; height: 42px; }
 .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; }

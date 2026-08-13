@@ -17,6 +17,15 @@ const props = defineProps<{
   /** Rota de destino. Sem ela, o botão emite `criar` — para telas em que o
       formulário abre na própria página. */
   para?: string
+  /**
+   * O que o limite conta, quando isso não é óbvio na tela.
+   *
+   * ⚠️ Nasceu de uma confusão real: a garagem mostrava 3 veículos e dizia
+   * "você chegou ao limite: 10". O limite de transportes é COMPARTILHADO entre
+   * garagem, marina e haras — a conta estava certa, a tela é que não contava a
+   * história inteira.
+   */
+  oQueConta?: string
 }>()
 
 const emit = defineEmits<{ criar: [] }>()
@@ -29,7 +38,10 @@ const bloqueio = computed(() =>
 
 <template>
   <div v-if="bloqueio" class="card travado">
-    <div class="meta"><Icone nome="bloqueio" /> {{ bloqueio.motivo }}</div>
+    <div class="meta">
+      <Icone nome="bloqueio" /> {{ bloqueio.motivo }}
+      <template v-if="props.oQueConta"> ({{ props.oQueConta }})</template>
+    </div>
     <NuxtLink :to="bloqueio.rota" class="btn sec">{{ bloqueio.rotuloAcao }}</NuxtLink>
   </div>
   <NuxtLink v-else-if="props.para" :to="props.para" class="btn">{{ props.rotulo }}</NuxtLink>

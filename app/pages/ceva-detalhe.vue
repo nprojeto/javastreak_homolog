@@ -216,7 +216,7 @@ onMounted(carregar)
       <template v-else>
         <div v-if="nivelAtual !== null" class="card">
           <h3>Nível atual: {{ nivelAtual }}%</h3>
-          <div class="barra"><span :style="{ width: nivelAtual + '%' }" /></div>
+          <div class="barra-prog"><span :style="{ width: nivelAtual + '%' }" /></div>
           <div class="meta">Atualizado em {{ dataBR(niveis?.[0]?.data) }}</div>
         </div>
 
@@ -271,8 +271,8 @@ h3 { margin: 0 0 4px; }
 .linha { display: flex; align-items: center; gap: 8px; }
 .linha .grow { flex: 1; min-width: 0; }
 .linha .meta { margin: 2px 0 0; }
-.barra { height: 14px; background: var(--linha); border-radius: 999px; overflow: hidden; margin: 6px 0; }
-.barra span { display: block; height: 100%; background: var(--verde); }
+.barra-prog { height: 14px; background: var(--linha); border-radius: 999px; overflow: hidden; margin: 6px 0; }
+.barra-prog span { display: block; height: 100%; background: var(--verde); }
 .perc { text-align: center; font-size: 30px; font-weight: 700; color: var(--verde); }
 .btn.sec { margin-top: 8px; }
 </style>

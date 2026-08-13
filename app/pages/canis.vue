@@ -33,6 +33,12 @@ const ui = useUi()
 const caes = ref<Cao[] | null>(null)
 const erro = ref('')
 
+/**
+ * `editando` guarda o id em edição. Vazio, o formulário cria; preenchido, ele
+ * altera pelo `apiEditar`, que é o mesmo editor genérico já usado por ceva e
+ * abate — nenhuma regra nova no servidor.
+ */
+const editando = ref('')
 const form = ref(false)
 const nome = ref('')
 const funcao = ref(FUNCOES[0]!)
@@ -74,18 +80,45 @@ async function escolheuFoto(e: Event) {
   }
 }
 
+function limpar() {
+  editando.value = ''
+  nome.value = ''; funcao.value = FUNCOES[0]!; raca.value = ''
+  sexo.value = 'Macho'; nasc.value = ''; obs.value = ''; foto.value = ''
+}
+
+function editar(c: Cao) {
+  editando.value = c.id
+  nome.value = c.nome || ''
+  funcao.value = c.funcao || FUNCOES[0]!
+  raca.value = c.raca || ''
+  sexo.value = c.sexo || 'Macho'
+  nasc.value = String(c.dataNascimento || '').slice(0, 10)
+  obs.value = c.obs || ''
+  foto.value = ''
+  form.value = true
+}
+
+function fechar() { form.value = false; limpar() }
+
 async function salvar() {
   if (!nome.value) { ui.avisar('Informe o nome do cão', 'erro'); return }
   salvando.value = true
+  const d = {
+    nome: nome.value, funcao: funcao.value, raca: raca.value,
+    sexo: sexo.value, dataNascimento: nasc.value, obs: obs.value, foto: foto.value
+  }
   try {
-    /* Sem `canilId`: o servidor põe no meu canil, criando-o se for o primeiro. */
-    await server('apiCriarCao', {
-      nome: nome.value, funcao: funcao.value, raca: raca.value,
-      sexo: sexo.value, dataNascimento: nasc.value, obs: obs.value, foto: foto.value
-    })
-    ui.avisar('Cão salvo ✔')
-    form.value = false
-    nome.value = ''; raca.value = ''; nasc.value = ''; obs.value = ''; foto.value = ''
+    if (editando.value) {
+      /* ⚠️ Sem foto nova, o campo vai VAZIO e o `apiEditar` não toca no
+         `fotoUrl` — trocar uma raça não pode apagar a foto do cão. */
+      await server('apiEditar', 'cao', editando.value, d)
+      ui.avisar('Cão atualizado ✔')
+    } else {
+      /* Sem `canilId`: o servidor põe no meu canil, criando-o se for o primeiro. */
+      await server('apiCriarCao', d)
+      ui.avisar('Cão salvo ✔')
+    }
+    fechar()
     await carregar()
   } catch { /* já avisado, traduzido */ } finally {
     salvando.value = false
@@ -128,12 +161,13 @@ onMounted(carregar)
               {{ c.sexo }}<template v-if="idade(c.dataNascimento)"> · {{ idade(c.dataNascimento) }}</template>
             </div>
           </NuxtLink>
+          <button class="lad-e" title="Editar" @click="editar(c)"><Icone nome="editar" /></button>
           <button class="lad-x" title="Excluir" @click="excluir(c)"><Icone nome="excluir" /></button>
         </div>
       </div>
 
       <div v-if="form" class="card form-novo">
-        <h3>Novo cão</h3>
+        <h3>{{ editando ? 'Editar cão' : 'Novo cão' }}</h3>
 
         <label for="c_nome">Nome do cão *</label>
         <input id="c_nome" v-model="nome" class="no-i18n">
@@ -165,11 +199,14 @@ onMounted(carregar)
         <label for="c_foto">Foto</label>
         <img v-if="foto" :src="foto" class="prev" alt="Prévia">
         <input id="c_foto" type="file" accept="image/*" @change="escolheuFoto">
+        <div v-if="editando" class="meta">
+          Escolher uma foto substitui a atual. Deixando em branco, ela continua.
+        </div>
 
         <button class="btn" :disabled="salvando" @click="salvar">
-          {{ salvando ? 'Salvando…' : 'Salvar cão' }}
+          {{ salvando ? 'Salvando…' : (editando ? 'Salvar alterações' : 'Salvar cão') }}
         </button>
-        <button class="btn sec" @click="form = false">Cancelar</button>
+        <button class="btn sec" @click="fechar">Cancelar</button>
       </div>
 
       <BotaoCriar
@@ -177,7 +214,7 @@ onMounted(carregar)
         rotulo="＋ Novo cão"
         chave="caesPorCanil"
         :quantidade="caes.length"
-        @criar="form = true"
+        @criar="limpar(); form = true"
       />
       <NuxtLink to="/saude-animal" class="btn sec">Voltar</NuxtLink>
     </template>

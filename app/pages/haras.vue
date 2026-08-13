@@ -19,6 +19,7 @@ const ui = useUi()
 const lista = ref<Transporte[] | null>(null)
 const erro = ref('')
 
+const editando = ref('')
 const form = ref(false)
 const identificacao = ref('')
 const nasc = ref('')
@@ -51,17 +52,43 @@ async function escolheuFoto(e: Event) {
   }
 }
 
+function limpar() {
+  editando.value = ''
+  identificacao.value = ''; nasc.value = ''; obs.value = ''; foto.value = ''
+}
+
+function editar(t: Transporte) {
+  editando.value = t.id
+  identificacao.value = t.identificacao || ''
+  nasc.value = String(t.dataNascimento || '').slice(0, 10)
+  obs.value = t.obs || ''
+  foto.value = ''
+  form.value = true
+}
+
+function fechar() { form.value = false; limpar() }
+
 async function salvar() {
   if (!identificacao.value) { ui.avisar('Informe o nome do cavalo', 'erro'); return }
   salvando.value = true
   try {
-    await server('apiCriarTransporte', {
-      tipo: 'Cavalo', identificacao: identificacao.value,
-      dataNascimento: nasc.value, obs: obs.value, foto: foto.value, meio: 'aras'
-    })
-    ui.avisar('Cavalo salvo ✔')
-    form.value = false
-    identificacao.value = ''; nasc.value = ''; obs.value = ''; foto.value = ''
+    if (editando.value) {
+      /* ⚠️ Na edição a `dataNascimento` PASSA — e é a única forma de ela ser
+         gravada hoje, porque o `apiCriarTransporte` ignora esse campo (a tela
+         manda, o backend descarta). O `apiEditar` é genérico e grava. */
+      await server('apiEditar', 'transporte', editando.value, {
+        identificacao: identificacao.value, dataNascimento: nasc.value,
+        obs: obs.value, foto: foto.value
+      })
+      ui.avisar('Cavalo atualizado ✔')
+    } else {
+      await server('apiCriarTransporte', {
+        tipo: 'Cavalo', identificacao: identificacao.value,
+        dataNascimento: nasc.value, obs: obs.value, foto: foto.value, meio: 'aras'
+      })
+      ui.avisar('Cavalo salvo ✔')
+    }
+    fechar()
     await carregar()
   } catch { /* já avisado */ } finally {
     salvando.value = false
@@ -109,6 +136,7 @@ onMounted(carregar)
             <b class="no-i18n">{{ t.identificacao || 'Cavalo' }}</b>
             <div v-if="idade(t.dataNascimento)" class="meta">{{ idade(t.dataNascimento) }}</div>
           </NuxtLink>
+          <button class="lad-e" title="Editar" @click="editar(t)"><Icone nome="editar" /></button>
           <button class="lad-x" title="Excluir" @click="excluir(t)"><Icone nome="excluir" /></button>
         </div>
       </div>
@@ -116,7 +144,7 @@ onMounted(carregar)
       <!-- Fica AQUI, junto do botão que o abre: declarado antes da lista,
            ele abria fora da tela em qualquer lista com alguns itens. -->
       <div v-if="form" class="card form-novo">
-        <h3>Novo cavalo</h3>
+        <h3>{{ editando ? 'Editar cavalo' : 'Novo cavalo' }}</h3>
         <label for="h_nome">Nome do cavalo *</label>
         <input id="h_nome" v-model="identificacao" class="no-i18n">
         <CampoData v-model="nasc" label="Data de nascimento" />
@@ -126,9 +154,9 @@ onMounted(carregar)
         <img v-if="foto" :src="foto" class="prev" alt="Prévia">
         <input id="h_foto" type="file" accept="image/*" @change="escolheuFoto">
         <button class="btn" :disabled="salvando" @click="salvar">
-          {{ salvando ? 'Salvando…' : 'Salvar cavalo' }}
+          {{ salvando ? 'Salvando…' : (editando ? 'Salvar alterações' : 'Salvar cavalo') }}
         </button>
-        <button class="btn sec" @click="form = false">Cancelar</button>
+        <button class="btn sec" @click="fechar">Cancelar</button>
       </div>
 
       <BotaoCriar
@@ -136,7 +164,8 @@ onMounted(carregar)
         rotulo="＋ Novo cavalo"
         chave="transportes"
         :quantidade="(lista || []).length"
-        @criar="form = true"
+        o-que-conta="somando garagem, marina e haras"
+        @criar="limpar(); form = true"
       />
       <NuxtLink to="/saude-animal" class="btn sec">Voltar</NuxtLink>
     </template>

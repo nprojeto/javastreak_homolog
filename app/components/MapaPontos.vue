@@ -10,14 +10,30 @@ import { addBase, carregarLeaflet } from '~/composables/useMapa'
 import type { Ponto } from '~/composables/useMapa'
 
 export interface Limite { nome: string; pontos: Ponto[] }
-export interface Pino { lat: number; lng: number; titulo?: string; cor?: string }
+export interface Pino {
+  lat: number; lng: number; titulo?: string; cor?: string
+  /** Linhas extras do balão: o que aconteceu naquele ponto. */
+  linhas?: string[]
+}
+
+export interface RotaMapa {
+  nome?: string; pontos: Ponto[]; cor?: string; linhas?: string[]
+}
 
 const props = withDefaults(defineProps<{
   limites?: Limite[]
   pinos?: Pino[]
   tracado?: Ponto[]
+  /** Rotas desenhadas com balão — o `tracado` continua para o caso simples. */
+  rotas?: RotaMapa[]
   altura?: string
 }>(), { altura: '38vh' })
+
+/* O balão é HTML, e nome de ceva vem do usuário. */
+function esc(t: string) {
+  return String(t || '').replace(/[&<>"]/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] || c))
+}
 
 const el = ref<HTMLElement | null>(null)
 let map: MapaLeaflet | null = null
@@ -41,11 +57,21 @@ async function desenhar() {
     }).addTo(camada)
   }
 
+  /* Rotas com balão próprio: é onde os eventos daquela rota são contados. */
+  for (const r of props.rotas || []) {
+    if ((r.pontos || []).length < 2) continue
+    const extra = (r.linhas || []).map((l) => '<br>' + esc(l)).join('')
+    L.polyline(r.pontos.map((p) => [p.lat, p.lng] as [number, number]), {
+      color: r.cor || '#2f6ea8', weight: 4
+    }).addTo(camada).bindPopup('<b>' + esc(r.nome || 'Rota') + '</b>' + extra)
+  }
+
   for (const p of props.pinos || []) {
+    const extra = (p.linhas || []).map((l) => '<br>' + esc(l)).join('')
     L.circleMarker([p.lat, p.lng], {
       radius: 8, color: '#fff', weight: 2,
       fillColor: p.cor || '#b8863b', fillOpacity: 1
-    }).addTo(camada).bindPopup('<b>' + (p.titulo || '') + '</b>')
+    }).addTo(camada).bindPopup('<b>' + esc(p.titulo || '') + '</b>' + extra)
   }
 
   /* Enquadra tudo o que existe. Sem nada, fica na visão do Brasil. */
@@ -55,7 +81,7 @@ async function desenhar() {
   } catch { /* camada vazia */ }
 }
 
-watch(() => [props.limites, props.pinos, props.tracado], desenhar, { deep: true })
+watch(() => [props.limites, props.pinos, props.tracado, props.rotas], desenhar, { deep: true })
 
 onMounted(async () => {
   const L = await carregarLeaflet()

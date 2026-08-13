@@ -254,7 +254,7 @@ onMounted(() => {
           <h4 class="sub">Adoção por módulo</h4>
           <div v-for="m in painel.porModulo" :key="m.chave" class="mod">
             <div class="mod-rot">{{ m.nome }}<span>{{ m.usuarios }} ({{ m.pct }}%)</span></div>
-            <div class="barra"><span :style="{ width: m.pct + '%' }" /></div>
+            <div class="barra-prog"><span :style="{ width: m.pct + '%' }" /></div>
           </div>
         </template>
       </div>
@@ -425,8 +425,8 @@ h3 { margin: 0 0 4px; }
 .mod { margin-bottom: 8px; }
 .mod-rot { display: flex; justify-content: space-between; font-size: 12.5px; }
 .mod-rot span { color: var(--osso-2); }
-.barra { height: 8px; background: var(--linha); border-radius: 999px; overflow: hidden; margin-top: 3px; }
-.barra span { display: block; height: 100%; background: var(--verde); }
+.barra-prog { height: 8px; background: var(--linha); border-radius: 999px; overflow: hidden; margin-top: 3px; }
+.barra-prog span { display: block; height: 100%; background: var(--verde); }
 .ficha { border-left: 5px solid var(--verde); background: var(--carvao-3); border-radius: 10px; padding: 12px; margin: 10px 0; }
 .linha { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 13px; border-bottom: 1px solid var(--linha); }
 .linha span { color: var(--osso-2); }

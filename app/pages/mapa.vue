@@ -34,11 +34,16 @@ interface Rede {
   propriedades: ItemMapa[]; verManejadores: boolean
 }
 
+/**
+ * ⚠️ QUATRO filtros, não seis. Abates e Marcações tinham botão próprio, e o
+ * resultado era um mapa cheio de pinos soltos que ninguém sabia a que
+ * pertenciam — um abate longe de tudo não diz nada. Eles agora aparecem
+ * DENTRO da ceva e da rota a que se ligam: toque no pino e o balão conta o
+ * que aconteceu ali. Menos botão, e cada número com o seu dono.
+ */
 const FILTROS = [
   { k: 'espera', rot: 'Cevas', cor: '#b8863b', ic: 'ceva' },
   { k: 'rotas', rot: 'Rotas', cor: '#3b6ea5', ic: 'rotas' },
-  { k: 'marcacao', rot: 'Marcações', cor: '#8a5a10', ic: 'armadilha' },
-  { k: 'abate', rot: 'Abates', cor: '#b23b3b', ic: 'painel' },
   { k: 'propriedade', rot: 'Propriedades', cor: '#2e6b3a', ic: 'areas' },
   { k: 'rede', rot: 'Rede', cor: '#e8552b', ic: 'global' }
 ] as const
@@ -57,8 +62,7 @@ const abertos = ref(true)
 /* Rede LIGADA por padrão: o mapa da rede é metade da razão de existir desta
    tela, e nascer desligado fazia parecer que as lojas não estavam lá. */
 const ligados = reactive<Record<Chave, boolean>>({
-  espera: true, rotas: true, marcacao: true, abate: true,
-  propriedade: true, rede: true
+  espera: true, rotas: true, propriedade: true, rede: true
 })
 
 const num = (v: unknown) => {
@@ -84,27 +88,89 @@ const tracados = computed(() =>
     : []
 )
 
+/** Cada rota com o seu traçado e o balão do que aconteceu nela. */
+const rotasNoMapa = computed(() =>
+  tracados.value.map((r) => {
+    const e = eventosDaRota(r)
+    const linhas: string[] = []
+    linhas.push(e.marcacoes ? e.marcacoes + ' marcação(ões) nesta rota' : 'Nenhuma marcação nesta rota')
+    linhas.push(e.abates ? e.abates + ' abate(s) ao longo dela' : 'Nenhum abate ao longo dela')
+    return { nome: r.nome || 'Rota', pontos: r.pontos!, cor: '#2f6ea8', linhas }
+  })
+)
+
+/** Metros entre dois pontos. Plano local basta: aqui nada passa de km. */
+function distM(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const dLat = (bLat - aLat) * 110574
+  const dLng = (bLng - aLng) * 111320 * Math.cos((aLat * Math.PI) / 180)
+  return Math.sqrt(dLat * dLat + dLng * dLng)
+}
+
+/**
+ * O que aconteceu em cada ceva. Um abate é atribuído à ceva quando foi
+ * registrado NELA (o servidor grava a coordenada da ceva nesse caso), e o
+ * empate é resolvido pela mais próxima dentro de 80 m — folga para o erro do
+ * GPS sem alcançar a ceva vizinha.
+ */
+const RAIO_M = 80
+
+function eventosDaCeva(c: ItemMapa) {
+  const d = dados.value
+  const cl = num(c.lat), cg = num(c.lng)
+  if (!d || cl === null || cg === null) return { abates: 0 }
+  let abates = 0
+  for (const a of d.abates || []) {
+    const al = num(a.lat), ag = num(a.lng)
+    if (al === null || ag === null) continue
+    if (distM(cl, cg, al, ag) <= RAIO_M) abates++
+  }
+  return { abates }
+}
+
+/** Marcações e abates ligados a uma rota. A marcação já traz `rotaId`. */
+function eventosDaRota(r: ItemMapa) {
+  const d = dados.value
+  if (!d) return { marcacoes: 0, abates: 0 }
+  const marcacoes = (d.marcacoes || []).filter((m) => String(m.rotaId || '') === String(r.id)).length
+  let abates = 0
+  for (const a of d.abates || []) {
+    const al = num(a.lat), ag = num(a.lng)
+    if (al === null || ag === null) continue
+    if ((r.pontos || []).some((p) => distM(p.lat, p.lng, al, ag) <= RAIO_M)) abates++
+  }
+  return { marcacoes, abates }
+}
+
+function balaoCeva(c: ItemMapa) {
+  const e = eventosDaCeva(c)
+  const linhas = [(c.nome || 'Ceva')]
+  linhas.push(e.abates ? e.abates + ' abate(s) registrado(s) aqui' : 'Nenhum abate registrado aqui')
+  return linhas
+}
+
 const pinos = computed(() => {
   const d = dados.value
-  const out: Array<{ lat: number; lng: number; titulo: string; cor: string }> = []
+  const out: Array<{ lat: number; lng: number; titulo: string; cor: string; linhas?: string[] }> = []
   if (!d) return out
 
-  const add = (l: ItemMapa[], cor: string, rot: (i: ItemMapa) => string) => {
+  const add = (
+    l: ItemMapa[], cor: string,
+    rot: (i: ItemMapa) => string,
+    detalhe?: (i: ItemMapa) => string[]
+  ) => {
     for (const i of l) {
       if (!temCoord(i)) continue
-      out.push({ lat: num(i.lat)!, lng: num(i.lng)!, titulo: rot(i), cor })
+      out.push({
+        lat: num(i.lat)!, lng: num(i.lng)!, titulo: rot(i), cor,
+        linhas: detalhe ? detalhe(i) : undefined
+      })
     }
   }
 
   if (ligados.espera) {
-    add(d.cevas || [], '#b8863b', (c) => (c.nome || 'Ceva'))
+    add(d.cevas || [], '#b8863b', (c) => (c.nome || 'Ceva'), (c) => balaoCeva(c).slice(1))
     add(d.cevasCompart || [], '#c8a35c', (c) => (c.nome || 'Ceva') + ' · ' + (c.donoNome || ''))
   }
-  if (ligados.marcacao) {
-    add(d.marcacoes || [], '#8a5a10', (m) => (m.tipo || 'Marcação') + (m.descricao ? ' — ' + m.descricao : ''))
-    add(d.armadilhas || [], '#b23b3b', (a) => (a.tipo || 'Armadilha'))
-  }
-  if (ligados.abate) add(d.abates || [], '#b23b3b', () => 'Abate')
 
   if (ligados.rede && rede.value) {
     add(rede.value.empresas || [], '#e8552b', (e) => (e.nome || 'Empresa'))
@@ -183,15 +249,14 @@ onMounted(carregar)
         <MapaPontos
           :limites="limites"
           :pinos="pinos"
-          :tracado="tracados.length === 1 ? tracados[0]!.pontos : []"
+          :rotas="rotasNoMapa"
           altura="62vh"
         />
       </ClientOnly>
 
-      <div v-if="tracados.length > 1" class="card">
+      <div v-if="tracados.length" class="card">
         <div class="meta">
-          {{ tracados.length }} rotas ligadas. Abra uma rota para ver o traçado
-          dela sozinho.
+          Toque numa rota ou numa ceva no mapa para ver o que aconteceu ali.
         </div>
         <NuxtLink
           v-for="r in tracados"

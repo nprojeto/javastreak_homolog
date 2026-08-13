@@ -254,8 +254,15 @@ select option { background: var(--carvao-2); color: var(--osso); }
 .rel-tab th, .rel-tab td, .lim th, .lim td { border-color: var(--linha-esc); }
 .kpi { background: var(--carvao-3); }
 .kpi b { color: var(--laranja-cl); }
-.barra { background: var(--linha-esc); }
-.barra span { background: var(--laranja); }
+/**
+ * ⚠️ `barra-prog`, não `barra`. Como `.barra` a regra pegava QUALQUER elemento
+ * com essa classe — e três telas usam a palavra com outro sentido (a barra de
+ * ações do guiamento, a barra de filtros do mapa). O resultado era um bloco
+ * laranja atrás do texto de cada filtro, deixando o rótulo ilegível. Nome
+ * genérico em CSS global vira armadilha.
+ */
+.barra-prog { background: var(--linha-esc); border-radius: 999px; overflow: hidden; }
+.barra-prog span { background: var(--laranja); }
 
 /* ── Mapa ───────────────────────────────────────────────────────────────── */
 
@@ -452,7 +459,18 @@ body.pagina-larga .miolo { max-width: 1040px; }
 }
 .grade3 .lad .pill { font-size: 10px; padding: 1px 7px; }
 
-/* Excluir sobre a foto, com fundo próprio para não sumir em imagem clara. */
+/* Editar e excluir sobre a foto, com fundo próprio para não sumirem em
+   imagem clara. Editar fica à ESQUERDA do excluir: o gesto perigoso no canto,
+   longe do polegar que passa a lista. */
+.grade3 .lad-e {
+  position: absolute; top: 6px; right: 38px;
+  width: 26px; height: 26px; border: 0; border-radius: 50%;
+  background: rgba(0, 0, 0, .55); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+}
+.grade3 .lad-e .ic-svg { width: 15px; height: 15px; }
+
 .grade3 .lad-x {
   position: absolute; top: 6px; right: 6px;
   width: 26px; height: 26px; border: 0; border-radius: 50%;
