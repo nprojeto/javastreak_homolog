@@ -144,7 +144,14 @@ async function salvar() {
           <option v-for="t in TIPOS" :key="t">{{ t }}</option>
         </select>
 
-        <BotaoGps v-model:lat="lat" v-model:lng="lng" />
+        <!-- O limite vai ao mapa como orientação: quem marca de casa vê a
+             divisa e acerta de primeira, em vez de descobrir na recusa. -->
+        <BotaoGps
+          v-model:lat="lat"
+          v-model:lng="lng"
+          :limite="prop?.limite || []"
+          :nome-limite="prop?.nome"
+        />
         <div v-if="foraDoLimite" class="meta ruim aviso">
           <Icone nome="alerta" /> Este ponto está fora do limite desenhado de {{ prop?.nome }}
         </div>
