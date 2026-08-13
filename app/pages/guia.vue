@@ -34,7 +34,7 @@ import type { LimiteGuia, RotaGuia, CevaGuia, MarcaGuia } from '~/components/Map
 definePageMeta({ layout: 'app' })
 
 interface Guia {
-  id: string; nome?: string; tipo?: string
+  id: string; nome?: string; tipo?: string; propriedadeId?: string
   limites: LimiteGuia[]; rotas: RotaGuia[]; cevas: CevaGuia[]; marcacoes: MarcaGuia[]
   souDono?: boolean
 }
@@ -62,20 +62,101 @@ const mapa = ref<{ enquadrar: () => void } | null>(null)
 let observador: number | null = null
 let travaTela: WakeLockSentinel | null = null
 
+/* ── percurso da caça livre ─────────────────────────────────────────────── */
+
+/**
+ * ⚠️ A CAÇA LIVRE GRAVA O PERCURSO — e até agora não gravava. O backend já
+ * estava pronto: `apiCriarRota` com `origem: 'gps'` AVISA quando o traçado
+ * sai do limite em vez de recusar, justamente para não perder o caminho de
+ * quem andou na divisa com sinal ruim. Faltava a tela juntar os pontos e
+ * oferecer o botão.
+ *
+ * ⚠️ Ponto novo só entra a cada 15 m. Sem esse filtro, o GPS parado gera
+ * dezenas de pontos no mesmo lugar — o traçado vira um borrão e o payload
+ * cresce sem necessidade.
+ */
+const DIST_MIN_M = 15
+
+const gravando = ref(false)
+const percurso = ref<Ponto[]>([])
+const salvandoPercurso = ref(false)
+
+const ehLivre = computed(() => g.value?.tipo === 'livre')
+
+const distanciaPercurso = computed(() => {
+  let m = 0
+  for (let i = 1; i < percurso.value.length; i++) {
+    m += distanciaM(percurso.value[i - 1]!, percurso.value[i]!)
+  }
+  return m
+})
+
+function pontoDoPercurso(p: { lat: number; lng: number }) {
+  if (!gravando.value) return
+  const ultimo = percurso.value[percurso.value.length - 1]
+  if (ultimo && distanciaM(ultimo, p) < DIST_MIN_M) return
+  percurso.value = [...percurso.value, { lat: p.lat, lng: p.lng }]
+}
+
+async function salvarPercurso() {
+  if (percurso.value.length < 2) {
+    ui.avisar('Ande um pouco antes de salvar — o percurso ainda não tem traçado', 'erro')
+    return
+  }
+  const nome = prompt('Nome do percurso:', 'Percurso de ' + new Date().toLocaleDateString())
+  if (nome === null) return
+  salvandoPercurso.value = true
+  try {
+    /* ⚠️ `origem: 'gps'` é o que faz o servidor AVISAR em vez de recusar
+       quando o traçado sai do limite. Sem isso, um passo na divisa jogaria
+       fora a caminhada inteira. */
+    const r = await server<{ foraDoLimite?: boolean }>('apiCriarRota', {
+      nome: nome || 'Percurso',
+      propriedadeId: g.value?.propriedadeId || '',
+      pontos: percurso.value,
+      origem: 'gps',
+      modalidade: 'manejo',
+      distancia: Math.round(distanciaPercurso.value)
+    })
+    gravando.value = false
+    if (r?.foraDoLimite) {
+      ui.avisar('Percurso salvo ✔ — parte dele saiu do limite da propriedade')
+    } else {
+      ui.avisar('Percurso salvo como rota ✔')
+    }
+    percurso.value = []
+    await carregar()
+  } catch { /* já avisado, traduzido */ } finally {
+    salvandoPercurso.value = false
+  }
+}
+
+function descartarPercurso() {
+  if (!confirm('Descartar o percurso gravado? Não dá para recuperar.')) return
+  gravando.value = false
+  percurso.value = []
+}
+
 /* ── registro de evento ─────────────────────────────────────────────────── */
 
 /**
- * Tipos oferecidos no campo. Espelham a lista fechada do servidor, menos
- * "Abate": aquele tem tela própria, e um pino não substitui o registro que
- * vai ao IBAMA.
+ * O que se registra andando. `Abate` está na lista, mas NÃO vira marcação:
+ * escolher abate leva à tela própria, com a coordenada preenchida.
+ *
+ * ⚠️ Isso não afrouxa a regra. O abate continua tendo uma porta só — peso,
+ * sexo, método, amostra e o tempo consultado na hora. O que mudou é que ele
+ * deixou de estar escondido atrás de um botão separado no fim do painel:
+ * quem acabou de abater procura "abate" na lista do que aconteceu.
  */
-const TIPOS = ['Avistamento', 'Rastro', 'Perigo', 'Armadilha', 'Água',
+const ABATE = 'Abate'
+const TIPOS = [ABATE, 'Avistamento', 'Rastro', 'Perigo', 'Armadilha', 'Água',
   'Comida/isca', 'Referência', 'Foto/registro', 'Aviso', 'Outro']
 
 const painel = ref(false)
 const escolhendo = ref(false)
 const pontoNovo = ref<Ponto | null>(null)
 const tipoNovo = ref('Avistamento')
+const ehAbate = computed(() => tipoNovo.value === ABATE)
 const descNovo = ref('')
 const statusNovo = ref<'Ativa' | 'Inativa'>('Ativa')
 const fotoNova = ref('')
@@ -94,18 +175,25 @@ const pontoForaDoLimite = computed(() => {
   return !ls.some((l) => pontoDentro(p, l.limite))
 })
 
-function abrirPainel(usarGps: boolean) {
-  if (usarGps) {
-    if (!eu.value) { ui.avisar('Ainda sem posição do GPS', 'erro'); return }
-    pontoNovo.value = { lat: eu.value.lat, lng: eu.value.lng }
-    escolhendo.value = false
-  } else {
-    pontoNovo.value = null
-    escolhendo.value = true
-  }
+/**
+ * UM botão. Antes eram dois — "Registrar aqui" e "Marcar no mapa" — e a
+ * escolha vinha ANTES de saber o que se ia registrar, que é a ordem errada:
+ * quem viu um javali quer dizer isso primeiro, não decidir de onde tira a
+ * coordenada. O painel abre já com a posição do GPS, e trocar o ponto virou
+ * um botão dentro dele, para quem precisar.
+ */
+function abrirPainel() {
+  pontoNovo.value = eu.value ? { lat: eu.value.lat, lng: eu.value.lng } : null
+  escolhendo.value = !eu.value      // sem GPS, já entra escolhendo no mapa
   painel.value = true
   /* Seguir a posição brigaria com escolher o ponto: o mapa fugiria do dedo. */
   seguir.value = false
+}
+
+/** Troca o ponto pelo toque no mapa, sem fechar o painel. */
+function trocarPonto() {
+  escolhendo.value = true
+  pontoNovo.value = null
 }
 
 function fecharPainel() {
@@ -166,6 +254,17 @@ function irParaAbate() {
   if (p) { q.lat = p.lat.toFixed(6); q.lng = p.lng.toFixed(6) }
   router.push({ path: '/abate', query: q })
 }
+
+/**
+ * As rotas da caçada mais o percurso em gravação, para quem anda ver o
+ * caminho já feito. O percurso NÃO entra no cálculo de desvio: ele é o que
+ * está sendo criado, não o que se deve seguir.
+ */
+const rotasComPercurso = computed(() => {
+  const base = g.value?.rotas || []
+  if (!ehLivre.value || percurso.value.length < 2) return base
+  return [...base, { id: '__percurso', nome: 'Percurso de agora', pontos: percurso.value }]
+})
 
 /** Todos os pontos do traçado, de todas as rotas atribuídas. */
 const traco = computed<Ponto[]>(() => (g.value?.rotas || []).flatMap((r) => r.pontos || []))
@@ -274,6 +373,8 @@ async function carregar() {
   erro.value = ''
   try {
     g.value = await server<Guia>('apiManejoGuia', id.value)
+    /* Caça livre grava desde a abertura: quem abriu o guiamento já está indo. */
+    if (g.value?.tipo === 'livre' && !percurso.value.length) gravando.value = true
     if (!temRota.value && !(g.value?.limites || []).length) {
       erro.value = 'Esta caçada não tem rota nem limite desenhado para guiar.'
     }
@@ -296,6 +397,7 @@ function ligarGps() {
       }
       /* Reserva: só vale andando, e nunca sobrescreve o sensor. */
       rumoDoGps(p.coords.heading)
+      pontoDoPercurso({ lat: p.coords.latitude, lng: p.coords.longitude })
     },
     (e) => {
       erroGps.value = e.code === e.PERMISSION_DENIED
@@ -411,11 +513,44 @@ onBeforeUnmount(() => {
         <div class="meta"><Icone nome="alerta" /> {{ erroBussola }}</div>
       </div>
 
+      <!-- PERCURSO: só na caça livre, e sempre visível enquanto grava. -->
+      <div v-if="ehLivre" class="card percurso" :class="{ ativo: gravando }">
+        <div class="linha">
+          <span class="ponto-vivo" :class="{ on: gravando }" />
+          <div class="grow">
+            <b>{{ gravando ? 'Gravando o percurso' : 'Gravação pausada' }}</b>
+            <div class="meta">
+              <span class="no-i18n">{{ percurso.length }}</span> ponto(s) ·
+              <span class="no-i18n">{{ fmtDist(distanciaPercurso) }}</span>
+            </div>
+          </div>
+          <button class="btn sm sec pausa" @click="gravando = !gravando">
+            {{ gravando ? 'Pausar' : 'Retomar' }}
+          </button>
+        </div>
+        <div class="acoes-perc">
+          <button
+            class="btn"
+            :disabled="salvandoPercurso || percurso.length < 2"
+            @click="salvarPercurso"
+          >
+            <Icone nome="salvar" />
+            {{ salvandoPercurso ? 'Salvando…' : 'Concluir e salvar percurso' }}
+          </button>
+          <button
+            v-if="percurso.length"
+            class="btn sec"
+            :disabled="salvandoPercurso"
+            @click="descartarPercurso"
+          >Descartar</button>
+        </div>
+      </div>
+
       <ClientOnly>
         <MapaGuia
           ref="mapa"
           :limites="g.limites || []"
-          :rotas="g.rotas || []"
+          :rotas="rotasComPercurso"
           :cevas="g.cevas || []"
           :marcacoes="g.marcacoes || []"
           :eu="eu"
@@ -434,18 +569,18 @@ onBeforeUnmount(() => {
         <button class="btn sec pequeno" @click="fecharPainel">Cancelar</button>
       </div>
 
-      <!-- REGISTRAR: as duas ações que se faz andando -->
-      <div v-if="!painel" class="barra">
-        <button class="btn" @click="abrirPainel(true)">
-          <Icone nome="adicionar" /> Registrar aqui
-        </button>
-        <button class="btn sec" @click="abrirPainel(false)">
-          <Icone nome="pino" /> Marcar no mapa
-        </button>
-      </div>
+      <!-- UM botão: o que registrar se escolhe DENTRO, não antes. -->
+      <button v-if="!painel" class="btn registrar" @click="abrirPainel">
+        <Icone nome="adicionar" /> Registrar evento
+      </button>
 
       <div v-if="painel" class="card painel">
         <h3><Icone nome="adicionar" /> Registrar evento</h3>
+
+        <label for="g_tipo">O que aconteceu? *</label>
+        <select id="g_tipo" v-model="tipoNovo">
+          <option v-for="t in TIPOS" :key="t" :value="t">{{ t }}</option>
+        </select>
 
         <div class="ponto" :class="{ falta: !pontoNovo }">
           <template v-if="pontoNovo">
@@ -454,14 +589,25 @@ onBeforeUnmount(() => {
               <Icone nome="alerta" /> Este ponto está fora do limite da propriedade.
             </div>
           </template>
-          <span v-else>Nenhum ponto escolhido ainda.</span>
+          <span v-else>Toque no mapa para marcar o ponto.</span>
+          <button class="trocar" @click="trocarPonto">
+            <Icone nome="pino" :px="14" /> {{ pontoNovo ? 'Trocar ponto' : 'Escolher no mapa' }}
+          </button>
         </div>
 
-        <label for="g_tipo">O que você viu ou marcou *</label>
-        <select id="g_tipo" v-model="tipoNovo">
-          <option v-for="t in TIPOS" :key="t" :value="t">{{ t }}</option>
-        </select>
+        <!-- ABATE: o painel dá lugar ao caminho da tela própria. -->
+        <div v-if="ehAbate" class="desvio">
+          <div class="meta">
+            O abate tem tela própria: precisa de peso, sexo, método e do tempo
+            consultado na hora. A coordenada vai preenchida daqui.
+          </div>
+          <button class="btn" @click="irParaAbate">
+            <Icone nome="abate" /> Abrir o registro de abate
+          </button>
+          <button class="btn sec" @click="fecharPainel">Cancelar</button>
+        </div>
 
+        <template v-if="!ehAbate">
         <template v-if="tipoNovo === 'Armadilha'">
           <label for="g_st">Situação da armadilha</label>
           <select id="g_st" v-model="statusNovo">
@@ -483,13 +629,7 @@ onBeforeUnmount(() => {
           <button class="btn sec" :disabled="salvando" @click="fecharPainel">Cancelar</button>
         </div>
 
-        <button class="btn sec ir-abate" @click="irParaAbate">
-          <Icone nome="abate" /> Foi um abate — abrir o registro completo
-        </button>
-        <div class="meta">
-          O abate tem tela própria: precisa de peso, sexo, método e do tempo
-          consultado na hora. A coordenada vai preenchida daqui.
-        </div>
+        </template>
       </div>
 
       <div class="barra">
@@ -592,7 +732,31 @@ onBeforeUnmount(() => {
 .ponto .alerta { color: var(--alerta); }
 .acoes { display: flex; gap: 8px; margin-top: 12px; }
 .acoes .btn { flex: 1; margin: 0; }
-.ir-abate { margin-top: 12px; }
+.registrar { margin-top: 10px; }
+
+.percurso { border-left: 4px solid var(--linha); margin-bottom: 10px; }
+.percurso.ativo { border-left-color: var(--danger); }
+.percurso .linha { display: flex; align-items: center; gap: 10px; }
+.percurso .grow { flex: 1; min-width: 0; }
+.percurso .grow b { font-size: 14px; }
+.percurso .meta { margin: 2px 0 0; }
+.percurso .pausa { width: auto; margin: 0; flex: none; }
+.ponto-vivo {
+  flex: none; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--osso-2);
+}
+/* Pisca só enquanto grava: é o sinal de que o GPS está sendo lido. */
+.ponto-vivo.on { background: var(--danger); animation: pulsa 1.6s ease-in-out infinite; }
+@keyframes pulsa { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
+.acoes-perc { display: flex; gap: 8px; margin-top: 10px; }
+.acoes-perc .btn { flex: 1; margin: 0; }
+.desvio { margin-top: 10px; }
+.desvio .btn { margin-top: 10px; }
+.trocar {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;
+  border: 1px solid var(--linha); background: none; color: var(--laranja-cl);
+  font: inherit; font-size: 11.5px; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+}
 
 .legenda { display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 11.5px; color: var(--osso-2); }
 .legenda span { display: flex; align-items: center; gap: 5px; }

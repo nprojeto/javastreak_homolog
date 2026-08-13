@@ -31,6 +31,16 @@ const props = defineProps<{
   limiteMarcas?: number
 }>()
 const pontos = defineModel<Ponto[]>('pontos', { default: () => [] })
+
+/**
+ * ⚠️ A POSIÇÃO DE QUEM DESENHA. Faltava, e sem ela desenhar a rota estando na
+ * propriedade era às cegas: o traçado nasce sobre a imagem de satélite, e quem
+ * está em campo não tem como saber onde está em relação ao que está marcando.
+ *
+ * O ponto é só referência — não entra no traçado nem é enviado ao servidor.
+ */
+const eu = ref<{ lat: number; lng: number; precisao?: number } | null>(null)
+let observador: number | null = null
 const marcas = defineModel<Marca[]>('marcas', { default: () => [] })
 
 /** Tipo da marcação → ícone do sistema, no lugar do emoji. */
@@ -48,6 +58,9 @@ const tipoMarca = ref(TIPOS_MARCA[2]![0])
 
 let map: MapaLeaflet | null = null
 let camada: FeatureGroup | null = null
+let camadaEu: FeatureGroup | null = null
+let pinoEu: ReturnType<NonNullable<typeof L>['circleMarker']> | null = null
+let haloEu: ReturnType<NonNullable<typeof L>['circle']> | null = null
 let L: Awaited<ReturnType<typeof carregarLeaflet>> | null = null
 
 const distancia = computed(() => {
@@ -155,7 +168,9 @@ onMounted(async () => {
     .setView([-15.78, -47.93], 4)
   await addBase(map)
   camada = L.featureGroup().addTo(map)
+  camadaEu = L.featureGroup().addTo(map)
   map.on('click', (e) => clicou(e.latlng.lat, e.latlng.lng))
+  ligarGps()
   setTimeout(() => {
     map?.invalidateSize()
     redesenhar()
@@ -167,7 +182,58 @@ onMounted(async () => {
   }, 150)
 })
 
-onBeforeUnmount(() => { map?.remove(); map = null })
+/**
+ * Acompanha a posição enquanto a tela está aberta, e DESLIGA ao sair —
+ * esquecer o observador drena a bateria de quem só fechou a aba.
+ */
+function ligarGps() {
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return
+  observador = navigator.geolocation.watchPosition(
+    (p) => {
+      eu.value = {
+        lat: p.coords.latitude, lng: p.coords.longitude,
+        precisao: p.coords.accuracy ? Math.round(p.coords.accuracy) : undefined
+      }
+      desenharEu()
+    },
+    () => { /* sem sinal ou sem permissão: o mapa continua servindo */ },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
+  )
+}
+
+/** Pino da posição: move em vez de recriar, senão pisca a cada passo. */
+function desenharEu() {
+  if (!map || !camadaEu || !L) return
+  const p = eu.value
+  if (!p) return
+  const centro: [number, number] = [p.lat, p.lng]
+  if (!pinoEu) {
+    haloEu = L.circle(centro, {
+      radius: p.precisao || 0, color: '#e8552b', weight: 1,
+      fillColor: '#e8552b', fillOpacity: 0.12, interactive: false
+    }).addTo(camadaEu)
+    pinoEu = L.circleMarker(centro, {
+      radius: 7, color: '#fff', weight: 3,
+      fillColor: '#e8552b', fillOpacity: 1, interactive: false
+    }).addTo(camadaEu)
+  } else {
+    pinoEu.setLatLng(centro)
+    haloEu?.setLatLng(centro)
+    if (p.precisao) haloEu?.setRadius(p.precisao)
+  }
+}
+
+/** Centraliza onde estou, sem mexer no traçado. */
+function irParaMim() {
+  if (!map || !eu.value) return
+  map.setView([eu.value.lat, eu.value.lng], Math.max(map.getZoom(), 17))
+}
+
+onBeforeUnmount(() => {
+  if (observador !== null) navigator.geolocation.clearWatch(observador)
+  observador = null
+  map?.remove(); map = null
+})
 </script>
 
 <template>
@@ -178,6 +244,11 @@ onBeforeUnmount(() => { map?.remove(); map = null })
       </button>
       <button type="button" :class="{ on: modo === 'ponto' }" @click="modo = 'ponto'">
         <Icone nome="pino" /> Aviso / marcação
+      </button>
+      <!-- Só aparece com posição em mãos: botão que não faz nada é pior que
+           botão nenhum. -->
+      <button v-if="eu" type="button" class="onde" title="Onde estou" @click="irParaMim">
+        <Icone nome="pino" />
       </button>
     </div>
 
@@ -217,6 +288,7 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 
 <style scoped>
 .mapa { height: 50vh; min-height: 300px; border-radius: 12px; border: 1px solid var(--linha); }
+.onde { flex: none; width: 44px; color: var(--laranja-cl); }
 .modos { display: flex; gap: 6px; margin-bottom: 6px; }
 .modos button {
   flex: 1; padding: 9px; border-radius: 10px; border: 1.5px solid var(--linha);
