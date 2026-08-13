@@ -7,7 +7,7 @@
  */
 import { useUi } from '~/stores/ui'
 import { dataBR } from '~/composables/useMascaras'
-import type { Cao } from '~/pages/canil.vue'
+import type { Cao } from '~/pages/canis.vue'
 
 definePageMeta({ layout: 'app' })
 
@@ -24,6 +24,10 @@ const { server } = useServer()
 const ui = useUi()
 
 const id = computed(() => String(route.query.id || ''))
+/* ⚠️ Sem `canil` na URL: o canil virou casa e a tela não o conhece mais.
+   `apiListarCaes()` sem argumento devolve todos os meus cães, e é entre eles
+   que este é encontrado. O parâmetro antigo ainda é aceito para não quebrar
+   link guardado. */
 const canilId = computed(() => String(route.query.canil || ''))
 const cao = ref<Cao | null>(null)
 const saude = ref<Saude[] | null>(null)
@@ -49,7 +53,7 @@ function idade(iso?: string) {
 async function carregar() {
   erro.value = ''
   try {
-    const l = await server<Cao[]>('apiListarCaes', canilId.value)
+    const l = await server<Cao[]>('apiListarCaes', canilId.value || undefined)
     cao.value = (l || []).find((c) => c.id === id.value) || null
     if (!cao.value) { erro.value = 'Cão não encontrado'; return }
     saude.value = await server<Saude[]>('apiListarSaude', id.value)
@@ -162,7 +166,7 @@ onMounted(carregar)
       </div>
 
       <button v-if="!form" class="btn" @click="form = true">＋ Registrar saúde</button>
-      <NuxtLink :to="{ path: '/canil', query: { id: canilId } }" class="btn sec">Voltar</NuxtLink>
+      <NuxtLink to="/canis" class="btn sec">Voltar</NuxtLink>
     </template>
   </div>
 </template>

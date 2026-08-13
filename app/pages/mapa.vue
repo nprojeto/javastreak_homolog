@@ -39,7 +39,6 @@ const FILTROS = [
   { k: 'rotas', rot: 'Rotas', cor: '#3b6ea5', ic: 'rotas' },
   { k: 'marcacao', rot: 'Marcações', cor: '#8a5a10', ic: 'armadilha' },
   { k: 'abate', rot: 'Abates', cor: '#b23b3b', ic: 'painel' },
-  { k: 'canil', rot: 'Canis', cor: '#7a5c2e', ic: 'canil' },
   { k: 'propriedade', rot: 'Propriedades', cor: '#2e6b3a', ic: 'areas' },
   { k: 'rede', rot: 'Rede', cor: '#e8552b', ic: 'global' }
 ] as const
@@ -59,7 +58,7 @@ const abertos = ref(true)
    tela, e nascer desligado fazia parecer que as lojas não estavam lá. */
 const ligados = reactive<Record<Chave, boolean>>({
   espera: true, rotas: true, marcacao: true, abate: true,
-  canil: true, propriedade: true, rede: true
+  propriedade: true, rede: true
 })
 
 const num = (v: unknown) => {
@@ -106,7 +105,6 @@ const pinos = computed(() => {
     add(d.armadilhas || [], '#b23b3b', (a) => (a.tipo || 'Armadilha'))
   }
   if (ligados.abate) add(d.abates || [], '#b23b3b', () => 'Abate')
-  if (ligados.canil) add(d.canis || [], '#7a5c2e', (c) => (c.nome || 'Canil'))
 
   if (ligados.rede && rede.value) {
     add(rede.value.empresas || [], '#e8552b', (e) => (e.nome || 'Empresa'))

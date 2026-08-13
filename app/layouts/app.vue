@@ -21,6 +21,29 @@ const marca = useMarca()
 const ui = useUi()
 
 const menuAberto = ref(false)
+const router = useRouter()
+
+/**
+ * ⚠️ VOLTAR não aparece nas telas de topo. Ali ele não teria para onde ir — o
+ * histórico do navegador pode estar vazio (aba nova, PWA recém-aberto, link
+ * compartilhado), e um botão que às vezes joga para fora do app é pior que
+ * botão nenhum.
+ */
+const RAIZES = ['/inicio', '/cacar', '/agenda', '/saude-animal', '/manutencao',
+  '/documentacao', '/trofeus', '/ranking', '/promocoes', '/mapa', '/empresa',
+  '/vitrine', '/patrocinio', '/admin', '/']
+
+const mostraVoltar = computed(() => !RAIZES.includes(route.path.replace(/\/$/, '') || '/'))
+
+/**
+ * Volta no histórico quando há para onde, e cai no início quando não há.
+ * `window.history.length` não distingue as páginas DESTE app das que vieram
+ * antes na mesma aba, então a checagem é a página anterior existir de todo.
+ */
+function voltar() {
+  if (window.history.length > 1) router.back()
+  else router.push('/inicio')
+}
 
 const atalhos = computed(() => {
   const base = auth.tipo === 'empresa' ? NAV_LOJISTA : NAV_MANEJADOR
@@ -48,6 +71,14 @@ watch(() => route.path, () => { menuAberto.value = false })
     <header class="topo">
       <button class="btn-menu" aria-label="Menu" @click="menuAberto = true">
         <Icone nome="menu" :px="26" />
+      </button>
+      <button
+        v-if="mostraVoltar"
+        class="btn-menu btn-voltar"
+        aria-label="Voltar"
+        @click="voltar"
+      >
+        <Icone nome="voltar" :px="24" />
       </button>
       <!-- Só a marca. O nome do usuário fica no menu lateral, abaixo do logo:
            repetir no topo custava largura numa linha que já está disputada. -->
@@ -92,6 +123,8 @@ watch(() => route.path, () => { menuAberto.value = false })
 
 <style scoped>
 .app-shell { min-height: 100vh; padding-bottom: 30px; }
+
+.btn-voltar { margin-left: -4px; }
 
 .topo {
   display: flex; align-items: center; gap: 8px;

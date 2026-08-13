@@ -39,7 +39,7 @@ onMounted(async () => {
     <CartaoModulo
       icone="canil"
       titulo="CANIL"
-      descricao="Cães: matilha, saúde e vacinas"
+      descricao="Cães da matilha: saúde e vacinas"
       para="/canis"
       :selo="carregando ? undefined : totalCaes + ' cão(es)'"
       selo-tipo="ok"
