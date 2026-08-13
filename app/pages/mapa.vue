@@ -14,6 +14,8 @@
  */
 import { useAuth } from '~/stores/auth'
 import { useUi } from '~/stores/ui'
+import { estatisticaDe } from '~/composables/useEstatisticaCeva'
+import type { Abate, Agora } from '~/composables/useEstatisticaCeva'
 import { soDig } from '~/composables/useMascaras'
 import type { Ponto } from '~/composables/useMapa'
 
@@ -26,7 +28,7 @@ interface ItemMapa {
   pontos?: Ponto[]; limite?: Ponto[]; descricao?: string; dataHora?: string
   rotaId?: string; status?: string
   fotoUrl?: string; sexo?: string; whatsapp?: string; telefone?: string
-  cidade?: string; ramo?: string; vitrine?: string; bio?: string
+  cidade?: string; ramo?: string; vitrine?: string; bio?: string; cevaId?: string
 }
 
 /**
@@ -91,6 +93,32 @@ const props_ = ref<ItemMapa[]>([])
 const erro = ref('')
 const abertos = ref(true)
 const mapaRef = ref<{ enquadrar: () => void; mapa: () => unknown } | null>(null)
+
+/**
+ * ⚠️ O ÍNDICE NO PINO. É ele que faz o mapa responder "qual ceva hoje?" sem
+ * abrir nada — e era o que a etiqueta da versão antiga mostrava.
+ *
+ * `apiClimaCevas` traz o tempo de TODAS as cevas numa chamada só (os termos do
+ * MET pedem cache, e uma consulta por ceva estouraria isso). Os abates vêm do
+ * `apiMapaDados`, que já está carregado — nenhuma chamada nova por ceva.
+ */
+const climaPorCeva = ref<Record<string, Agora>>({})
+
+const indicePorCeva = computed<Record<string, number | null>>(() => {
+  const out: Record<string, number | null> = {}
+  const d = dados.value
+  if (!d) return out
+  for (const c of d.cevas || []) {
+    const clima = climaPorCeva.value[c.id]
+    if (!clima) { out[c.id] = null; continue }
+    /* Os abates daquela ceva, do lote que o mapa já tem. */
+    const meus = (d.abates || []).filter((a) => String(a.cevaId || '') === String(c.id)) as unknown as Abate[]
+    if (!meus.length) { out[c.id] = null; continue }
+    const e = estatisticaDe({ ...clima, alimento: alimentoAtual(c.id), quando: new Date() }, meus)
+    out[c.id] = e.indice
+  }
+  return out
+})
 const minhaPos = ref<{ lat: number; lng: number } | null>(null)
 
 /**
@@ -199,11 +227,13 @@ interface PinoMapa {
  * a pergunta "vale a pena ir nesta hoje?" nasce olhando o mapa, não dentro da
  * ficha da ceva, que ninguém abre no meio do mato.
  */
-const selecionado = ref<{ tipo: 'ceva' | 'rota'; id: string; nome: string } | null>(null)
+const selecionado = ref<{ tipo: 'ceva' | 'rota'; id: string; nome: string; alimento?: string } | null>(null)
 const painelEl = ref<HTMLElement | null>(null)
 
 async function selecionar(x: { tipo: 'ceva' | 'rota'; id: string; nome: string }) {
-  selecionado.value = x
+  /* O alimento de agora vem do mapa (`ultimoAlimento`), não do abate: é a
+     condição atual da ceva, e é ela que entra como "agora" na estatística. */
+  selecionado.value = { ...x, alimento: alimentoAtual(x.id) }
   /* O mapa ocupa 62vh: sem rolar até o painel, o toque parece não ter feito
      nada. Espera o painel existir antes de rolar. */
   await nextTick()
@@ -231,7 +261,8 @@ const pinos = computed(() => {
      relance e ainda diz o que é sem abrir o balão. */
   if (ligados.espera) {
     add(d.cevas || [], '#b8863b', (c) => (c.nome || 'Ceva'),
-      (c) => ({ icone: 'ceva', sel: { tipo: 'ceva' as const, id: c.id } }))
+      (c) => ({ icone: 'ceva', sel: { tipo: 'ceva' as const, id: c.id },
+        indice: indicePorCeva.value[c.id] ?? null }))
     add(d.cevasCompart || [], '#c8a35c', (c) => (c.nome || 'Ceva') + ' · ' + (c.donoNome || ''),
       () => ({ icone: 'ceva' }))
   }
@@ -287,6 +318,18 @@ function acoesLoja(e: ItemMapa) {
   return a
 }
 
+/**
+ * Alimento posto na ceva hoje. `apiMapaDados` guarda a LINHA inteira do último
+ * alimento por ceva, então o tipo vem direto dela — não pelo `alimentoTipo`,
+ * que é indexado por id do alimento e serve a outro uso.
+ */
+function alimentoAtual(cevaId: string): string {
+  const d = dados.value as unknown as {
+    ultimoAlimento?: Record<string, { tipo?: string }>
+  } | null
+  return d?.ultimoAlimento?.[cevaId]?.tipo || ''
+}
+
 /** Centro aproximado do limite, para pousar o pino da propriedade. */
 function centroDe(p: ItemMapa): { lat: number; lng: number } | null {
   if (temCoord(p)) return { lat: num(p.lat)!, lng: num(p.lng)! }
@@ -313,6 +356,11 @@ async function carregar() {
     props_.value = p || []
     /* A rede chega separada e pode falhar sem derrubar o mapa. */
     rede.value = await server<Rede>('apiNetworkMapa').catch(() => null)
+    /* O clima é o último e o mais frágil: sem ele o mapa funciona, só fica
+       sem a etiqueta do índice. */
+    const cl = await server<{ ok?: boolean; cevas?: Record<string, Agora> }>('apiClimaCevas')
+      .catch(() => null)
+    if (cl?.ok && cl.cevas) climaPorCeva.value = cl.cevas
   } catch (e) {
     erro.value = e instanceof Error ? e.message : 'Não foi possível carregar o mapa'
   }
@@ -389,10 +437,11 @@ onMounted(carregar)
         </div>
         <!-- `key` força recriar ao trocar de ceva: sem isso o painel manteria
              os dados da anterior enquanto os novos não chegam. -->
-        <PainelCondicoes
+        <PainelCeva
           :key="selecionado.tipo + selecionado.id"
           :tipo="selecionado.tipo"
           :id="selecionado.id"
+          :alimento="selecionado.alimento"
         />
       </div>
 

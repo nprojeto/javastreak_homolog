@@ -27,6 +27,11 @@ export interface Pino {
    * numa aba que ninguém abre no meio do mato.
    */
   sel?: { tipo: 'ceva' | 'rota'; id: string }
+  /**
+   * Índice 0–100 mostrado NO pino, como a etiqueta da imagem do legado.
+   * É o que faz o mapa responder "qual delas hoje?" sem abrir nada.
+   */
+  indice?: number | null
 }
 
 export interface RotaMapa {
@@ -69,8 +74,16 @@ function pinoHtml(p: Pino) {
     /* `simboloDe` traduz o nome para o id do sprite — o mesmo caminho do
        componente `<Icone>`, para um nome errado não virar pino vazio. */
     : '<svg><use href="#' + esc(simboloDe(p.icone || 'painel')) + '"/></svg>'
+  /* A etiqueta pega a cor da faixa, não do tipo: é ela que se lê de longe. */
+  const et = (p.indice === null || p.indice === undefined) ? ''
+    : '<span class="js-et js-et-' + faixaDoIndice(p.indice) + '">' + p.indice + '</span>'
   return '<span class="js-gota" style="--pc:' + esc(cor) + '">'
-    + '<span class="js-face">' + miolo + '</span></span>'
+    + '<span class="js-face">' + miolo + '</span>' + et + '</span>'
+}
+
+/** Três faixas, as mesmas do painel — para o pino e o painel não discordarem. */
+function faixaDoIndice(v: number) {
+  return v >= 60 ? 'alta' : v >= 30 ? 'media' : 'baixa'
 }
 
 /* O balão é HTML, e nome de ceva vem do usuário. */
@@ -220,6 +233,18 @@ onBeforeUnmount(() => { map?.remove(); map = null })
   width: 22px; height: 22px; stroke: var(--pc, #b8863b);
   fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
 }
+
+/* Etiqueta do índice, pendurada na base da gota. */
+.js-et {
+  position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+  z-index: 2; min-width: 22px; padding: 1px 5px;
+  border-radius: 999px; border: 2px solid #fff;
+  font: 700 11px/1.3 system-ui, sans-serif; text-align: center; color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+}
+.js-et-alta { background: #2f7d3a; }
+.js-et-media { background: #C8892B; }
+.js-et-baixa { background: #8A8375; }
 
 /* Botões do balão: WhatsApp, ver loja. */
 .js-bts { display: flex; gap: 6px; margin-top: 8px; }
