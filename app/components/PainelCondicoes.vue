@@ -28,6 +28,8 @@ const props = defineProps<{
 
 interface Abate extends Clima {
   id: string; dataHora?: string; quantidade?: string; sexo?: string
+  pesoAprox?: string; comprimento?: string; desenvolvimento?: string
+  metodoAbate?: string; abatidoPorNome?: string
 }
 interface Resposta { abates?: Abate[] }
 interface ClimaAgora extends Clima { ok?: boolean; erro?: string }
@@ -40,6 +42,40 @@ const erroClima = ref('')
 const aberto = ref(false)
 
 const r = computed(() => compararClima(agora.value, abates.value || []))
+
+const num = (v: unknown) => {
+  const x = parseFloat(String(v ?? '').replace(',', '.'))
+  return isNaN(x) ? null : x
+}
+
+/**
+ * Resumo dos abates daquele ponto. É o painel que estava na ficha da ceva e
+ * que agora abre no mapa — onde a pergunta realmente aparece.
+ *
+ * ⚠️ Peso médio só dos que TÊM peso. Contar registro sem peso como zero
+ * puxaria a média para baixo e faria a ceva parecer pior do que é.
+ */
+const resumo = computed(() => {
+  const l = abates.value || []
+  const pesos = l.map((a) => num(a.pesoAprox)).filter((x): x is number => x !== null && x > 0)
+  const qtd = l.reduce((s, a) => s + (num(a.quantidade) || 1), 0)
+  const machos = l.filter((a) => String(a.sexo || '').toLowerCase().startsWith('m')).length
+  const femeas = l.filter((a) => String(a.sexo || '').toLowerCase().startsWith('f')).length
+  const datas = l.map((a) => String(a.dataHora || '')).filter(Boolean).sort()
+  return {
+    registros: l.length,
+    animais: qtd,
+    pesoMedio: pesos.length ? Math.round((pesos.reduce((s, x) => s + x, 0) / pesos.length) * 10) / 10 : null,
+    machos,
+    femeas,
+    ultimo: datas.length ? datas[datas.length - 1]! : '',
+    /* Dias desde o último: responde "faz quanto tempo que dá aqui?" sem
+       exigir conta de cabeça. */
+    diasUltimo: datas.length
+      ? Math.floor((Date.now() - new Date(datas[datas.length - 1]!).getTime()) / 86400000)
+      : null
+  }
+})
 
 const COR: Record<string, string> = { alta: 'alta', media: 'media', baixa: 'baixa' }
 const TEXTO: Record<string, string> = {
@@ -139,11 +175,35 @@ onMounted(carregar)
         </div>
       </template>
 
-      <h4 class="sub">Abates aqui</h4>
+      <h4 class="sub">O que já saiu aqui</h4>
+      <div class="kpis">
+        <div class="kpi">
+          <b class="no-i18n">{{ resumo.animais }}</b>
+          <span>animal(is)</span>
+        </div>
+        <div class="kpi">
+          <b class="no-i18n">{{ resumo.registros }}</b>
+          <span>abate(s)</span>
+        </div>
+        <div class="kpi">
+          <b class="no-i18n">{{ resumo.pesoMedio === null ? '—' : resumo.pesoMedio + ' kg' }}</b>
+          <span>peso médio</span>
+        </div>
+        <div class="kpi">
+          <b class="no-i18n">{{ resumo.diasUltimo === null ? '—' : resumo.diasUltimo + 'd' }}</b>
+          <span>desde o último</span>
+        </div>
+      </div>
+      <div v-if="resumo.machos || resumo.femeas" class="meta">
+        <span class="no-i18n">{{ resumo.machos }}</span> macho(s) ·
+        <span class="no-i18n">{{ resumo.femeas }}</span> fêmea(s)
+      </div>
+
       <div v-for="a in abates.slice(0, 6)" :key="a.id" class="linha">
         <span class="no-i18n">{{ dataBR(a.dataHora) }}</span>
         <span class="meta no-i18n">
-          {{ [a.luaFase, a.condicaoTempo].filter(Boolean).join(' · ') || '—' }}
+          {{ [a.sexo, a.pesoAprox ? a.pesoAprox + ' kg' : '', a.luaFase, a.condicaoTempo]
+            .filter(Boolean).join(' · ') || '—' }}
         </span>
       </div>
       <div v-if="abates.length > 6" class="meta">
@@ -191,6 +251,12 @@ onMounted(carregar)
 }
 
 .sub { margin: 14px 0 6px; font-size: 13px; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.kpi {
+  background: var(--carvao-3); border-radius: 10px; padding: 8px 4px; text-align: center;
+}
+.kpi b { display: block; font-size: 16px; color: var(--laranja-cl); }
+.kpi span { font-size: 9.5px; color: var(--osso-2); line-height: 1.15; display: block; }
 .linha { display: flex; gap: 8px; padding: 5px 0; border-top: 1px solid var(--linha); font-size: 12.5px; }
 .linha .meta { margin: 0; flex: 1; text-align: right; }
 </style>

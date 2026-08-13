@@ -78,10 +78,6 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Semelhança entre o tempo de agora e o dos abates daqui.
-           Fica ANTES do mapa: é a pergunta que traz a pessoa a esta tela. -->
-      <PainelCondicoes tipo="rota" :id="id" />
-
       <ClientOnly>
         <MapaPontos
           :limites="prop?.temLimite ? [{ nome: prop.nome, pontos: prop.limite }] : []"

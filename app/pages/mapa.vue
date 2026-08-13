@@ -148,7 +148,8 @@ const rotasNoMapa = computed(() =>
     const linhas: string[] = []
     linhas.push(e.marcacoes ? e.marcacoes + ' marcação(ões) nesta rota' : 'Nenhuma marcação nesta rota')
     linhas.push(e.abates ? e.abates + ' abate(s) ao longo dela' : 'Nenhum abate ao longo dela')
-    return { nome: r.nome || 'Rota', pontos: r.pontos!, cor: '#2f6ea8', linhas }
+    return { nome: r.nome || 'Rota', pontos: r.pontos!, cor: '#2f6ea8', linhas,
+      sel: { tipo: 'rota' as const, id: r.id } }
   })
 )
 
@@ -160,25 +161,16 @@ function distM(aLat: number, aLng: number, bLat: number, bLng: number) {
 }
 
 /**
- * O que aconteceu em cada ceva. Um abate é atribuído à ceva quando foi
- * registrado NELA (o servidor grava a coordenada da ceva nesse caso), e o
- * empate é resolvido pela mais próxima dentro de 80 m — folga para o erro do
- * GPS sem alcançar a ceva vizinha.
+ * ⚠️ A contagem por CEVA saiu daqui. Ela existia para o balão do pino, e o
+ * balão deu lugar ao painel completo — que busca os abates de verdade pelo
+ * `apiAbatesDaCeva`, em vez de adivinhar por proximidade de coordenada.
+ * Manter as duas contas seria manter duas verdades sobre o mesmo número.
+ *
+ * A da ROTA continua, porque o traçado ainda mostra um resumo no balão
+ * quando a rota não é selecionável. Folga para o erro do GPS sem alcançar a
+ * rota vizinha.
  */
 const RAIO_M = 80
-
-function eventosDaCeva(c: ItemMapa) {
-  const d = dados.value
-  const cl = num(c.lat), cg = num(c.lng)
-  if (!d || cl === null || cg === null) return { abates: 0 }
-  let abates = 0
-  for (const a of d.abates || []) {
-    const al = num(a.lat), ag = num(a.lng)
-    if (al === null || ag === null) continue
-    if (distM(cl, cg, al, ag) <= RAIO_M) abates++
-  }
-  return { abates }
-}
 
 /** Marcações e abates ligados a uma rota. A marcação já traz `rotaId`. */
 function eventosDaRota(r: ItemMapa) {
@@ -194,17 +186,28 @@ function eventosDaRota(r: ItemMapa) {
   return { marcacoes, abates }
 }
 
-function balaoCeva(c: ItemMapa) {
-  const e = eventosDaCeva(c)
-  const linhas = [(c.nome || 'Ceva')]
-  linhas.push(e.abates ? e.abates + ' abate(s) registrado(s) aqui' : 'Nenhum abate registrado aqui')
-  return linhas
-}
 
 interface PinoMapa {
   lat: number; lng: number; titulo: string; cor: string
   linhas?: string[]; foto?: string; icone?: string
   acoes?: Array<{ rotulo: string; url: string }>
+  sel?: { tipo: 'ceva' | 'rota'; id: string }
+}
+
+/**
+ * Ceva ou rota tocada no mapa. É aqui que o painel de condições vive agora —
+ * a pergunta "vale a pena ir nesta hoje?" nasce olhando o mapa, não dentro da
+ * ficha da ceva, que ninguém abre no meio do mato.
+ */
+const selecionado = ref<{ tipo: 'ceva' | 'rota'; id: string; nome: string } | null>(null)
+const painelEl = ref<HTMLElement | null>(null)
+
+async function selecionar(x: { tipo: 'ceva' | 'rota'; id: string; nome: string }) {
+  selecionado.value = x
+  /* O mapa ocupa 62vh: sem rolar até o painel, o toque parece não ter feito
+     nada. Espera o painel existir antes de rolar. */
+  await nextTick()
+  painelEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 const pinos = computed(() => {
@@ -228,7 +231,7 @@ const pinos = computed(() => {
      relance e ainda diz o que é sem abrir o balão. */
   if (ligados.espera) {
     add(d.cevas || [], '#b8863b', (c) => (c.nome || 'Ceva'),
-      (c) => ({ icone: 'ceva', linhas: balaoCeva(c).slice(1) }))
+      (c) => ({ icone: 'ceva', sel: { tipo: 'ceva' as const, id: c.id } }))
     add(d.cevasCompart || [], '#c8a35c', (c) => (c.nome || 'Ceva') + ' · ' + (c.donoNome || ''),
       () => ({ icone: 'ceva' }))
   }
@@ -247,7 +250,8 @@ const pinos = computed(() => {
     for (const r of tracados.value) {
       const p = (r.pontos || [])[0]
       if (!p) continue
-      out.push({ lat: p.lat, lng: p.lng, titulo: r.nome || 'Rota', cor: '#3b6ea5', icone: 'rotas' })
+      out.push({ lat: p.lat, lng: p.lng, titulo: r.nome || 'Rota', cor: '#3b6ea5',
+        icone: 'rotas', sel: { tipo: 'rota' as const, id: r.id } })
     }
   }
 
@@ -368,8 +372,29 @@ onMounted(carregar)
           :rotas="rotasNoMapa"
           enquadrar-uma-vez
           altura="62vh"
+          @selecionar="selecionar"
         />
       </ClientOnly>
+
+      <!-- PAINEL DA CEVA / ROTA tocada no mapa. -->
+      <div v-if="selecionado" ref="painelEl" class="sel">
+        <div class="sel-cab">
+          <b class="no-i18n">{{ selecionado.nome }}</b>
+          <NuxtLink
+            :to="{ path: selecionado.tipo === 'ceva' ? '/ceva-detalhe' : '/rota-detalhe',
+                   query: { id: selecionado.id } }"
+            class="sel-ir"
+          >Abrir ficha</NuxtLink>
+          <button class="sel-x" aria-label="Fechar" @click="selecionado = null">×</button>
+        </div>
+        <!-- `key` força recriar ao trocar de ceva: sem isso o painel manteria
+             os dados da anterior enquanto os novos não chegam. -->
+        <PainelCondicoes
+          :key="selecionado.tipo + selecionado.id"
+          :tipo="selecionado.tipo"
+          :id="selecionado.id"
+        />
+      </div>
 
       <div class="barra-mapa">
         <button class="btn" @click="centralizarEmMim">
@@ -421,6 +446,18 @@ onMounted(carregar)
 .chip.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); font-weight: 600; }
 .chip i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .aviso { color: var(--laranja-esc); margin-top: 8px; }
+.sel { margin-top: 10px; scroll-margin-top: 12px; }
+.sel-cab { display: flex; align-items: center; gap: 8px; padding: 0 4px 6px; }
+.sel-cab b { flex: 1; min-width: 0; font-size: 15px; }
+.sel-ir {
+  font-size: 11.5px; font-weight: 700; color: var(--laranja-cl);
+  text-decoration: none; border: 1px solid var(--linha);
+  border-radius: 999px; padding: 4px 10px;
+}
+.sel-x {
+  border: 0; background: none; color: var(--osso-2);
+  font-size: 24px; line-height: 1; cursor: pointer; padding: 0 4px;
+}
 .barra-mapa { display: flex; gap: 8px; margin-top: 8px; }
 .barra-mapa .btn { flex: 1; margin: 0; }
 .linha-rota {

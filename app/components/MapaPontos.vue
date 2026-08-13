@@ -21,10 +21,17 @@ export interface Pino {
   icone?: string
   /** Botões do balão. O rótulo é traduzido pelo chamador. */
   acoes?: Array<{ rotulo: string; url: string }>
+  /**
+   * Item que o pino representa. Com isto, tocar no pino AVISA a tela em vez de
+   * abrir balão — é o que leva o painel da ceva para o mapa, em vez de deixá-lo
+   * numa aba que ninguém abre no meio do mato.
+   */
+  sel?: { tipo: 'ceva' | 'rota'; id: string }
 }
 
 export interface RotaMapa {
   nome?: string; pontos: Ponto[]; cor?: string; linhas?: string[]
+  sel?: { tipo: 'ceva' | 'rota'; id: string }
 }
 
 const props = withDefaults(defineProps<{
@@ -43,7 +50,10 @@ const props = withDefaults(defineProps<{
   enquadrarUmaVez?: boolean
 }>(), { altura: '38vh' })
 
-const emit = defineEmits<{ pronto: [] }>()
+const emit = defineEmits<{
+  pronto: []
+  selecionar: [{ tipo: 'ceva' | 'rota'; id: string; nome: string }]
+}>()
 
 /** Já enquadrou uma vez? Ver `enquadrarUmaVez`. */
 let enquadrou = false
@@ -95,9 +105,16 @@ async function desenhar() {
   for (const r of props.rotas || []) {
     if ((r.pontos || []).length < 2) continue
     const extra = (r.linhas || []).map((l) => '<br>' + esc(l)).join('')
-    L.polyline(r.pontos.map((p) => [p.lat, p.lng] as [number, number]), {
+    const linha = L.polyline(r.pontos.map((p) => [p.lat, p.lng] as [number, number]), {
       color: r.cor || '#2f6ea8', weight: 4
-    }).addTo(camada).bindPopup('<b>' + esc(r.nome || 'Rota') + '</b>' + extra)
+    })
+    linha.addTo(camada)
+    if (r.sel) {
+      const s = r.sel, t = r.nome || 'Rota'
+      linha.on('click', () => emit('selecionar', { tipo: s.tipo, id: s.id, nome: t }))
+    } else {
+      linha.bindPopup('<b>' + esc(r.nome || 'Rota') + '</b>' + extra)
+    }
   }
 
   for (const p of props.pinos || []) {
@@ -111,8 +128,8 @@ async function desenhar() {
     /* Foto ou ícone viram um pino DESENHADO; sem os dois, o círculo simples
        de sempre. Marcador com conteúdo é muito mais fácil de achar no meio de
        um mapa de satélite que uma bolinha de 8 px. */
-    if (p.foto || p.icone) {
-      L.marker([p.lat, p.lng], {
+    const alvo = p.foto || p.icone
+      ? L.marker([p.lat, p.lng], {
         icon: L.divIcon({
           className: 'js-pino',
           html: pinoHtml(p),
@@ -120,12 +137,19 @@ async function desenhar() {
           iconAnchor: [22, 50],
           popupAnchor: [0, -46]
         })
-      }).addTo(camada).bindPopup(balao)
-    } else {
-      L.circleMarker([p.lat, p.lng], {
+      })
+      : L.circleMarker([p.lat, p.lng], {
         radius: 8, color: '#fff', weight: 2,
         fillColor: p.cor || '#b8863b', fillOpacity: 1
-      }).addTo(camada).bindPopup(balao)
+      })
+    alvo.addTo(camada)
+    /* ⚠️ Pino com `sel` NÃO abre balão: o toque leva ao painel completo, e um
+       balão por cima só atrapalharia a leitura do que abre embaixo. */
+    if (p.sel) {
+      const s = p.sel, t = p.titulo || ''
+      alvo.on('click', () => emit('selecionar', { tipo: s.tipo, id: s.id, nome: t }))
+    } else {
+      alvo.bindPopup(balao)
     }
   }
 
