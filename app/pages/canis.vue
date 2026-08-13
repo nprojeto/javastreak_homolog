@@ -75,13 +75,15 @@ onMounted(carregar)
         Nenhum canil cadastrado.
       </div>
 
-      <div v-for="k in lista" :key="k.id" class="card canil">
-        <NuxtLink :to="{ path: '/canil', query: { id: k.id } }" class="grow">
-          <b class="no-i18n"><Icone nome="canil" /> {{ k.nome || 'Canil' }}</b>
-          <div class="meta">{{ k.qtdCaes || 0 }} cão(es)</div>
-          <div v-if="k.obs" class="meta no-i18n">{{ k.obs }}</div>
-        </NuxtLink>
-        <button class="ib" title="Excluir" @click="excluir(k)"><Icone nome="excluir" /></button>
+      <div class="grade3">
+        <div v-for="k in lista" :key="k.id" class="card lad">
+          <NuxtLink :to="{ path: '/canil', query: { id: k.id } }" class="lad-link">
+            <span class="lad-ic"><Icone nome="canil" :px="28" /></span>
+            <b class="no-i18n">{{ k.nome || 'Canil' }}</b>
+            <div class="meta">{{ k.qtdCaes || 0 }} cão(es)</div>
+          </NuxtLink>
+          <button class="lad-x" title="Excluir" @click="excluir(k)"><Icone nome="excluir" /></button>
+        </div>
       </div>
 
       <!-- Fica AQUI, junto do botão que o abre: declarado antes da lista,
@@ -117,9 +119,5 @@ onMounted(carregar)
 .ruim { color: var(--danger); }
 .vazio { text-align: center; padding: 24px; }
 .vazio .big { font-size: 40px; margin-bottom: 6px; }
-.canil { display: flex; align-items: center; gap: 8px; }
-.canil .grow { flex: 1; min-width: 0; text-decoration: none; color: var(--txt); }
-.canil .meta { margin: 3px 0 0; }
-.ib { border: 0; background: none; cursor: pointer; font-size: 17px; padding: 4px; flex: none; }
 .btn.sec { margin-top: 8px; }
 </style>

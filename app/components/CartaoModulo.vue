@@ -48,8 +48,15 @@ defineProps<{
       <span v-if="selo" class="mod-selo" :class="seloTipo || 'alerta'">{{ selo }}</span>
     </div>
 
-    <span class="btn sm sec mod-btn">{{ travado ? 'Resolver' : 'Abrir' }}</span>
-    <span class="mod-chev" :class="{ 'so-estreito': coluna }">›</span>
+    <!--
+      ⚠️ UM convite por cartão, não dois. O botão "Abrir" e a seta diziam a
+      mesma coisa lado a lado, e o cartão inteiro já é o link — três
+      affordances para uma ação só. Fica a seta, leve; o botão volta apenas
+      quando está travado, porque aí ele diz algo que a seta não diz:
+      "Resolver", e não "Abrir".
+    -->
+    <span v-if="travado" class="btn sm sec mod-btn">Resolver</span>
+    <span v-else class="mod-chev">›</span>
   </NuxtLink>
 </template>
 
@@ -74,9 +81,7 @@ defineProps<{
 .mod-selo.danger { background: #3A1E1C; color: var(--danger); }
 .mod-selo.ok { background: var(--verde-claro); color: var(--verde-esc); }
 .mod-btn { flex: none; width: auto; margin: 0; }
-.mod-chev { flex: none; font-size: 20px; color: var(--linha); }
-/* A seta só faz sentido quando o cartão é uma linha. */
-@media (min-width: 520px) { .mod-chev.so-estreito { display: none; } }
+.mod-chev { flex: none; font-size: 22px; color: var(--osso-2); }
 
 /* Travado: o cartão apaga, mas continua legível e clicável. */
 .mod.bloq { border-left: 3px solid var(--alerta); }
@@ -99,9 +104,5 @@ defineProps<{
     flex-direction: column; align-items: stretch; text-align: left; gap: 10px;
   }
   .mod.col .mod-btn { width: 100%; margin-top: auto; }
-}
-/* Estreito: mesma linha dos demais cartões, com a seta de volta. */
-@media (max-width: 519px) {
-  .mod.col .mod-chev { display: inline; }
 }
 </style>

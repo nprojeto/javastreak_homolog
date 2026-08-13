@@ -56,7 +56,6 @@ const propsUsaveis = computed(() =>
   (props_.value || []).filter((p) => p.regular && p.temLimite)
 )
 const temProp = computed(() => propsUsaveis.value.length > 0)
-const temLocal = computed(() => (cevas.value || []).length > 0 || (rotas.value || []).length > 0)
 
 /** Enquanto qualquer lista não chegou, não se afirma que falta. */
 const carregado = computed(() => props_.value !== null && cevas.value !== null && rotas.value !== null)
@@ -81,17 +80,16 @@ const reqProp = computed(() => {
   return { estado: 'pendente' as const, texto: 'Sua propriedade está irregular: confira as autorizações' }
 })
 
-const reqLocal = computed(() => {
-  if (!carregado.value) return { estado: 'ok' as const, texto: 'Conferindo…' }
-  const nc = (cevas.value || []).length
-  const nr = (rotas.value || []).length
-  if (nc || nr) {
-    const partes = []
-    if (nc) partes.push(nc + ' ceva(s)')
-    if (nr) partes.push(nr + ' rota(s)')
-    return { estado: 'ok' as const, texto: partes.join(' · ') }
-  }
-  return { estado: 'opcional' as const, texto: 'Sem ceva nem rota: dá para caçar livre' }
+
+const descCevas = computed(() => {
+  if (!carregado.value) return 'Cevas, alimento e nível'
+  const n = (cevas.value || []).length
+  return n ? n + ' ceva(s) cadastrada(s)' : 'Nenhuma ceva — opcional para caçar'
+})
+const descRotas = computed(() => {
+  if (!carregado.value) return 'Trajetos dentro da propriedade'
+  const n = (rotas.value || []).length
+  return n ? n + ' rota(s) cadastrada(s)' : 'Nenhuma rota — opcional para caçar'
 })
 
 /** O que impede de abrir uma caçada. Ceva e rota NÃO entram aqui. */
@@ -138,71 +136,48 @@ onMounted(async () => {
   <div>
     <TituloTela titulo="CAÇAR" descricao="Prepare, abra a caçada e preste contas." />
 
-    <!-- ───────── 1. PREPARAÇÃO ───────── -->
+    <!-- ───────── 1. PREPARAÇÃO ─────────
+      ⚠️ UM cartão por assunto, não dois. Antes havia uma lista de requisitos
+      E uma lista de módulos: CTF aparecia duas vezes, Propriedade duas vezes,
+      Espera duas vezes — as duas com seta, as duas indo ao mesmo lugar. O
+      estado agora vive DENTRO do cartão que leva ao assunto.
+    -->
     <h3 class="etapa">Preparação</h3>
-    <div class="card requisitos">
-      <LinhaRequisito
-        icone="documentos"
-        titulo="CTF"
-        :texto="reqCtf.texto"
-        :estado="reqCtf.estado"
-        para="/ctf"
-      />
-      <LinhaRequisito
-        icone="areas"
-        titulo="Propriedade"
-        :texto="reqProp.texto"
-        :estado="reqProp.estado"
-        :para="bloqueio ? '/ctf' : '/propriedades'"
-      />
-      <LinhaRequisito
-        icone="ceva"
-        titulo="Local de caça"
-        :texto="reqLocal.texto"
-        :estado="reqLocal.estado"
-        :para="bloqueio ? '/ctf' : '/espera'"
-        acao="Cadastrar"
-      />
-    </div>
 
-    <div class="mod-grade">
-      <CartaoModulo
-        icone="documentos"
-        titulo="CTF"
-        descricao="Envie o documento para liberar"
-        para="/ctf"
-        :selo="cred.dados ? (ctfOk ? 'EM DIA' : 'SEM CTF') : undefined"
-        :selo-tipo="ctfOk ? 'ok' : 'danger'"
-        coluna
-      />
-      <CartaoModulo
-        icone="areas"
-        titulo="Propriedades"
-        descricao="Áreas de manejo e autorizações"
-        para="/propriedades"
-        :travado="bloqueio"
-        para-destravar="/ctf"
-        coluna
-      />
-      <CartaoModulo
-        icone="ceva"
-        titulo="Espera (ceva)"
-        descricao="Cevas, alimento e nível"
-        para="/espera"
-        :travado="bloqueio"
-        para-destravar="/ctf"
-        coluna
-      />
-      <CartaoModulo
-        icone="rotas"
-        titulo="Rotas"
-        descricao="Trajetos dentro da propriedade"
-        para="/rotas"
-        :travado="bloqueio"
-        para-destravar="/ctf"
-        coluna
-      />
-    </div>
+    <CartaoModulo
+      icone="documentos"
+      titulo="CTF"
+      :descricao="reqCtf.texto"
+      para="/ctf"
+      :selo="cred.dados ? (ctfOk ? 'EM DIA' : 'PENDENTE') : undefined"
+      :selo-tipo="ctfOk ? 'ok' : 'danger'"
+    />
+    <CartaoModulo
+      icone="areas"
+      titulo="Propriedades"
+      :descricao="reqProp.texto"
+      para="/propriedades"
+      :travado="bloqueio"
+      para-destravar="/ctf"
+      :selo="carregado && !bloqueio ? (temProp ? 'PRONTA' : 'PENDENTE') : undefined"
+      :selo-tipo="temProp ? 'ok' : 'danger'"
+    />
+    <CartaoModulo
+      icone="ceva"
+      titulo="Espera (ceva)"
+      :descricao="descCevas"
+      para="/espera"
+      :travado="bloqueio"
+      para-destravar="/ctf"
+    />
+    <CartaoModulo
+      icone="rotas"
+      titulo="Rotas"
+      :descricao="descRotas"
+      para="/rotas"
+      :travado="bloqueio"
+      para-destravar="/ctf"
+    />
 
     <!-- ───────── 2. CAÇAR ───────── -->
     <h3 class="etapa">Caçadas</h3>
@@ -266,8 +241,6 @@ onMounted(async () => {
 }
 .etapa:first-of-type { margin-top: 4px; }
 
-.requisitos { padding: 2px 0; margin-bottom: 12px; }
-.mod-grade { margin-bottom: 12px; }
 
 .pronto, .falta { margin-bottom: 12px; }
 .pronto { border-left: 5px solid var(--verde); }

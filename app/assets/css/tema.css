@@ -389,3 +389,80 @@ body.pagina-larga .miolo { max-width: 1040px; }
 @media (min-width: 520px) { .mod-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 900px) { .mod-grade { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .mod-grade > .card { margin-top: 0; display: flex; }
+
+/* ───────── GRADE DE LADRILHOS ─────────
+   Três por linha: cães, canis, cavalos, veículos e barcos.
+
+   ⚠️ Mora AQUI, e não no `scoped` de cada tela, porque são cinco listas que
+   precisam ficar idênticas. Repetir a regra em cada arquivo é garantir que
+   uma receba um ajuste que as outras não recebem — foi exatamente o que já
+   aconteceu com os cartões de módulo antes do `CartaoModulo`.
+
+   ⚠️ Três colunas cabem porque o ladrilho é VERTICAL: foto em cima, nome
+   embaixo. Numa tela de 360 px cada um fica com ~100 px, então o nome é
+   cortado em duas linhas e só uma linha de detalhe sobrevive. Quem quiser o
+   resto abre a ficha — que é o que a lista já fazia. */
+.grade3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+/* Anula o empilhamento vertical que o `.card + .card` impõe fora da grade. */
+.grade3 > .card + .card { margin-top: 0; }
+
+.grade3 .lad {
+  position: relative;
+  display: flex; flex-direction: column;
+  padding: 8px; overflow: hidden;
+  /* Todos os da mesma linha com a mesma altura, mesmo com textos diferentes. */
+  height: 100%;
+}
+.grade3 .lad .lad-link {
+  display: flex; flex-direction: column; gap: 6px;
+  text-decoration: none; color: var(--txt); min-width: 0;
+}
+/* Quadrado: a foto de um cão em pé e a de um barco deitado ocupam o mesmo
+   espaço, e a grade não fica com linhas de alturas diferentes. */
+.grade3 .lad-foto,
+.grade3 .lad-ic {
+  width: 100%; aspect-ratio: 1; border-radius: 10px;
+  object-fit: cover; display: block;
+}
+.grade3 .lad-ic {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--carvao-3); color: var(--osso-2);
+}
+.grade3 .lad-ic :deep(.ic-svg),
+.grade3 .lad-ic .ic-svg { width: 28px; height: 28px; }
+
+.grade3 .lad b {
+  font-size: 12.5px; line-height: 1.25;
+  /* Duas linhas e corta: nome comprido não pode empurrar a grade.
+     ⚠️ `min-height` de duas linhas mesmo quando o nome ocupa uma só. Sem ele,
+     um ladrilho com nome curto e o vizinho com nome longo desalinham tudo o
+     que vem embaixo, e a grade fica com cara de quebrada. */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.5em;
+}
+.grade3 .lad .meta {
+  margin: 0; font-size: 11px; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.grade3 .lad .pill { font-size: 10px; padding: 1px 7px; }
+
+/* Excluir sobre a foto, com fundo próprio para não sumir em imagem clara. */
+.grade3 .lad-x {
+  position: absolute; top: 6px; right: 6px;
+  width: 26px; height: 26px; border: 0; border-radius: 50%;
+  background: rgba(0, 0, 0, .55); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+}
+.grade3 .lad-x .ic-svg { width: 15px; height: 15px; }
+
+/* Telas muito estreitas não comportam três: duas, com o mesmo desenho. */
+@media (max-width: 330px) {
+  .grade3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
