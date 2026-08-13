@@ -56,8 +56,16 @@ const g = ref<Guia | null>(null)
 const erro = ref('')
 const eu = ref<{ lat: number; lng: number; precisao?: number } | null>(null)
 const erroGps = ref('')
+/**
+ * ⚠️ O mapa SEGUE A POSIÇÃO sempre — não há mais botão para ligar e desligar.
+ * Ele existia junto com "ver o caminho todo", e os dois eram controles de
+ * mapa numa tela que se usa andando, com o celular na mão: quem está no mato
+ * quer ver onde está, não administrar enquadramento.
+ *
+ * A única exceção continua sendo escolher ponto no mapa, quando seguir
+ * brigaria com o dedo — aí `seguir` desliga sozinho.
+ */
 const seguir = ref(true)
-const mapa = ref<{ enquadrar: () => void } | null>(null)
 
 let observador: number | null = null
 let travaTela: WakeLockSentinel | null = null
@@ -77,6 +85,13 @@ let travaTela: WakeLockSentinel | null = null
  */
 const DIST_MIN_M = 15
 
+/**
+ * ⚠️ Sem PAUSAR e sem DESCARTAR. Os dois eram jeitos de estragar a gravação
+ * sem querer: pausar e esquecer perde o meio do caminho, e descartar apaga o
+ * que não tem volta com um toque. Quem quiser se livrar do percurso apaga a
+ * rota depois, em Rotas — onde a decisão é deliberada e reversível até o
+ * último passo.
+ */
 const gravando = ref(false)
 const percurso = ref<Ponto[]>([])
 const salvandoPercurso = ref(false)
@@ -129,12 +144,6 @@ async function salvarPercurso() {
   } catch { /* já avisado, traduzido */ } finally {
     salvandoPercurso.value = false
   }
-}
-
-function descartarPercurso() {
-  if (!confirm('Descartar o percurso gravado? Não dá para recuperar.')) return
-  gravando.value = false
-  percurso.value = []
 }
 
 /* ── registro de evento ─────────────────────────────────────────────────── */
@@ -199,6 +208,8 @@ function trocarPonto() {
 function fecharPainel() {
   painel.value = false
   escolhendo.value = false
+  /* Sem botão para religar, o mapa precisa voltar a seguir sozinho. */
+  seguir.value = true
   pontoNovo.value = null
   descNovo.value = ''
   fotoNova.value = ''
@@ -419,11 +430,6 @@ async function travarTela() {
   } catch { /* negado ou sem suporte: não é motivo para atrapalhar */ }
 }
 
-function centralizar() {
-  if (!eu.value) { ui.avisar('Ainda sem posição do GPS', 'erro'); return }
-  seguir.value = true
-}
-
 onMounted(() => {
   if (!id.value) { erro.value = 'Caçada não informada.'; return }
   carregar()
@@ -518,37 +524,28 @@ onBeforeUnmount(() => {
         <div class="linha">
           <span class="ponto-vivo" :class="{ on: gravando }" />
           <div class="grow">
-            <b>{{ gravando ? 'Gravando o percurso' : 'Gravação pausada' }}</b>
+            <b>Gravando o percurso</b>
             <div class="meta">
               <span class="no-i18n">{{ percurso.length }}</span> ponto(s) ·
               <span class="no-i18n">{{ fmtDist(distanciaPercurso) }}</span>
             </div>
           </div>
-          <button class="btn sm sec pausa" @click="gravando = !gravando">
-            {{ gravando ? 'Pausar' : 'Retomar' }}
-          </button>
         </div>
-        <div class="acoes-perc">
-          <button
-            class="btn"
-            :disabled="salvandoPercurso || percurso.length < 2"
-            @click="salvarPercurso"
-          >
-            <Icone nome="salvar" />
-            {{ salvandoPercurso ? 'Salvando…' : 'Concluir e salvar percurso' }}
-          </button>
-          <button
-            v-if="percurso.length"
-            class="btn sec"
-            :disabled="salvandoPercurso"
-            @click="descartarPercurso"
-          >Descartar</button>
+        <button
+          class="btn"
+          :disabled="salvandoPercurso || percurso.length < 2"
+          @click="salvarPercurso"
+        >
+          <Icone nome="salvar" />
+          {{ salvandoPercurso ? 'Salvando…' : 'Concluir e salvar percurso' }}
+        </button>
+        <div class="meta">
+          Para se livrar deste percurso depois, apague a rota em Rotas.
         </div>
       </div>
 
       <ClientOnly>
         <MapaGuia
-          ref="mapa"
           :limites="g.limites || []"
           :rotas="rotasComPercurso"
           :cevas="g.cevas || []"
@@ -632,15 +629,6 @@ onBeforeUnmount(() => {
         </template>
       </div>
 
-      <div class="barra">
-        <button class="btn" :class="{ sec: !seguir }" @click="centralizar">
-          <Icone nome="pino" /> Seguir minha posição
-        </button>
-        <button class="btn sec" @click="seguir = false; mapa?.enquadrar()">
-          <Icone nome="mapa" /> Ver o caminho todo
-        </button>
-      </div>
-
       <div class="card legenda">
         <span><i class="q rota" /> Rota</span>
         <span><i class="q area" /> Limite</span>
@@ -717,8 +705,6 @@ onBeforeUnmount(() => {
 .bussola-off { border-left: 4px solid var(--alerta); display: flex; align-items: center; gap: 10px; }
 .bussola-off .meta { margin: 0; flex: 1; }
 
-.barra { display: flex; gap: 8px; margin-top: 10px; }
-.barra .btn { flex: 1; margin: 0; }
 
 .tocar { display: flex; align-items: center; gap: 10px; margin-top: 10px; border-left: 4px solid var(--laranja-cl); }
 .tocar .meta { margin: 0; flex: 1; }
@@ -740,7 +726,7 @@ onBeforeUnmount(() => {
 .percurso .grow { flex: 1; min-width: 0; }
 .percurso .grow b { font-size: 14px; }
 .percurso .meta { margin: 2px 0 0; }
-.percurso .pausa { width: auto; margin: 0; flex: none; }
+.percurso .btn { margin-top: 10px; }
 .ponto-vivo {
   flex: none; width: 11px; height: 11px; border-radius: 50%;
   background: var(--osso-2);
@@ -748,8 +734,6 @@ onBeforeUnmount(() => {
 /* Pisca só enquanto grava: é o sinal de que o GPS está sendo lido. */
 .ponto-vivo.on { background: var(--danger); animation: pulsa 1.6s ease-in-out infinite; }
 @keyframes pulsa { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
-.acoes-perc { display: flex; gap: 8px; margin-top: 10px; }
-.acoes-perc .btn { flex: 1; margin: 0; }
 .desvio { margin-top: 10px; }
 .desvio .btn { margin-top: 10px; }
 .trocar {

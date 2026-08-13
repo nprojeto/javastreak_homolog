@@ -49,8 +49,24 @@ async function carregar() {
   }
 }
 
+/**
+ * ⚠️ O AVISO DIZ O QUE REALMENTE ACONTECE, e conferi antes de escrever.
+ * Apagar a rota NÃO tira o abate do relatório do IBAMA: a seleção lá é por
+ * PROPRIEDADE e PERÍODO da autorização (`abatesDaAutorizacao_`), não pela
+ * rota. O que se perde é a COLUNA ORIGEM — o abate que dizia
+ * "Rota: Trilha do brejo" passa a dizer "Livre", porque o nome sumiu junto.
+ *
+ * Prometer que o abate desaparece seria assustar à toa; não avisar nada
+ * deixaria a pessoa descobrir a origem trocada no dia da prestação de contas.
+ */
 async function excluir(r: Rota) {
-  if (!confirm('Excluir esta rota?')) return
+  if (!confirm(
+    'Excluir a rota "' + (r.nome || 'sem nome') + '"?\n\n'
+    + 'Os abates registrados nela CONTINUAM no relatório de fechamento do IBAMA '
+    + '— eles são listados por propriedade e período.\n\n'
+    + 'Mas a coluna "origem" desses abates deixa de mostrar o nome desta rota '
+    + 'e passa a constar como "Livre". Isso não tem volta.'
+  )) return
   try {
     await server('apiExcluir', 'rota', r.id)
     ui.avisar('Excluída')
