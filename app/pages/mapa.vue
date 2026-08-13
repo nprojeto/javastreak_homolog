@@ -13,6 +13,8 @@
  * mostrar a rede de outra conta.
  */
 import { useAuth } from '~/stores/auth'
+import { useUi } from '~/stores/ui'
+import { soDig } from '~/composables/useMascaras'
 import type { Ponto } from '~/composables/useMapa'
 
 definePageMeta({ layout: 'app' })
@@ -23,6 +25,33 @@ interface ItemMapa {
   identificacao?: string; donoNome?: string; compartilhada?: boolean
   pontos?: Ponto[]; limite?: Ponto[]; descricao?: string; dataHora?: string
   rotaId?: string; status?: string
+  fotoUrl?: string; sexo?: string; whatsapp?: string; telefone?: string
+  cidade?: string; ramo?: string; vitrine?: string; bio?: string
+}
+
+/**
+ * ⚠️ AVATAR POR SEXO. A regra já existia no perfil ("Sexo define seu avatar
+ * padrão"), mas os arquivos nunca tinham sido colocados e o mapa não usava
+ * nada. Masculino para masculino, feminino para feminino; sem informação,
+ * cai no masculino, que é o padrão histórico do cadastro.
+ *
+ * ⚠️ Foto própria SEMPRE vence o avatar. O padrão é o recuo, não a regra.
+ */
+function avatarDe(m: ItemMapa): string {
+  if (m.fotoUrl) return String(m.fotoUrl)
+  const sx = String(m.sexo || '').trim().toLowerCase()
+  const fem = sx.startsWith('f')   // 'Feminino', 'F', 'fêmea' de cadastro antigo
+  return base + 'avatar/manejador-' + (fem ? 'f' : 'm') + '.png'
+}
+
+function logoDe(e: ItemMapa): string {
+  return e.fotoUrl ? String(e.fotoUrl) : base + 'avatar/empresa.png'
+}
+
+/** Link do WhatsApp, só se houver número. */
+function zap(n?: string): string {
+  const d = soDig(n)
+  return d.length >= 8 ? 'https://wa.me/' + (d.length <= 11 ? '55' + d : d) : ''
 }
 interface MapaDados {
   cevas: ItemMapa[]; abates: ItemMapa[]; armadilhas: ItemMapa[]
@@ -51,13 +80,37 @@ const FILTROS = [
 type Chave = (typeof FILTROS)[number]['k']
 
 const auth = useAuth()
+const ui = useUi()
 const { server } = useServer()
+/* Caminho dos avatares: respeita a subpasta do Pages. */
+const base = useRuntimeConfig().app.baseURL
 
 const dados = ref<MapaDados | null>(null)
 const rede = ref<Rede | null>(null)
 const props_ = ref<ItemMapa[]>([])
 const erro = ref('')
 const abertos = ref(true)
+const mapaRef = ref<{ enquadrar: () => void; mapa: () => unknown } | null>(null)
+const minhaPos = ref<{ lat: number; lng: number } | null>(null)
+
+/**
+ * ⚠️ Centralizar é BOTÃO, não comportamento. O mapa reenquadrava a cada
+ * redesenho, e como os dados chegam em partes (mapa, propriedades, rede),
+ * cada chegada arrastava a vista de volta enquanto a pessoa olhava outro
+ * canto. Agora ele enquadra uma vez e depois obedece ao dedo.
+ */
+function centralizarEmMim() {
+  if (!navigator.geolocation) { ui.avisar('Seu aparelho não oferece localização', 'erro'); return }
+  navigator.geolocation.getCurrentPosition(
+    (p) => {
+      minhaPos.value = { lat: p.coords.latitude, lng: p.coords.longitude }
+      const m = mapaRef.value?.mapa() as { setView?: (c: [number, number], z: number) => void } | null
+      m?.setView?.([p.coords.latitude, p.coords.longitude], 15)
+    },
+    () => ui.avisar('Não foi possível obter a localização', 'erro'),
+    { enableHighAccuracy: true, timeout: 15000 }
+  )
+}
 
 /* Rede LIGADA por padrão: o mapa da rede é metade da razão de existir desta
    tela, e nascer desligado fazia parecer que as lojas não estavam lá. */
@@ -148,36 +201,98 @@ function balaoCeva(c: ItemMapa) {
   return linhas
 }
 
+interface PinoMapa {
+  lat: number; lng: number; titulo: string; cor: string
+  linhas?: string[]; foto?: string; icone?: string
+  acoes?: Array<{ rotulo: string; url: string }>
+}
+
 const pinos = computed(() => {
   const d = dados.value
-  const out: Array<{ lat: number; lng: number; titulo: string; cor: string; linhas?: string[] }> = []
+  const out: PinoMapa[] = []
   if (!d) return out
 
   const add = (
     l: ItemMapa[], cor: string,
     rot: (i: ItemMapa) => string,
-    detalhe?: (i: ItemMapa) => string[]
+    extra?: (i: ItemMapa) => Partial<PinoMapa>
   ) => {
     for (const i of l) {
       if (!temCoord(i)) continue
-      out.push({
-        lat: num(i.lat)!, lng: num(i.lng)!, titulo: rot(i), cor,
-        linhas: detalhe ? detalhe(i) : undefined
-      })
+      out.push({ lat: num(i.lat)!, lng: num(i.lng)!, titulo: rot(i), cor, ...(extra ? extra(i) : {}) })
     }
   }
 
+  /* ⚠️ Ceva ganhou ÍCONE. Uma bolinha de 8 px sobre imagem de satélite era
+     invisível — o pino em gota, com o mesmo ícone do resto do app, se acha de
+     relance e ainda diz o que é sem abrir o balão. */
   if (ligados.espera) {
-    add(d.cevas || [], '#b8863b', (c) => (c.nome || 'Ceva'), (c) => balaoCeva(c).slice(1))
-    add(d.cevasCompart || [], '#c8a35c', (c) => (c.nome || 'Ceva') + ' · ' + (c.donoNome || ''))
+    add(d.cevas || [], '#b8863b', (c) => (c.nome || 'Ceva'),
+      (c) => ({ icone: 'ceva', linhas: balaoCeva(c).slice(1) }))
+    add(d.cevasCompart || [], '#c8a35c', (c) => (c.nome || 'Ceva') + ' · ' + (c.donoNome || ''),
+      () => ({ icone: 'ceva' }))
+  }
+
+  /* Um pino no centro de cada propriedade: o polígono verde some no verde da
+     mata, e sem ele a área desenhada passa despercebida. */
+  if (ligados.propriedade) {
+    for (const p of props_.value) {
+      const c = centroDe(p)
+      if (!c) continue
+      out.push({ ...c, titulo: p.nome || 'Propriedade', cor: '#2e6b3a', icone: 'areas' })
+    }
+  }
+
+  if (ligados.rotas) {
+    for (const r of tracados.value) {
+      const p = (r.pontos || [])[0]
+      if (!p) continue
+      out.push({ lat: p.lat, lng: p.lng, titulo: r.nome || 'Rota', cor: '#3b6ea5', icone: 'rotas' })
+    }
   }
 
   if (ligados.rede && rede.value) {
-    add(rede.value.empresas || [], '#e8552b', (e) => (e.nome || 'Empresa'))
-    add(rede.value.manejadores || [], '#2f7d3a', (m) => (m.nome || 'Manejador'))
+    add(rede.value.empresas || [], '#e8552b', (e) => (e.nome || 'Empresa'), (e) => ({
+      foto: logoDe(e),
+      linhas: [e.ramo || 'Loja', e.cidade || ''].filter(Boolean),
+      acoes: acoesLoja(e)
+    }))
+    add(rede.value.manejadores || [], '#2f7d3a', (m) => (m.nome || 'Manejador'), (m) => ({
+      foto: avatarDe(m),
+      linhas: [m.cidade || '', m.bio || ''].filter(Boolean),
+      acoes: zap(m.whatsapp || m.telefone)
+        ? [{ rotulo: 'WhatsApp', url: zap(m.whatsapp || m.telefone) }]
+        : []
+    }))
   }
   return out
 })
+
+/**
+ * Botões da loja: WhatsApp e a vitrine.
+ *
+ * ⚠️ O balão do Leaflet é HTML solto, fora do roteador do Nuxt — um link
+ * interno ali recarregaria o app inteiro. Por isso a vitrine vai como URL
+ * absoluta com o `baseURL` na frente, e abre normalmente.
+ */
+function acoesLoja(e: ItemMapa) {
+  const a: Array<{ rotulo: string; url: string }> = []
+  const w = zap(e.whatsapp || e.telefone)
+  if (w) a.push({ rotulo: 'WhatsApp', url: w })
+  a.push({ rotulo: 'Ver loja', url: base + 'loja?empresa=' + encodeURIComponent(e.id) })
+  return a
+}
+
+/** Centro aproximado do limite, para pousar o pino da propriedade. */
+function centroDe(p: ItemMapa): { lat: number; lng: number } | null {
+  if (temCoord(p)) return { lat: num(p.lat)!, lng: num(p.lng)! }
+  const l = p.limite || []
+  if (l.length < 3) return null
+  return {
+    lat: l.reduce((s, x) => s + x.lat, 0) / l.length,
+    lng: l.reduce((s, x) => s + x.lng, 0) / l.length
+  }
+}
 
 const total = computed(() => pinos.value.length + tracados.value.length + limites.value.length)
 
@@ -247,12 +362,23 @@ onMounted(carregar)
 
       <ClientOnly>
         <MapaPontos
+          ref="mapaRef"
           :limites="limites"
           :pinos="pinos"
           :rotas="rotasNoMapa"
+          enquadrar-uma-vez
           altura="62vh"
         />
       </ClientOnly>
+
+      <div class="barra-mapa">
+        <button class="btn" @click="centralizarEmMim">
+          <Icone nome="pino" /> Onde estou
+        </button>
+        <button class="btn sec" @click="mapaRef?.enquadrar()">
+          <Icone nome="mapa" /> Ver tudo
+        </button>
+      </div>
 
       <div v-if="tracados.length" class="card">
         <div class="meta">
@@ -295,6 +421,8 @@ onMounted(carregar)
 .chip.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); font-weight: 600; }
 .chip i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .aviso { color: var(--laranja-esc); margin-top: 8px; }
+.barra-mapa { display: flex; gap: 8px; margin-top: 8px; }
+.barra-mapa .btn { flex: 1; margin: 0; }
 .linha-rota {
   display: block; padding: 8px 0; border-top: 1px solid var(--linha);
   text-decoration: none; color: var(--txt); font-size: 14px;

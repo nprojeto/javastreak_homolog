@@ -57,13 +57,13 @@ const erro = ref('')
 const eu = ref<{ lat: number; lng: number; precisao?: number } | null>(null)
 const erroGps = ref('')
 /**
- * ⚠️ O mapa SEGUE A POSIÇÃO sempre — não há mais botão para ligar e desligar.
- * Ele existia junto com "ver o caminho todo", e os dois eram controles de
- * mapa numa tela que se usa andando, com o celular na mão: quem está no mato
- * quer ver onde está, não administrar enquadramento.
+ * ⚠️ O mapa segue a posição, MAS PARA DE SEGUIR ao primeiro arrasto. Seguir
+ * sempre parecia certo numa tela de guiamento, e é — até a pessoa querer
+ * olhar o que vem adiante: o mapa a puxava de volta a cada passo do GPS. Um
+ * botão "onde estou" religa quando ela quiser.
  *
- * A única exceção continua sendo escolher ponto no mapa, quando seguir
- * brigaria com o dedo — aí `seguir` desliga sozinho.
+ * Escolher ponto no mapa também desliga, pelo mesmo motivo: seguir brigaria
+ * com o dedo.
  */
 const seguir = ref(true)
 
@@ -118,7 +118,17 @@ async function salvarPercurso() {
     ui.avisar('Ande um pouco antes de salvar — o percurso ainda não tem traçado', 'erro')
     return
   }
-  const nome = prompt('Nome do percurso:', 'Percurso de ' + new Date().toLocaleDateString())
+  /**
+   * ⚠️ A propriedade vem do MANEJO, e é obrigatória lá desde a criação. Se
+   * chegar vazia, o problema é de carregamento — avisar agora é muito melhor
+   * que mandar ao servidor e receber uma recusa depois de a pessoa já ter
+   * caminhado e digitado o nome.
+   */
+  if (!g.value?.propriedadeId) {
+    ui.avisar('Não consegui identificar a propriedade desta caçada. Recarregue a tela e tente de novo.', 'erro')
+    return
+  }
+  const nome = prompt('Nome da rota:', 'Percurso de ' + new Date().toLocaleDateString())
   if (nome === null) return
   salvandoPercurso.value = true
   try {
@@ -127,7 +137,7 @@ async function salvarPercurso() {
        fora a caminhada inteira. */
     const r = await server<{ foraDoLimite?: boolean }>('apiCriarRota', {
       nome: nome || 'Percurso',
-      propriedadeId: g.value?.propriedadeId || '',
+      propriedadeId: g.value.propriedadeId,
       pontos: percurso.value,
       origem: 'gps',
       modalidade: 'manejo',
@@ -135,9 +145,9 @@ async function salvarPercurso() {
     })
     gravando.value = false
     if (r?.foraDoLimite) {
-      ui.avisar('Percurso salvo ✔ — parte dele saiu do limite da propriedade')
+      ui.avisar('Rota salva ✔ — parte do percurso saiu do limite da propriedade')
     } else {
-      ui.avisar('Percurso salvo como rota ✔')
+      ui.avisar('Rota salva ✔')
     }
     percurso.value = []
     await carregar()
@@ -537,10 +547,11 @@ onBeforeUnmount(() => {
           @click="salvarPercurso"
         >
           <Icone nome="salvar" />
-          {{ salvandoPercurso ? 'Salvando…' : 'Concluir e salvar percurso' }}
+          {{ salvandoPercurso ? 'Salvando…' : 'Concluir e salvar rota' }}
         </button>
         <div class="meta">
-          Para se livrar deste percurso depois, apague a rota em Rotas.
+          Ao concluir, o percurso vira uma rota. Para se livrar dela depois,
+          apague em Rotas.
         </div>
       </div>
 
@@ -552,6 +563,7 @@ onBeforeUnmount(() => {
           :marcacoes="g.marcacoes || []"
           :eu="eu"
           :seguir="seguir"
+          @arrastou="seguir = false"
           :escolhendo="escolhendo"
           :ponto-novo="pontoNovo"
           :rumo-aparelho="rumoAparelho"
@@ -565,6 +577,11 @@ onBeforeUnmount(() => {
         <div class="meta"><Icone nome="pino" /> Toque no mapa para marcar o ponto.</div>
         <button class="btn sec pequeno" @click="fecharPainel">Cancelar</button>
       </div>
+
+      <!-- Religar o seguimento depois de arrastar o mapa. -->
+      <button v-if="!seguir && !painel" class="btn sec onde" @click="seguir = true">
+        <Icone nome="pino" /> Onde estou
+      </button>
 
       <!-- UM botão: o que registrar se escolhe DENTRO, não antes. -->
       <button v-if="!painel" class="btn registrar" @click="abrirPainel">
@@ -719,6 +736,7 @@ onBeforeUnmount(() => {
 .acoes { display: flex; gap: 8px; margin-top: 12px; }
 .acoes .btn { flex: 1; margin: 0; }
 .registrar { margin-top: 10px; }
+.onde { margin-top: 10px; }
 
 .percurso { border-left: 4px solid var(--linha); margin-bottom: 10px; }
 .percurso.ativo { border-left-color: var(--danger); }

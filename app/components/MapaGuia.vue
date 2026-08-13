@@ -48,7 +48,7 @@ const props = defineProps<{
   alvo?: Ponto | null
 }>()
 
-const emit = defineEmits<{ escolher: [Ponto] }>()
+const emit = defineEmits<{ escolher: [Ponto]; arrastou: [] }>()
 
 /** Cor por tipo de aviso. Perigo e armadilha puxam vermelho de propósito. */
 const COR_MARCA: Record<string, string> = {
@@ -314,6 +314,10 @@ onMounted(async () => {
   camadaNovo = L.featureGroup().addTo(map)
   /* ⚠️ O toque só vira ponto no modo de escolha. Fora dele, tocar no mapa não
      pode marcar nada: quem está andando encosta na tela o tempo todo. */
+  /* ⚠️ `dragstart`, não `move`: `move` dispara também quando o `panTo` do
+     seguimento mexe o mapa, e o seguimento se desligaria sozinho no primeiro
+     passo. `dragstart` só acontece com o dedo. */
+  map.on('dragstart', () => emit('arrastou'))
   map.on('click', (ev: { latlng: { lat: number; lng: number } }) => {
     if (!props.escolhendo) return
     emit('escolher', { lat: ev.latlng.lat, lng: ev.latlng.lng })
