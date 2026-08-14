@@ -71,7 +71,47 @@ const salvando = ref(false)
 
 /* Com ceva escolhida, o local do abate é o da ceva — o servidor sobrescreve. */
 const mostraLocal = computed(() => !cevaId.value)
-const podeTempoReal = computed(() => !!cevaId.value)
+
+/**
+ * ⚠️ O TEMPO REAL NÃO DEPENDE MAIS DA CEVA. Antes o bloco de condições só
+ * aparecia com ceva escolhida, e o abate de caçada livre ou de rota nem via a
+ * opção — caía calado no preenchimento à mão, com `condFonte: 'manual'` num
+ * registro que podia ter sido medido. Agora basta haver COORDENADA: o
+ * `apiClimaPonto` consulta o MET Norway por lat/lng.
+ */
+const temPonto = computed(() => !!(Number(lat.value) || Number(lng.value)))
+const podeTempoReal = computed(() => !!cevaId.value || temPonto.value)
+
+/**
+ * ── ONDE O ABATE ENTRA ──
+ *
+ * Uma pergunta só, no lugar de dois seletores (ceva e rota) que podiam ser
+ * preenchidos ao mesmo tempo sem que nada avisasse. As opções são as da
+ * propriedade daquela caçada, mais o percurso em gravação quando houver.
+ */
+const onde = ref('')
+
+const opcoesOnde = computed(() => {
+  const o: Array<{ valor: string; rotulo: string }> = []
+  if (route.query.percurso === '1') {
+    o.push({ valor: 'p', rotulo: 'No percurso que estou gravando' })
+  }
+  for (const c of m.value?.cevas || []) o.push({ valor: 'c:' + c.id, rotulo: 'Ceva: ' + (c.nome || 'ceva') })
+  for (const r of m.value?.rotas || []) o.push({ valor: 'r:' + r.id, rotulo: 'Rota: ' + (r.nome || 'rota') })
+  o.push({ valor: '', rotulo: 'Solto na propriedade' })
+  return o
+})
+
+/**
+ * ⚠️ `onde` MANDA em `cevaId` e `rotaId`, e não o contrário. Deixar os três
+ * livres permitiria gravar um abate com ceva E rota ao mesmo tempo, o que o
+ * relatório do IBAMA não sabe representar.
+ */
+watch(onde, (v) => {
+  cevaId.value = v.startsWith('c:') ? v.slice(2) : ''
+  rotaId.value = v.startsWith('r:') ? v.slice(2) : ''
+  if (modo.value === 'tempoReal') verClima()
+})
 
 function agoraLocal() {
   const d = new Date()
@@ -151,11 +191,25 @@ onMounted(() => {
   }
 })
 
-/* A ceva vinda do painel de campo, aplicada quando a lista já existe. */
+/**
+ * O que veio do mapa da caçada, aplicado quando as listas já existem.
+ *
+ * ⚠️ Escreve em `onde`, não em `cevaId`: é `onde` que manda nos dois campos, e
+ * mexer neles por fora deixaria o seletor mostrando uma coisa e o registro
+ * gravando outra.
+ */
 watch(m, (v) => {
-  const pre = String(route.query.ceva || '')
-  if (!pre || !v) return
-  if ((v.cevas || []).some((c) => String(c.id) === pre)) cevaId.value = pre
+  if (!v || onde.value) return
+  const ceva = String(route.query.ceva || '')
+  const rota = String(route.query.rota || '')
+  if (ceva && (v.cevas || []).some((c) => String(c.id) === ceva)) { onde.value = 'c:' + ceva; return }
+  if (rota && (v.rotas || []).some((r) => String(r.id) === rota)) { onde.value = 'r:' + rota; return }
+  if (route.query.percurso === '1') { onde.value = 'p'; return }
+  /* Um item só na propriedade: escolher por ela poupa um toque e não esconde
+     nada — o seletor continua à vista, mostrando o que foi escolhido. */
+  const cs = v.cevas || [], rs = v.rotas || []
+  if (cs.length === 1 && !rs.length) onde.value = 'c:' + cs[0]!.id
+  else if (rs.length === 1 && !cs.length) onde.value = 'r:' + rs[0]!.id
 }, { immediate: true })
 watch(modo, (v) => { if (v === 'tempoReal') verClima() })
 
@@ -207,7 +261,11 @@ async function salvar() {
   if (!m.value) { ui.avisar('Sem caçada', 'erro'); return }
   if (!dataHora.value) { ui.avisar('Informe data e hora', 'erro'); return }
   if (m.value.tipo === 'ceva' && !cevaId.value) { ui.avisar('Escolha a ceva do abate', 'erro'); return }
-  if (m.value.tipo === 'rota' && !rotaId.value) { ui.avisar('Escolha a rota do abate', 'erro'); return }
+  /* ⚠️ A exigência de rota vale só quando a caçada É de rota e existe rota
+     para escolher — numa caçada livre o abate pode ser solto na propriedade. */
+  if (m.value.tipo === 'rota' && (m.value.rotas || []).length && !rotaId.value) {
+    ui.avisar('Escolha a rota do abate', 'erro'); return
+  }
 
   const d: Record<string, unknown> = {
     manejoId: m.value.id, cevaId: cevaId.value, rotaId: rotaId.value,
@@ -264,22 +322,19 @@ async function salvar() {
           Caçada: <b>{{ m.nome }}</b> · {{ m.tipo }}
         </div>
 
-        <template v-if="(m.cevas || []).length">
-          <label for="ab_ceva">Ceva{{ m.tipo === 'ceva' ? ' *' : '' }}</label>
-          <select id="ab_ceva" v-model="cevaId">
-            <option value="">Selecione…</option>
-            <option v-for="c in m.cevas" :key="c.id" :value="c.id">{{ c.nome }}</option>
-          </select>
-
-        </template>
-
-        <template v-if="(m.rotas || []).length">
-          <label for="ab_rota">Rota{{ m.tipo === 'rota' ? ' *' : '' }}</label>
-          <select id="ab_rota" v-model="rotaId">
-            <option value="">Selecione…</option>
-            <option v-for="r in m.rotas" :key="r.id" :value="r.id">{{ r.nome }}</option>
-          </select>
-        </template>
+        <!--
+          ⚠️ UMA pergunta, não duas. Ceva e rota eram seletores separados e
+          nada impedia preencher os dois — um abate com ceva E rota, que o
+          relatório do IBAMA não sabe representar.
+        -->
+        <label for="ab_onde">Onde foi o abate *</label>
+        <select id="ab_onde" v-model="onde">
+          <option v-for="o in opcoesOnde" :key="o.valor" :value="o.valor">{{ o.rotulo }}</option>
+        </select>
+        <div v-if="onde === 'p'" class="meta">
+          O percurso ainda está sendo gravado, então o abate fica solto na
+          propriedade e guarda a coordenada de onde você está.
+        </div>
 
         <label for="ab_quem">Quem abateu *</label>
         <select id="ab_quem" v-model="quem">
@@ -294,15 +349,15 @@ async function salvar() {
         <h3>Condições</h3>
         <div class="modos">
           <button :class="{ on: modo === 'passado' }" @click="modo = 'passado'">
-            <Icone nome="calendario" />️ Aconteceu antes
+            <Icone nome="calendario" /> Aconteceu antes
           </button>
           <button :class="{ on: modo === 'tempoReal' }" @click="modo = 'tempoReal'">
-            ⏱ Agora (tempo real)
+            <Icone nome="relogio" /> Agora (tempo real)
           </button>
         </div>
 
         <template v-if="modo === 'tempoReal'">
-          <div v-if="buscandoClima" class="meta">Consultando o tempo na ceva…</div>
+          <div v-if="buscandoClima" class="meta">Consultando o tempo na propriedade…</div>
           <div v-else-if="clima?.ok" class="clima">
             <div><b>{{ clima.condicaoTempo }}</b> · {{ clima.luaFase }}</div>
             <div class="meta no-i18n">
@@ -311,7 +366,8 @@ async function salvar() {
               chuva {{ clima.chuvaProb }}%
             </div>
             <div class="meta">
-              Data, hora, lua e clima são gravados pelo servidor. Fonte: MET Norway.
+              Data, hora, lua e clima são gravados pelo servidor, medidos no
+              ponto do abate. Fonte: MET Norway.
             </div>
           </div>
           <div v-else class="meta ruim">

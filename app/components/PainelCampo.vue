@@ -348,11 +348,18 @@ async function salvarEvento() {
 function irDiretoAoAbate() {
   const q: Record<string, string> = { manejo: props.manejoId }
   if (eu.value) { q.lat = eu.value.lat.toFixed(6); q.lng = eu.value.lng.toFixed(6) }
-  /* Com UMA ceva só, ela vai junto — o servidor grava o ponto dela e o clima
-     em tempo real sai da coordenada certa. Com várias, quem escolhe é a tela
-     do abate, que já tem o seletor. */
-  const cs = g.value?.cevas || []
-  if (cs.length === 1) q.ceva = String(cs[0]!.id)
+  /**
+   * ⚠️ Gravando percurso, isso vai junto — a tela do abate oferece "no
+   * percurso que estou gravando" como opção. Sem o aviso, a pessoa teria de
+   * lembrar sozinha que estava gravando.
+   */
+  if (gravando.value) q.percurso = '1'
+  /* Com UM item só na propriedade, ele vai escolhido: poupa um toque e o
+     clima em tempo real sai da coordenada certa. Com vários, quem escolhe é
+     a tela do abate, que tem o seletor. */
+  const cs = g.value?.cevas || [], rs = g.value?.rotas || []
+  if (cs.length === 1 && !rs.length) q.ceva = String(cs[0]!.id)
+  else if (rs.length === 1 && !cs.length) q.rota = String(rs[0]!.id)
   navigateTo({ path: '/abate', query: q })
 }
 
@@ -361,7 +368,11 @@ function irParaAbate() {
   const p = pontoNovo.value || eu.value
   const q: Record<string, string> = { manejo: props.manejoId }
   if (p) { q.lat = p.lat.toFixed(6); q.lng = p.lng.toFixed(6) }
+  /* O "onde" já escolhido no painel viaja junto — a tela do abate não repete
+     a pergunta que a pessoa acabou de responder. */
   if (ondeNovo.value.startsWith('c:')) q.ceva = ondeNovo.value.slice(2)
+  else if (ondeNovo.value.startsWith('r:')) q.rota = ondeNovo.value.slice(2)
+  else if (ondeNovo.value === '__percurso') q.percurso = '1'
   navigateTo({ path: '/abate', query: q })
 }
 
