@@ -204,7 +204,19 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 
 .palco { position: relative; }
 /* `touch-action: none`: o gesto é do mapa, não da página. */
-.mapa { height: 46vh; min-height: 260px; border-radius: 12px; border: 1px solid var(--linha); touch-action: none; }
+/**
+ * ⚠️ `position: relative` + `isolation` + `overflow: hidden` NO ELEMENTO DO
+ * MAPA. O CSS do Leaflet não posiciona `.leaflet-container`, e os controles
+ * dele são `position: absolute` com `z-index: 1000` — sem um ancestral
+ * posicionado aqui, eles se prendem ao primeiro que existir acima e aparecem
+ * FORA do mapa, por cima do resto da tela. `isolation` fecha o contexto de
+ * empilhamento para que aquele 1000 não dispute com nada da página, e o
+ * `overflow` mantém as telhas dentro dos cantos arredondados.
+ */
+.mapa {
+  position: relative; isolation: isolate; overflow: hidden;
+  height: 46vh; min-height: 260px; border-radius: 12px; border: 1px solid var(--linha); touch-action: none;
+}
 .mira {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   pointer-events: none; z-index: 500;

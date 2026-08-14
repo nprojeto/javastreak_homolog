@@ -317,6 +317,16 @@ watch(() => [props.limites, props.rotas, props.cevas, props.marcacoes], desenhar
 watch(() => [props.eu, props.rumoAparelho, props.alvo], desenharEu, { deep: true })
 watch(() => props.pontoNovo, desenharNovo, { deep: true })
 
+/**
+ * ⚠️ `invalidateSize` quando o modo de escolha entra ou sai. Ligá-lo insere um
+ * aviso logo abaixo do mapa e muda a altura disponível na tela; sem recalcular,
+ * o Leaflet continua com as medidas antigas e desenha telha e marcador fora do
+ * lugar — o que aparece como mapa "vazando" por cima do que vem depois.
+ */
+watch(() => props.escolhendo, () => {
+  setTimeout(() => map?.invalidateSize(), 60)
+})
+
 onMounted(async () => {
   const L = await carregarLeaflet()
   if (!el.value) return
@@ -372,6 +382,18 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 <style scoped>
 /* ⚠️ `touch-action: none` entrega o gesto ao Leaflet. Sem isso o navegador
    disputa a pinça com o mapa e acaba zoomando a página. */
-.mapa { border-radius: 12px; border: 1px solid var(--linha); touch-action: none; }
+/**
+ * ⚠️ `position: relative` + `isolation` + `overflow: hidden` NO ELEMENTO DO
+ * MAPA. O CSS do Leaflet não posiciona `.leaflet-container`, e os controles
+ * dele são `position: absolute` com `z-index: 1000` — sem um ancestral
+ * posicionado aqui, eles se prendem ao primeiro que existir acima e aparecem
+ * FORA do mapa, por cima do resto da tela. `isolation` fecha o contexto de
+ * empilhamento para que aquele 1000 não dispute com nada da página, e o
+ * `overflow` mantém as telhas dentro dos cantos arredondados.
+ */
+.mapa {
+  position: relative; isolation: isolate; overflow: hidden;
+  border-radius: 12px; border: 1px solid var(--linha); touch-action: none;
+}
 .mapa.escolhendo { border-color: var(--laranja-cl); box-shadow: 0 0 0 2px rgba(255, 122, 26, .25); cursor: crosshair; }
 </style>

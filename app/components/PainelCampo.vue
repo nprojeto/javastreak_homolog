@@ -654,10 +654,14 @@ onBeforeUnmount(() => {
 .centralizar {
   position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
   z-index: 500; display: flex; align-items: center; gap: 6px;
-  background: rgba(32, 30, 23, .82); color: var(--osso);
+  background: rgba(32, 30, 23, .94); color: var(--osso);
   border: 1px solid var(--linha); border-radius: 999px;
   padding: 8px 16px; font: inherit; font-size: 12.5px; font-weight: 700;
-  cursor: pointer; backdrop-filter: blur(3px);
+  cursor: pointer;
+  /* ⚠️ SEM `backdrop-filter`. Ele deixava o botão mais bonito e é conhecido
+     por causar artefato de repintura no Safari do iOS: o navegador recompõe a
+     camada e o mapa aparece borrado por cima do que vem depois. Um fundo
+     opaco custa nada e não tem esse risco. */
   box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
 }
 .centralizar:active { background: rgba(32, 30, 23, .95); }
