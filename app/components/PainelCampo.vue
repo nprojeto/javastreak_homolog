@@ -161,7 +161,29 @@ function pontoDoPercurso(p: { lat: number; lng: number }) {
   percurso.value = [...percurso.value, { lat: p.lat, lng: p.lng }]
 }
 
+/**
+ * ⚠️ SÓ COMEÇA DENTRO DO LIMITE. O percurso vira uma rota da propriedade, e
+ * rota que nasce fora dela não é rota daquela propriedade — é caminhada de
+ * chegada, estrada, o percurso do carro até a porteira. Deixar gravar de
+ * qualquer lugar encheria as Rotas de traçados que não servem a ninguém.
+ *
+ * ⚠️ O que já está gravando NÃO é interrompido ao sair do limite: divisa com
+ * sinal ruim é rotina, e cortar a gravação no meio perderia a caminhada. É a
+ * mesma escolha do salvamento, que avisa e salva em vez de recusar.
+ */
+const podeGravar = computed(() => {
+  const ls = (g.value?.limites || []).filter((l) => (l.limite || []).length >= 3)
+  /* Sem posição ou sem limite desenhado, não há como afirmar que está fora —
+     e travar por falta de informação seria pior que não travar. */
+  if (!eu.value || !ls.length) return true
+  return ls.some((l) => pontoDentro(eu.value!, l.limite))
+})
+
 function comecarPercurso() {
+  if (!podeGravar.value) {
+    ui.avisar('Você está fora do limite da propriedade. Entre nela para começar a gravar.', 'erro')
+    return
+  }
   percurso.value = []
   gravando.value = true
   ui.avisar('Gravando o percurso — ele vira uma rota ao concluir')
@@ -544,6 +566,11 @@ onBeforeUnmount(() => {
           mesma coisa. O abate ganhou botão próprio porque é o registro que
           mais se procura depois que acontece.
         -->
+        <div v-if="!podeGravar && !painel" class="meta fora-limite">
+          <Icone nome="alerta" /> Você está fora do limite da propriedade —
+          o percurso só começa lá dentro.
+        </div>
+
         <div v-if="!painel" class="acoes-campo">
           <button class="btn sec" @click="abrirPainel">
             <Icone nome="adicionar" /> Registrar evento
@@ -551,8 +578,13 @@ onBeforeUnmount(() => {
           <button class="btn" @click="irDiretoAoAbate">
             <img src="/marca/javali-branco.png" class="ic-javali" alt=""> Registrar abate
           </button>
-          <button v-if="!gravando" class="btn sec" @click="comecarPercurso">
-            <Icone nome="rotas" /> Gravar novo percurso
+          <button
+            v-if="!gravando"
+            class="btn sec"
+            :class="{ off: !podeGravar }"
+            @click="comecarPercurso"
+          >
+            <Icone :nome="podeGravar ? 'rotas' : 'bloqueio'" /> Gravar novo percurso
           </button>
         </div>
       </template>
@@ -685,6 +717,9 @@ onBeforeUnmount(() => {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
 .ic-javali { width: 20px; height: 20px; object-fit: contain; }
+/* Continua clicável: o toque explica o motivo em vez de não fazer nada. */
+.acoes-campo .btn.off { opacity: .5; border-style: dashed; }
+.fora-limite { margin: 10px 4px 0; color: var(--alerta); }
 
 .percurso { margin-top: 10px; border-left: 4px solid var(--danger); }
 .percurso .linha { display: flex; align-items: center; gap: 10px; }

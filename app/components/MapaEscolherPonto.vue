@@ -121,11 +121,22 @@ onMounted(async () => {
   camada = L.featureGroup().addTo(map)
   await desenharLimite()
 
-  /* Se não veio ponto e há limite, abre enquadrando a propriedade — é onde a
-     pessoa vai marcar, e poupa procurar o lugar no mapa do Brasil inteiro. */
-  if (!temInicial && (props.limite || []).length >= 3) {
-    const b = L.latLngBounds((props.limite || []).map((p) => [p.lat, p.lng] as [number, number]))
-    map.fitBounds(b, { padding: [24, 24], maxZoom: 17 })
+  /**
+   * ⚠️ COM LIMITE, ele manda no enquadramento — mesmo havendo ponto inicial.
+   * Antes o limite só era usado quando não havia ponto, e o mapa abria
+   * apertado numa coordenada solta, sem mostrar a divisa: quem ia corrigir o
+   * ponto não via em relação a quê.
+   *
+   * O ponto inicial não se perde: ele continua no centro se estiver dentro do
+   * limite, e o `fitBounds` mostra os dois quando estiver fora.
+   */
+  const lim = props.limite || []
+  if (lim.length >= 3) {
+    const pts = lim.map((p) => [p.lat, p.lng] as [number, number])
+    if (temInicial) pts.push([la, ln])
+    map.fitBounds(L.latLngBounds(pts), { padding: [24, 24], maxZoom: 17 })
+    /* Recentra no ponto escolhido, mantendo o zoom que mostra a propriedade. */
+    if (temInicial) map.setView([la, ln], map.getZoom())
   }
 
   map.on('move', atualizarCentro)

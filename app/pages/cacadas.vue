@@ -23,9 +23,16 @@ export interface Manejo {
   avistamentos?: number | null; donoNome?: string; souDono?: boolean
   abates?: { registros: number; animais: number }
   participantes?: Array<{ id: string; nome: string; dono?: boolean }>
-  cevas?: Array<{ id: string; nome: string }>
-  rotas?: Array<{ id: string; nome: string }>
-  propriedade?: { id: string; nome: string } | null
+  /* `atribuida` separa o que foi escolhido na criação do que existe na
+     propriedade — o servidor devolve os dois. */
+  cevas?: Array<{ id: string; nome: string; atribuida?: boolean }>
+  rotas?: Array<{ id: string; nome: string; atribuida?: boolean }>
+  /* O limite vem junto: é ele que enquadra o mapa de escolher ponto. */
+  propriedade?: {
+    id: string; nome: string
+    limite?: Array<{ lat: number; lng: number }>
+    temLimite?: boolean
+  } | null
 }
 interface Convite {
   id: string; manejoNome?: string; tipo?: string; donoNome?: string; criadoEm?: string

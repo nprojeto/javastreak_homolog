@@ -454,7 +454,17 @@ async function salvar() {
         <input id="ab_comp" v-model="comprimento" inputmode="decimal">
 
         <template v-if="mostraLocal">
-          <BotaoGps v-model:lat="lat" v-model:lng="lng" />
+          <!--
+            ⚠️ O LIMITE VAI AO MAPA. Sem ele o "indicar no mapa" abria no
+            Brasil inteiro, e nada avisava quando o ponto caía fora da divisa
+            da propriedade daquela caçada.
+          -->
+          <BotaoGps
+            v-model:lat="lat"
+            v-model:lng="lng"
+            :limite="m.propriedade?.limite || []"
+            :nome-limite="m.propriedade?.nome"
+          />
         </template>
         <div v-else class="meta local"><Icone nome="pino" /> O local do abate é o da ceva escolhida.</div>
 
