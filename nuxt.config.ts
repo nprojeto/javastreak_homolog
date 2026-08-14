@@ -115,7 +115,7 @@ export default defineNuxtConfig({
        * Ver app/composables/useMarca.ts.
        */
       marca: process.env.NUXT_PUBLIC_MARCA || 'javastreak',
-      appVer: 'vJS.140826.1245',
+      appVer: 'vJS.140826.1444',
       ambiente: 'homologacao'
     }
   },

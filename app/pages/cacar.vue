@@ -144,10 +144,16 @@ onMounted(async () => {
     -->
     <h3 class="etapa">Preparação</h3>
 
+    <!--
+      ⚠️ O CTF fica com o SELO e perde a descrição de estado: "Em dia" aparecia
+      duas vezes no mesmo cartão, no texto e no selo. Quem carrega o estado é o
+      selo, que se lê de relance; a descrição volta a dizer o que o cartão FAZ.
+      Quando falta algo, ela diz o que fazer, que o selo não cabe.
+    -->
     <CartaoModulo
       icone="documentos"
       titulo="CTF"
-      :descricao="reqCtf.texto"
+      :descricao="ctfOk ? 'Seu registro no IBAMA' : reqCtf.texto"
       para="/ctf"
       :selo="cred.dados ? (ctfOk ? 'EM DIA' : 'PENDENTE') : undefined"
       :selo-tipo="ctfOk ? 'ok' : 'danger'"
@@ -159,12 +165,10 @@ onMounted(async () => {
       para="/propriedades"
       :travado="bloqueio"
       para-destravar="/ctf"
-      :selo="carregado && !bloqueio ? (temProp ? 'PRONTA' : 'PENDENTE') : undefined"
-      :selo-tipo="temProp ? 'ok' : 'danger'"
     />
     <CartaoModulo
       icone="ceva"
-      titulo="Espera (ceva)"
+      titulo="Ceva"
       :descricao="descCevas"
       para="/espera"
       :travado="bloqueio"

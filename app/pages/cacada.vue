@@ -42,6 +42,46 @@ const amigos = ref<Amigo[] | null>(null)
 const erro = ref('')
 
 const aba = ref<'abates' | 'amigos' | 'docs'>('abates')
+
+/**
+ * ── DOCUMENTAÇÃO DA CAÇADA ──
+ *
+ * ⚠️ A aba EXISTIA E ESTAVA VAZIA: o botão abria e não mostrava nada. Em campo
+ * é onde a fiscalização pede o papel, e é a hora em que o app tem que
+ * entregar — inclusive para o convidado, porque a autorização que ampara a
+ * caçada é a do DONO, não a de quem foi convidado.
+ */
+interface DocManejo {
+  id: string; tipo: string; numero?: string; categoria?: string
+  vencimento?: string; arquivoNome?: string; deNome?: string; souEu?: boolean
+}
+const docs = ref<DocManejo[] | null>(null)
+const abrindoDoc = ref('')
+
+async function carregarDocs() {
+  try {
+    const r = await server<{ documentos?: DocManejo[] }>('apiDocumentosDoManejo', id.value)
+    docs.value = r?.documentos || []
+  } catch {
+    docs.value = []
+  }
+}
+
+async function abrirDoc(d: DocManejo) {
+  abrindoDoc.value = d.id
+  try {
+    /* ⚠️ A URL é assinada e temporária, e a checagem de acesso acontece de
+       novo no servidor — a lista não é passe livre. */
+    const r = await server<{ url?: string }>('apiAbrirDocumento', d.id)
+    if (r?.url) window.open(r.url, '_blank')
+    else ui.avisar('Não foi possível abrir o documento', 'erro')
+  } catch { /* já avisado */ } finally {
+    abrindoDoc.value = ''
+  }
+}
+
+/* Só busca quando a aba abre: em campo, cada chamada custa bateria e sinal. */
+watch(aba, (v) => { if (v === 'docs' && docs.value === null) carregarDocs() })
 const loginAmigo = ref('')
 const convidando = ref(false)
 
@@ -128,7 +168,11 @@ onMounted(carregar)
       </div>
 
       <div class="tabs">
-        <button :class="{ on: aba === 'abates' }" @click="aba = 'abates'"><Icone nome="abate" /> Abates</button>
+        <!-- ⚠️ O javali da marca, em LARANJA: a aba não é botão laranja, então
+             a versão branca sumiria no fundo escuro. -->
+        <button :class="{ on: aba === 'abates' }" @click="aba = 'abates'">
+          <img src="/marca/javastreak-simbolo.png" class="ic-aba" alt=""> Abates
+        </button>
         <button :class="{ on: aba === 'amigos' }" @click="aba = 'amigos'"><Icone nome="amigos" /> Amigos</button>
         <button :class="{ on: aba === 'docs' }" @click="aba = 'docs'"><Icone nome="documentos" /> Documentação</button>
       </div>
@@ -140,7 +184,7 @@ onMounted(carregar)
           <div class="meta">Nenhum abate registrado nesta caçada.</div>
         </div>
         <div v-for="a in abates || []" :key="a.id" class="card linha">
-          <span class="ic"><Icone nome="abate" /></span>
+          <span class="ic"><img src="/marca/javastreak-simbolo.png" class="ic-abate" alt=""></span>
           <div class="grow">
             <b>{{ a.quantidade || 1 }} · {{ a.sexo || '—' }}</b>
             <div class="meta no-i18n">
@@ -206,25 +250,41 @@ onMounted(carregar)
             <div v-if="prop.car" class="meta no-i18n">CAR: {{ prop.car }}</div>
 
             <div class="aut" :class="{ falta: !prop.autManejo || prop.autManejo.vencido }">
-              <b>Autorização de Acesso</b>
-              <div class="meta no-i18n">
-                <template v-if="prop.autManejo">
-                  nº {{ prop.autManejo.numero || '—' }} · vence
-                  {{ dataBR(prop.autManejo.vencimento) }}
-                </template>
-                <template v-else>não cadastrada</template>
+              <div class="grow">
+                <b>Autorização de Acesso</b>
+                <div class="meta no-i18n">
+                  <template v-if="prop.autManejo">
+                    nº {{ prop.autManejo.numero || '—' }} · vence
+                    {{ dataBR(prop.autManejo.vencimento) }}
+                  </template>
+                  <template v-else>não cadastrada</template>
+                </div>
               </div>
+              <button
+                v-if="prop.autManejo?.temArquivo"
+                class="ver"
+                :disabled="abrindoDoc === prop.autManejo.id"
+                @click="abrirDoc({ id: prop.autManejo.id || '', tipo: 'Autorização de Acesso' })"
+              >{{ abrindoDoc === prop.autManejo.id ? '…' : 'Ver' }}</button>
             </div>
 
             <div class="aut" :class="{ falta: !prop.autIbama || prop.autIbama.vencido }">
-              <b>Autorização do IBAMA</b>
-              <div class="meta no-i18n">
-                <template v-if="prop.autIbama">
-                  nº {{ prop.autIbama.numero || '—' }} · vence
-                  {{ dataBR(prop.autIbama.vencimento) }}
-                </template>
-                <template v-else>não cadastrada</template>
+              <div class="grow">
+                <b>Autorização do IBAMA</b>
+                <div class="meta no-i18n">
+                  <template v-if="prop.autIbama">
+                    nº {{ prop.autIbama.numero || '—' }} · vence
+                    {{ dataBR(prop.autIbama.vencimento) }}
+                  </template>
+                  <template v-else>não cadastrada</template>
+                </div>
               </div>
+              <button
+                v-if="prop.autIbama?.temArquivo"
+                class="ver"
+                :disabled="abrindoDoc === prop.autIbama.id"
+                @click="abrirDoc({ id: prop.autIbama.id || '', tipo: 'Autorização do IBAMA' })"
+              >{{ abrindoDoc === prop.autIbama.id ? '…' : 'Ver' }}</button>
             </div>
           </div>
 
@@ -235,6 +295,38 @@ onMounted(carregar)
             />
           </ClientOnly>
         </template>
+
+        <!--
+          ⚠️ Documentos de TODOS os que estão na caçada, não só os seus. É a
+          autorização do dono que ampara quem foi convidado, e é ela que a
+          fiscalização pede — o convidado precisa alcançá-la em campo.
+        -->
+        <h3 class="sub">Documentos de quem está na caçada</h3>
+        <div v-if="docs === null" class="card"><div class="meta">Carregando…</div></div>
+        <div v-else-if="!docs.length" class="card">
+          <div class="meta">
+            Nenhum documento com arquivo anexado.
+            <template v-if="!aberta"> A caçada está encerrada, e o acesso aos
+            documentos dos outros fecha junto com ela.</template>
+          </div>
+        </div>
+        <div
+          v-for="d in docs || []"
+          :key="d.id"
+          class="card doc"
+          :class="{ 'de-outro': !d.souEu }"
+        >
+          <div class="grow">
+            <b class="no-i18n">{{ d.tipo }}</b>
+            <div class="meta no-i18n">
+              {{ d.deNome }}<template v-if="d.numero"> · nº {{ d.numero }}</template>
+              <template v-if="d.vencimento"> · vence {{ dataBR(d.vencimento) }}</template>
+            </div>
+          </div>
+          <button class="ver" :disabled="abrindoDoc === d.id" @click="abrirDoc(d)">
+            {{ abrindoDoc === d.id ? '…' : 'Ver' }}
+          </button>
+        </div>
       </template>
 
       <!--
@@ -250,6 +342,28 @@ onMounted(carregar)
 
 <style scoped>
 h3 { margin: 0 0 4px; }
+/* O javali da marca já é laranja: dentro da aba e da lista ele vai como está. */
+.ic-aba { width: 18px; height: 18px; object-fit: contain; vertical-align: -3px; margin-right: 3px; }
+.ic-abate { width: 22px; height: 22px; object-fit: contain; }
+
+.doc { display: flex; align-items: center; gap: 10px; }
+.doc .grow { flex: 1; min-width: 0; }
+.doc b { font-size: 14px; }
+.doc .meta { margin: 2px 0 0; }
+.doc .ver {
+  flex: none; border: 1px solid var(--linha); background: none; color: var(--laranja-cl);
+  font: inherit; font-size: 11.5px; font-weight: 700;
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+}
+.de-outro { border-left: 3px solid var(--verde); }
+.aut { display: flex; align-items: center; gap: 10px; }
+.aut .grow { flex: 1; min-width: 0; }
+.aut .ver {
+  flex: none; border: 1px solid var(--linha); background: none; color: var(--laranja-cl);
+  font: inherit; font-size: 11.5px; font-weight: 700;
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+}
+.sub { margin: 16px 4px 8px; font-size: 14px; }
 .ruim { color: var(--danger); }
 .cab.aberta { border-left: 5px solid var(--danger); }
 .cab .meta { margin: 4px 0 0; }
