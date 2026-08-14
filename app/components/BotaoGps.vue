@@ -26,6 +26,15 @@ const props = defineProps<{
   limite?: Ponto[]
   /** Nome do limite, para o aviso dentro do mapa. */
   nomeLimite?: string
+  /**
+   * Esconde os campos de latitude e longitude, mostrando só o ponto escolhido.
+   *
+   * ⚠️ Digitar coordenada à mão é caminho para erro caro: um dígito trocado
+   * põe o abate a quilômetros de distância, e é dele que sai a consulta de
+   * tempo e a conferência de limite. Onde o ponto vem do mapa ou do GPS, os
+   * campos não precisam existir.
+   */
+  semCampos?: boolean
 }>()
 
 const lat = defineModel<string>('lat', { default: '' })
@@ -91,7 +100,7 @@ function pegarGps() {
 </script>
 
 <template>
-  <div class="two">
+  <div v-if="!props.semCampos" class="two">
     <div>
       <label>Latitude *</label>
       <input v-model="lat" inputmode="decimal">
@@ -100,6 +109,15 @@ function pegarGps() {
       <label>Longitude *</label>
       <input v-model="lng" inputmode="decimal">
     </div>
+  </div>
+
+  <!-- Sem os campos, o ponto ainda precisa estar à vista para conferência. -->
+  <div v-else class="ponto-atual">
+    <template v-if="lat || lng">
+      <Icone nome="pino" :px="15" />
+      <b class="no-i18n">{{ Number(lat).toFixed(5) }}, {{ Number(lng).toFixed(5) }}</b>
+    </template>
+    <span v-else class="meta">Nenhum ponto marcado ainda.</span>
   </div>
   <div class="acoes">
     <button type="button" class="btn gps" :disabled="buscando" @click="pegarGps">
@@ -143,5 +161,11 @@ function pegarGps() {
 .acoes { display: flex; gap: 8px; }
 .acoes .btn { margin: 6px 0 0; }
 .no-mapa { margin: 8px 0 0; width: 100%; }
+.ponto-atual {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--carvao-3); border-radius: 10px; padding: 9px 12px;
+  font-size: 13px;
+}
+.ponto-atual .meta { margin: 0; }
 .meta { margin-top: 6px; }
 </style>

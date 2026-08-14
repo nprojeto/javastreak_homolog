@@ -43,7 +43,7 @@ interface Guia {
 const { server } = useServer()
 const ui = useUi()
 const {
-  graus: rumoAparelho, erro: erroBussola,
+  graus: rumoAparelho, fonte: fonteBussola, precisaPermissao, erro: erroBussola,
   iniciar: iniciarBussola, pedirPermissao, daPosicao: rumoDoGps
 } = useBussola()
 
@@ -61,19 +61,31 @@ const {
  * abrir o filtro. O pop-up nativo aparece nesse instante, e nenhum botão
  * precisou existir para isso.
  */
-let pediuBussola = false
+/**
+ * ⚠️ O TOQUE-INVISÍVEL NÃO BASTOU. Pendurar `requestPermission()` no primeiro
+ * toque da tela parecia elegante, mas falhava calado: o Safari só aceita o
+ * pedido em alguns tipos de gesto, e um toque para rolar costuma não valer —
+ * a pessoa ficava sem bússola sem saber por quê, e sem nada para tocar.
+ *
+ * Agora há um botão de verdade, flutuando sobre o mapa. Ele SOME assim que a
+ * bússola responde, então não estorva quem já autorizou.
+ */
+const pedindoBussola = ref(false)
 
-function pedirBussolaNoPrimeiroToque() {
-  if (pediuBussola) return
-  pediuBussola = true
-  /* `once` e `passive`: um disparo só, e sem atrapalhar a rolagem. */
-  const alvo = () => {
-    pedirPermissao().catch(() => { /* recusou: o mapa continua servindo */ })
-    document.removeEventListener('pointerdown', alvo)
-    document.removeEventListener('touchstart', alvo)
+const precisaAtivarBussola = computed(() =>
+  /* Some quando o sensor responde — mesmo que a permissão nunca tenha sido
+     pedida, que é o caso do Android. */
+  fonteBussola.value !== 'sensor' && (precisaPermissao.value || rumoAparelho.value === null))
+
+async function ativarBussola() {
+  pedindoBussola.value = true
+  try {
+    await pedirPermissao()
+  } catch {
+    /* Recusou ou o aparelho não tem sensor: o mapa continua servindo. */
+  } finally {
+    pedindoBussola.value = false
   }
-  document.addEventListener('pointerdown', alvo, { once: true, passive: true })
-  document.addEventListener('touchstart', alvo, { once: true, passive: true })
 }
 
 const mapaRef = ref<{ centralizar: (z?: number) => void; enquadrar: () => void } | null>(null)
@@ -444,7 +456,6 @@ onMounted(() => {
   /* O diálogo nativo do GPS aparece aqui, sem intermediário. */
   ligarGps()
   travarTela()
-  pedirBussolaNoPrimeiroToque()
 })
 
 onBeforeUnmount(() => {
@@ -523,6 +534,17 @@ onBeforeUnmount(() => {
       -->
       <button v-if="!seguir && !escolhendo" class="centralizar" @click="centralizar">
         <Icone nome="pino" :px="16" /> Centralizar
+      </button>
+
+      <!-- ⚠️ Some sozinho quando a bússola responde. -->
+      <button
+        v-if="precisaAtivarBussola && !escolhendo"
+        class="ativar-bussola"
+        :disabled="pedindoBussola"
+        @click="ativarBussola"
+      >
+        <Icone nome="global" :px="16" />
+        {{ pedindoBussola ? 'Aguardando…' : 'Ativar bússola' }}
       </button>
       </div>
 
@@ -708,6 +730,17 @@ onBeforeUnmount(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
 }
 .centralizar:active { background: rgba(32, 30, 23, .95); }
+
+/* No topo, para não brigar com o Centralizar, que fica embaixo. */
+.ativar-bussola {
+  position: absolute; left: 50%; top: 12px; transform: translateX(-50%);
+  z-index: 500; display: flex; align-items: center; gap: 6px;
+  background: rgba(32, 30, 23, .94); color: var(--laranja-cl);
+  border: 1px solid var(--laranja); border-radius: 999px;
+  padding: 8px 16px; font: inherit; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+}
+.ativar-bussola:active { background: rgba(32, 30, 23, 1); }
 
 /* Três numa linha só num celular de 360 px: rótulo curto, duas linhas se
    precisar, e nada de ícone gigante. */

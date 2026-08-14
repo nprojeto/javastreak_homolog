@@ -69,14 +69,27 @@ async function carregar() {
    a prestação de contas faz sentido: a caçada acabou, os abates estão
    registrados, e o relatório é o passo seguinte. Antes ele era um botão solto
    no fim da tela da caçada, desligado de qualquer momento. */
+/**
+ * ⚠️ SEM PERGUNTAR AVISTAMENTOS. O campo pedia um número de memória no fim da
+ * caçada, quando o app já tem o dado melhor: cada avistamento é registrado
+ * como evento no mapa, com hora e lugar. Perguntar de novo criava dois
+ * números para a mesma coisa, e o digitado costumava ser o errado.
+ *
+ * O servidor conta os avistamentos marcados; ver `apiEncerrarManejo`.
+ */
 const encerrandoM = ref<Manejo | null>(null)
-const avistamentos = ref('0')
 const salvandoEnc = ref(false)
 const encerrada = ref<Manejo | null>(null)
 
+/**
+ * Encerradas escondidas por padrão? Não — quem abre a tela pela primeira vez
+ * precisa ver que elas existem. O botão serve para quem já tem dezenas e quer
+ * a lista limpa, e a escolha vale só enquanto a tela está aberta.
+ */
+const verEncerradas = ref(true)
+
 function abrirEncerrar(m: Manejo) {
   encerrandoM.value = m
-  avistamentos.value = String(m.avistamentos ?? 0)
   encerrada.value = null
 }
 
@@ -85,7 +98,8 @@ async function confirmarEncerrar() {
   if (!m) return
   salvandoEnc.value = true
   try {
-    await server('apiEncerrarManejo', m.id, avistamentos.value)
+    /* Sem número: quem conta é o servidor, pelos eventos marcados. */
+    await server('apiEncerrarManejo', m.id, '')
     ui.avisar('Caçada encerrada')
     /* Guarda a encerrada para oferecer o fechamento do IBAMA em seguida. */
     encerrada.value = m
@@ -142,11 +156,9 @@ onMounted(carregar)
         <div class="meta">
           Encerrar é o único jeito de sair. <b>Não dá para reabrir depois.</b>
         </div>
-        <label for="enc_av">Quantos javalis você avistou?</label>
-        <input id="enc_av" v-model="avistamentos" inputmode="numeric">
         <div class="meta">
-          Conte também os que você viu e não abateu — é esse número que mostra
-          a pressão de javali na área.
+          Os avistamentos que você marcou no mapa durante a caçada já estão
+          contados — não precisa informar nada aqui.
         </div>
         <div class="acoes-enc">
           <button class="btn danger" :disabled="salvandoEnc" @click="confirmarEncerrar">
@@ -225,6 +237,14 @@ onMounted(carregar)
       />
 
       <template v-if="fechadas.length">
+        <!-- Botão logo abaixo do "Caçar agora", como pedido. -->
+        <button class="btn sec ocultar" @click="verEncerradas = !verEncerradas">
+          <Icone :nome="verEncerradas ? 'ver' : 'avancar'" />
+          {{ verEncerradas ? 'Ocultar encerradas' : 'Ver encerradas' }}
+          <span class="no-i18n">({{ fechadas.length }})</span>
+        </button>
+
+        <template v-if="verEncerradas">
         <h3 class="sec">Encerradas</h3>
         <NuxtLink
           v-for="m in fechadas"
@@ -246,6 +266,7 @@ onMounted(carregar)
           </div>
           <div class="chev">›</div>
         </NuxtLink>
+        </template>
       </template>
     </template>
   </div>
@@ -278,6 +299,7 @@ onMounted(carregar)
 .ac:only-child { border-radius: 0 0 12px 12px; }
 .ac:active { background: var(--linha); }
 
+.ocultar { margin-top: 10px; }
 .enc { border-left: 5px solid var(--danger); margin-bottom: 12px; }
 .enc h3 { margin: 0 0 4px; }
 .acoes-enc { display: flex; gap: 8px; margin-top: 12px; }

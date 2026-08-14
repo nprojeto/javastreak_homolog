@@ -563,12 +563,23 @@ async function salvar() {
             Brasil inteiro, e nada avisava quando o ponto caía fora da divisa
             da propriedade daquela caçada.
           -->
+          <!--
+            ⚠️ `sem-campos`: o ponto do abate vem do mapa ou do GPS, nunca
+            digitado. Um dígito trocado põe o registro a quilômetros dali, e é
+            desta coordenada que saem a consulta de tempo e a conferência de
+            limite — as duas ficariam erradas em silêncio.
+          -->
           <BotaoGps
             v-model:lat="lat"
             v-model:lng="lng"
+            sem-campos
             :limite="m.propriedade?.limite || []"
             :nome-limite="m.propriedade?.nome"
           />
+          <div v-if="foraDoLimite" class="meta alerta-limite">
+            <Icone nome="alerta" /> Este ponto está fora do limite da
+            propriedade. Marque onde o abate aconteceu, dentro dela.
+          </div>
         </template>
         <!--
           ⚠️ MOSTRA A COORDENADA DA CEVA. Antes o bloco de local sumia e
@@ -625,6 +636,7 @@ h3 { margin: 0 0 8px; }
   background: var(--card); cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
 }
 .modos button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
+.alerta-limite { color: var(--alerta); margin-top: 6px; }
 .fora { border-left: 4px solid var(--alerta); }
 .fora h3 { color: var(--alerta); }
 .ceva-local { margin-top: 6px; }
