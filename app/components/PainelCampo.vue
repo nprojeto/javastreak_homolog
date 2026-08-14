@@ -33,15 +33,66 @@ const props = defineProps<{
 
 interface Guia {
   id: string; nome?: string; tipo?: string; propriedadeId?: string
-  limites: LimiteGuia[]; rotas: RotaGuia[]; cevas: CevaGuia[]; marcacoes: MarcaGuia[]
+  limites: LimiteGuia[]
+  /* `atribuida` separa a rota DESTA caçada das outras da propriedade. */
+  rotas: Array<RotaGuia & { atribuida?: boolean }>
+  cevas: Array<CevaGuia & { atribuida?: boolean }>
+  marcacoes: MarcaGuia[]
 }
 
 const { server } = useServer()
 const ui = useUi()
 const {
-  graus: rumoAparelho, precisaPermissao, erro: erroBussola,
+  graus: rumoAparelho, erro: erroBussola,
   iniciar: iniciarBussola, pedirPermissao, daPosicao: rumoDoGps
 } = useBussola()
+
+/**
+ * ── PERMISSÕES ANTES DO MAPA ──
+ *
+ * ⚠️ Entrar na caçada PEDE localização e bússola de uma vez, numa tela só. O
+ * botão "ativar bússola" espalhado pelo caminho era pior de duas formas:
+ * aparecia no meio da operação, e no iOS a permissão de orientação **só pode
+ * ser pedida dentro de um gesto do usuário** — pedir sozinho é recusado em
+ * silêncio, e o app parecia sem bússola.
+ *
+ * ⚠️ NÃO É BLOQUEIO. Quem recusar, ou estiver num aparelho sem sensor, segue
+ * com o mapa: ele continua mostrando limite, rotas e cevas. O que se perde é
+ * a própria posição e a seta — e a tela diz isso em vez de travar.
+ */
+const permissoesOk = ref(false)
+const pedindo = ref(false)
+
+async function autorizar() {
+  pedindo.value = true
+  try {
+    /* A bússola primeiro: no iOS ela exige o gesto, e o diálogo do GPS
+       logo em seguida não atrapalha. */
+    await pedirPermissao()
+    await new Promise<void>((resolve) => {
+      if (!navigator.geolocation) { erroGps.value = 'Seu aparelho não oferece localização.'; resolve(); return }
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          eu.value = { lat: p.coords.latitude, lng: p.coords.longitude,
+            precisao: p.coords.accuracy ? Math.round(p.coords.accuracy) : undefined }
+          resolve()
+        },
+        (e) => {
+          erroGps.value = e.code === e.PERMISSION_DENIED
+            ? 'Permissão de localização negada. Você segue vendo o mapa, mas não a sua posição.'
+            : 'Sem sinal de GPS no momento. O mapa continua servindo.'
+          resolve()
+        },
+        { enableHighAccuracy: true, timeout: 15000 }
+      )
+    })
+  } finally {
+    pedindo.value = false
+    permissoesOk.value = true
+    ligarGps()
+    travarTela()
+  }
+}
 
 const g = ref<Guia | null>(null)
 const erro = ref('')
@@ -62,7 +113,13 @@ const ver = reactive({ limite: true, rotas: true, cevas: true, avisos: true })
 const filtros = ref(false)
 
 const limitesVis = computed(() => (ver.limite ? g.value?.limites || [] : []))
-const rotasVis = computed(() => (ver.rotas ? g.value?.rotas || [] : []))
+/**
+ * A rota da caçada em azul cheio; as outras da propriedade em azul apagado.
+ * Sem essa diferença, a pessoa confunde o caminho que escolheu com o que
+ * simplesmente existe no terreno.
+ */
+const rotasVis = computed(() => (ver.rotas ? g.value?.rotas || [] : [])
+  .map((r) => ({ ...r, cor: r.atribuida === false ? '#4a6b8a' : '#2f6ea8' })))
 const cevasVis = computed(() => (ver.cevas ? g.value?.cevas || [] : []))
 const marcasVis = computed(() => (ver.avisos ? g.value?.marcacoes || [] : []))
 
@@ -321,9 +378,9 @@ async function travarTela() {
 
 onMounted(() => {
   carregar()
-  ligarGps()
+  /* `iniciar` só PREPARA: no iOS ele marca que falta permissão, e quem pede
+     é o botão — dentro do gesto, que é a única forma que funciona lá. */
   iniciarBussola()
-  travarTela()
 })
 
 onBeforeUnmount(() => {
@@ -338,6 +395,28 @@ onBeforeUnmount(() => {
   <div class="campo">
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
     <div v-else-if="!g" class="card"><div class="meta">Carregando o mapa…</div></div>
+
+    <!-- ⚠️ PORTA DE ENTRADA: pede as duas permissões de uma vez. -->
+    <div v-else-if="!permissoesOk" class="card portao">
+      <h3><Icone nome="pino" /> Antes de entrar no campo</h3>
+      <!-- ⚠️ Uma frase inteira por nó de texto: o tradutor casa o texto do nó
+           contra o dicionário, e um <b> no meio parte a frase em pedaços que
+           nunca casam — a tela ficaria em português no modo inglês. -->
+      <div class="meta">
+        O mapa usa a sua localização para mostrar onde você está e gravar o
+        percurso, e a bússola para saber para que lado você está virado.
+      </div>
+      <button class="btn" :disabled="pedindo" @click="autorizar">
+        {{ pedindo ? 'Aguardando…' : 'Autorizar e abrir o mapa' }}
+      </button>
+      <button class="btn sec" :disabled="pedindo" @click="permissoesOk = true">
+        Abrir sem localização
+      </button>
+      <div class="meta">
+        Sem autorizar, o mapa continua mostrando o limite, as rotas e as cevas
+        — mas não a sua posição.
+      </div>
+    </div>
 
     <template v-else>
       <!-- situação, antes do mapa -->
@@ -372,14 +451,11 @@ onBeforeUnmount(() => {
         <div class="meta"><Icone nome="pino" /> Procurando o sinal do GPS…</div>
       </div>
 
-      <div v-if="precisaPermissao" class="card aviso-gps">
-        <div class="meta"><Icone nome="alerta" /> Ative a bússola para a seta saber para que lado você está virado.</div>
-        <button class="btn pequeno" @click="pedirPermissao()">Ativar bússola</button>
-      </div>
-      <div v-else-if="erroBussola" class="card aviso-gps">
+      <div v-if="erroBussola" class="card aviso-gps">
         <div class="meta"><Icone nome="alerta" /> {{ erroBussola }}</div>
       </div>
 
+      <div class="palco">
       <ClientOnly>
         <MapaGuia
           :limites="limitesVis"
@@ -397,14 +473,20 @@ onBeforeUnmount(() => {
         />
       </ClientOnly>
 
+      <!--
+        ⚠️ SOBRE o mapa e só quando ele foi arrastado para longe. Como botão
+        fixo abaixo, ele ocupava espaço permanente para uma ação que quase
+        nunca é necessária — o mapa segue a posição sozinho.
+      -->
+      <button v-if="!seguir && !escolhendo" class="centralizar" @click="seguir = true">
+        <Icone nome="pino" :px="16" /> Centralizar
+      </button>
+      </div>
+
       <div v-if="escolhendo" class="card tocar">
         <div class="meta"><Icone nome="pino" /> Toque no mapa para marcar o ponto.</div>
         <button class="btn sec pequeno" @click="fecharPainel">Cancelar</button>
       </div>
-
-      <button v-if="!seguir && !painel" class="btn sec onde" @click="seguir = true">
-        <Icone nome="pino" /> Onde estou
-      </button>
 
       <!-- PERCURSO -->
       <template v-if="souDono">
@@ -537,7 +619,23 @@ onBeforeUnmount(() => {
 
 .tocar { display: flex; align-items: center; gap: 10px; margin-top: 10px; border-left: 4px solid var(--laranja-cl); }
 .tocar .meta { margin: 0; flex: 1; }
-.onde { margin-top: 10px; }
+
+.portao { border-left: 4px solid var(--laranja); }
+.portao h3 { margin: 0 0 6px; font-size: 15px; }
+.portao .btn { margin-top: 10px; }
+
+/* Botão flutuante sobre o mapa: translúcido para não tapar o terreno. */
+.palco { position: relative; }
+.centralizar {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  z-index: 500; display: flex; align-items: center; gap: 6px;
+  background: rgba(32, 30, 23, .82); color: var(--osso);
+  border: 1px solid var(--linha); border-radius: 999px;
+  padding: 8px 16px; font: inherit; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; backdrop-filter: blur(3px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+}
+.centralizar:active { background: rgba(32, 30, 23, .95); }
 
 .acoes-campo { display: flex; gap: 8px; margin-top: 10px; }
 .acoes-campo .btn { flex: 1; margin: 0; }

@@ -47,6 +47,16 @@ const convidando = ref(false)
 
 const aberta = computed(() => m.value?.status === 'aberto')
 
+/**
+ * Leva ao painel de campo, que está no topo desta mesma tela. Rolar até lá é
+ * melhor que abrir outra tela: o mapa já está carregado, com a posição e o
+ * percurso em gravação, e recarregar tudo perderia os dois.
+ */
+const campoEl = ref<HTMLElement | null>(null)
+function irAoCampo() {
+  campoEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 async function carregar() {
   erro.value = ''
   try {
@@ -117,7 +127,9 @@ onMounted(carregar)
         pessoa e o campo, e quem entra numa caçada aberta entra para ver o
         caminho. Fechada, a caçada é histórico e não precisa de mapa ao vivo.
       -->
-      <PainelCampo v-if="aberta" :manejo-id="id" :sou-dono="m.souDono" />
+      <div ref="campoEl">
+        <PainelCampo v-if="aberta" :manejo-id="id" :sou-dono="m.souDono" />
+      </div>
 
       <div class="dash">
         <div class="kpi"><b>{{ m.abates?.animais || 0 }}</b><span>animais</span></div>
@@ -155,15 +167,15 @@ onMounted(carregar)
         </div>
 
         <!--
-          ⚠️ O ícone é o JAVALI DA MARCA, em branco. O `Icone nome="abate"` do
-          sprite é genérico e não diz de que abate se trata; o javali diz, e
-          amarra o registro ao produto. Branco porque o botão é laranja.
+          ⚠️ REGISTRAR EVENTO, não "registrar abate". Abate é UM dos eventos, e
+          mandar direto para a tela dele obrigava a pessoa a saber, antes de
+          tocar, que o que ela viu era abate — quando muitas vezes é rastro,
+          avistamento ou perigo. O painel de campo pergunta primeiro e desvia
+          para o abate quando for o caso.
         -->
-        <NuxtLink
-          v-if="aberta"
-          :to="{ path: '/abate', query: { manejo: id } }"
-          class="btn"
-        ><img src="/marca/javali-branco.png" class="ic-javali" alt=""> Registrar abate</NuxtLink>
+        <button v-if="aberta" class="btn" @click="irAoCampo">
+          <img src="/marca/javali-branco.png" class="ic-javali" alt=""> Registrar evento
+        </button>
       </template>
 
       <!-- AMIGOS -->

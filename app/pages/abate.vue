@@ -95,14 +95,24 @@ function agoraLocal() {
 const climaFalhou = ref(false)
 const motivoClima = ref('')
 
+/**
+ * ⚠️ CONSULTA POR CEVA **OU POR COORDENADA**. Antes só havia o caminho da
+ * ceva, então um abate de caçada livre ou de rota caía sempre no
+ * preenchimento à mão — e o registro saía marcado como `manual` num caso em
+ * que o tempo podia ter sido medido. O relatório do IBAMA guarda essa
+ * diferença, então ela importa.
+ */
 async function verClima() {
-  if (!cevaId.value) return
+  const temPonto = !!(Number(lat.value) || Number(lng.value))
+  if (!cevaId.value && !temPonto) return
   buscandoClima.value = true
   clima.value = null
   climaFalhou.value = false
   motivoClima.value = ''
   try {
-    clima.value = await server<Clima>('apiClimaCeva', cevaId.value)
+    clima.value = cevaId.value
+      ? await server<Clima>('apiClimaCeva', cevaId.value)
+      : await server<Clima>('apiClimaPonto', lat.value, lng.value)
     if (!clima.value?.ok) {
       climaFalhou.value = true
       motivoClima.value = clima.value?.erro || 'Não foi possível consultar o tempo'
@@ -121,9 +131,25 @@ async function verClima() {
   }
 }
 
-/* Sem ceva escolhida não há clima em tempo real: o servidor busca pela
-   coordenada dela. Cai para o preenchimento à mão. */
-watch(cevaId, () => { if (!cevaId.value) modo.value = 'passado' })
+/**
+ * Trocar de ceva refaz a consulta. Sem ceva, o clima vem da coordenada — e
+ * ela costuma vir preenchida do mapa da caçada.
+ */
+watch(cevaId, () => {
+  if (modo.value === 'tempoReal') verClima()
+})
+
+/**
+ * ⚠️ Com coordenada vinda do mapa da caçada, JÁ ENTRA em tempo real. O abate
+ * registrado ali acabou de acontecer: pedir para a pessoa escolher "aconteceu
+ * agora" seria um toque a mais para dizer o óbvio.
+ */
+onMounted(() => {
+  if (route.query.lat && route.query.lng) {
+    modo.value = 'tempoReal'
+    verClima()
+  }
+})
 
 /* A ceva vinda do painel de campo, aplicada quando a lista já existe. */
 watch(m, (v) => {
