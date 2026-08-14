@@ -13,6 +13,7 @@
  */
 import { dataBR } from '~/composables/useMascaras'
 import { useCreditos } from '~/stores/creditos'
+import { useUi } from '~/stores/ui'
 
 definePageMeta({ layout: 'app' })
 
@@ -31,6 +32,7 @@ interface Convite {
 }
 
 const { server } = useServer()
+const ui = useUi()
 const cred = useCreditos()
 
 const lista = ref<Manejo[] | null>(null)
@@ -51,6 +53,38 @@ async function carregar() {
     convites.value = await server<Convite[]>('apiMeusConvitesManejo').catch(() => [])
   } catch (e) {
     erro.value = e instanceof Error ? e.message : 'Não foi possível carregar as caçadas'
+  }
+}
+
+/* ── encerrar ─────────────────────────────────────────────────────────────
+   ⚠️ O FECHAMENTO DO IBAMA VEM AQUI, logo depois de encerrar. É a hora em que
+   a prestação de contas faz sentido: a caçada acabou, os abates estão
+   registrados, e o relatório é o passo seguinte. Antes ele era um botão solto
+   no fim da tela da caçada, desligado de qualquer momento. */
+const encerrandoM = ref<Manejo | null>(null)
+const avistamentos = ref('0')
+const salvandoEnc = ref(false)
+const encerrada = ref<Manejo | null>(null)
+
+function abrirEncerrar(m: Manejo) {
+  encerrandoM.value = m
+  avistamentos.value = String(m.avistamentos ?? 0)
+  encerrada.value = null
+}
+
+async function confirmarEncerrar() {
+  const m = encerrandoM.value
+  if (!m) return
+  salvandoEnc.value = true
+  try {
+    await server('apiEncerrarManejo', m.id, avistamentos.value)
+    ui.avisar('Caçada encerrada')
+    /* Guarda a encerrada para oferecer o fechamento do IBAMA em seguida. */
+    encerrada.value = m
+    encerrandoM.value = null
+    await carregar()
+  } catch { /* já avisado */ } finally {
+    salvandoEnc.value = false
   }
 }
 
@@ -94,6 +128,44 @@ onMounted(carregar)
         </div>
       </template>
 
+      <!-- ENCERRAR: confirma, pergunta os avistamentos e leva ao IBAMA -->
+      <div v-if="encerrandoM" class="card enc">
+        <h3>Encerrar "<span class="no-i18n">{{ encerrandoM.nome || 'Caçada' }}</span>"</h3>
+        <div class="meta">
+          Encerrar é o único jeito de sair. <b>Não dá para reabrir depois.</b>
+        </div>
+        <label for="enc_av">Quantos javalis você avistou?</label>
+        <input id="enc_av" v-model="avistamentos" inputmode="numeric">
+        <div class="meta">
+          Conte também os que você viu e não abateu — é esse número que mostra
+          a pressão de javali na área.
+        </div>
+        <div class="acoes-enc">
+          <button class="btn danger" :disabled="salvandoEnc" @click="confirmarEncerrar">
+            {{ salvandoEnc ? 'Encerrando…' : 'Encerrar caçada' }}
+          </button>
+          <button class="btn sec" :disabled="salvandoEnc" @click="encerrandoM = null">Cancelar</button>
+        </div>
+      </div>
+
+      <!--
+        ⚠️ O FECHAMENTO DO IBAMA VEM AQUI, logo depois de encerrar. É a hora em
+        que a prestação de contas faz sentido: a caçada acabou e os abates
+        estão registrados. Antes era um botão solto no fim da tela da caçada,
+        desligado de qualquer momento.
+      -->
+      <div v-if="encerrada" class="card pos-enc">
+        <h3><Icone nome="confirmar" /> Caçada encerrada</h3>
+        <div class="meta">
+          Os abates dela entram no fechamento do IBAMA da propriedade
+          <b class="no-i18n">{{ encerrada.propriedade?.nome || '' }}</b>.
+        </div>
+        <NuxtLink to="/ibama" class="btn">
+          <Icone nome="arquivo" /> Abrir o fechamento IBAMA
+        </NuxtLink>
+        <button class="btn sec" @click="encerrada = null">Agora não</button>
+      </div>
+
       <h3 class="sec"><Icone nome="alerta" /> Abertas</h3>
       <div v-if="!abertas.length" class="card">
         <div class="meta">Nenhuma caçada aberta.</div>
@@ -101,9 +173,7 @@ onMounted(carregar)
       <!--
         ⚠️ O cartão é um NuxtLink inteiro, então um segundo link DENTRO dele
         seria link aninhado — HTML inválido, e o toque cai no de fora. Por
-        isso o atalho fica num invólucro, ao lado do cartão, e não dentro.
-        Vale a duplicação: guiamento é a ação de quem já está no mato e quer
-        um toque, não três.
+        isso as ações ficam num invólucro, ao lado do cartão, e não dentro.
       -->
       <div v-for="m in abertas" :key="m.id" class="bloco-aberta">
         <NuxtLink
@@ -124,10 +194,20 @@ onMounted(carregar)
           </div>
           <div class="chev">›</div>
         </NuxtLink>
-        <NuxtLink
-          :to="{ path: '/guia', query: { manejo: m.id } }"
-          class="atalho-guia"
-        ><Icone nome="mapa" :px="16" /> Iniciar guiamento</NuxtLink>
+        <!--
+          ⚠️ ENTRAR e ENCERRAR, lado a lado. Encerrar era decisão tomada no fim
+          da tela da caçada, no meio da operação; aqui ela se toma olhando a
+          lista, que é quando a pessoa realmente decide. E o guiamento saiu:
+          virou o próprio mapa dentro da caçada.
+        -->
+        <div class="acoes-aberta">
+          <NuxtLink :to="{ path: '/cacada', query: { id: m.id } }" class="ac entrar">
+            <Icone nome="avancar" :px="16" /> Entrar
+          </NuxtLink>
+          <button v-if="m.souDono" class="ac encerrar" @click="abrirEncerrar(m)">
+            <Icone nome="confirmar" :px="16" /> Encerrar
+          </button>
+        </div>
       </div>
 
       <BotaoCriar
@@ -178,15 +258,25 @@ onMounted(carregar)
    cima do atalho ficam retos, e os dois lidos como uma peça só. */
 .bloco-aberta { margin-bottom: 10px; }
 .bloco-aberta .cacada { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-.atalho-guia {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 9px; text-decoration: none;
-  font-size: 12.5px; font-weight: 700; color: var(--laranja-cl);
-  background: var(--carvao-3);
-  border: 1px solid var(--linha); border-top: 0;
-  border-radius: 0 0 12px 12px;
+.acoes-aberta { display: flex; }
+.ac {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px; text-decoration: none; cursor: pointer;
+  font: inherit; font-size: 12.5px; font-weight: 700;
+  background: var(--carvao-3); border: 1px solid var(--linha); border-top: 0;
 }
-.atalho-guia:active { background: var(--linha); }
+.ac.entrar { color: var(--laranja-cl); border-radius: 0 0 0 12px; }
+.ac.encerrar { color: var(--danger); border-left: 0; border-radius: 0 0 12px 0; }
+.ac:only-child { border-radius: 0 0 12px 12px; }
+.ac:active { background: var(--linha); }
+
+.enc { border-left: 5px solid var(--danger); margin-bottom: 12px; }
+.enc h3 { margin: 0 0 4px; }
+.acoes-enc { display: flex; gap: 8px; margin-top: 12px; }
+.acoes-enc .btn { flex: 1; margin: 0; }
+.pos-enc { border-left: 5px solid var(--verde); margin-bottom: 12px; }
+.pos-enc h3 { margin: 0 0 4px; }
+.pos-enc .btn { margin-top: 10px; text-decoration: none; }
 .cacada .grow { flex: 1; min-width: 0; }
 .cacada .meta { margin: 3px 0 0; }
 .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--linha); margin-left: 6px; }

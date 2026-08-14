@@ -124,6 +124,13 @@ async function verClima() {
 /* Sem ceva escolhida não há clima em tempo real: o servidor busca pela
    coordenada dela. Cai para o preenchimento à mão. */
 watch(cevaId, () => { if (!cevaId.value) modo.value = 'passado' })
+
+/* A ceva vinda do painel de campo, aplicada quando a lista já existe. */
+watch(m, (v) => {
+  const pre = String(route.query.ceva || '')
+  if (!pre || !v) return
+  if ((v.cevas || []).some((c) => String(c.id) === pre)) cevaId.value = pre
+}, { immediate: true })
 watch(modo, (v) => { if (v === 'tempoReal') verClima() })
 
 async function escolheuFoto(e: Event) {
@@ -150,6 +157,11 @@ onMounted(async () => {
     lat.value = String(route.query.lat)
     lng.value = String(route.query.lng)
   }
+  /**
+   * ⚠️ A ceva escolhida no mapa da caçada chega pela URL. É aplicada DEPOIS
+   * de carregar o manejo (mais abaixo), senão a lista de cevas ainda não
+   * existe e o valor seria descartado em silêncio.
+   */
   if (!manejoId.value) { pronto.value = true; return }
   try {
     const man = await server<Manejo>('apiManejo', manejoId.value)

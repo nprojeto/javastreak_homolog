@@ -44,31 +44,8 @@ const erro = ref('')
 const aba = ref<'abates' | 'amigos' | 'docs'>('abates')
 const loginAmigo = ref('')
 const convidando = ref(false)
-const encerrando = ref(false)
-const avistamentos = ref('0')
 
 const aberta = computed(() => m.value?.status === 'aberto')
-
-/**
- * Avistamentos marcados no mapa durante o guiamento. O encerramento pergunta
- * "quantos você avistou?", e deixar o campo em zero enquanto existem cinco
- * pinos no mapa faria os dois números se contradizerem no mesmo registro.
- * Aqui ele nasce preenchido — e continua editável, porque nem todo
- * avistamento vira pino.
- */
-const avistamentosNoMapa = ref<number | null>(null)
-
-async function contarAvistamentos() {
-  if (!aberta.value || !m.value?.souDono) return
-  try {
-    const g = await server<{ marcacoes?: Array<{ tipo?: string }> }>('apiManejoGuia', id.value)
-    const n = (g.marcacoes || []).filter((k) => k.tipo === 'Avistamento').length
-    avistamentosNoMapa.value = n
-    if (n > 0 && avistamentos.value === '0') avistamentos.value = String(n)
-  } catch {
-    /* Acessório: falhar aqui não pode impedir de encerrar a caçada. */
-  }
-}
 
 async function carregar() {
   erro.value = ''
@@ -107,22 +84,8 @@ async function remover(a: Amigo) {
   } catch { /* já avisado */ }
 }
 
-async function encerrar() {
-  if (!confirm('Encerrar esta caçada? Não dá para reabrir.')) return
-  encerrando.value = true
-  try {
-    await server('apiEncerrarManejo', id.value, avistamentos.value)
-    ui.avisar('Caçada encerrada')
-    await carregar()
-  } catch { /* já avisado */ } finally {
-    encerrando.value = false
-  }
-}
 
-onMounted(async () => {
-  await carregar()
-  contarAvistamentos()
-})
+onMounted(carregar)
 </script>
 
 <template>
@@ -149,17 +112,12 @@ onMounted(async () => {
       </div>
 
       <!--
-        ⚠️ FORA DAS ABAS, de propósito. Ele já esteve no fim da aba Abates,
-        depois da lista inteira, e simplesmente não era encontrado: a aba pode
-        nem ser a que está aberta, e numa caçada com abates a pessoa precisa
-        rolar a lista toda para achá-lo. Guiamento é o que se usa ANDANDO, com
-        o celular na mão — tem que ser a primeira coisa depois do cabeçalho.
+        ⚠️ O MAPA É A PRIMEIRA COISA da caçada aberta, antes das abas. Havia
+        uma tela de guiamento separada; ela era uma parada a mais entre a
+        pessoa e o campo, e quem entra numa caçada aberta entra para ver o
+        caminho. Fechada, a caçada é histórico e não precisa de mapa ao vivo.
       -->
-      <NuxtLink
-        v-if="aberta"
-        :to="{ path: '/guia', query: { manejo: id } }"
-        class="btn guiar"
-      ><Icone nome="mapa" /> Iniciar guiamento</NuxtLink>
+      <PainelCampo v-if="aberta" :manejo-id="id" :sou-dono="m.souDono" />
 
       <div class="dash">
         <div class="kpi"><b>{{ m.abates?.animais || 0 }}</b><span>animais</span></div>
@@ -196,11 +154,16 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!--
+          ⚠️ O ícone é o JAVALI DA MARCA, em branco. O `Icone nome="abate"` do
+          sprite é genérico e não diz de que abate se trata; o javali diz, e
+          amarra o registro ao produto. Branco porque o botão é laranja.
+        -->
         <NuxtLink
           v-if="aberta"
           :to="{ path: '/abate', query: { manejo: id } }"
           class="btn"
-        ><Icone nome="abate" /> Registrar abate</NuxtLink>
+        ><img src="/marca/javali-branco.png" class="ic-javali" alt=""> Registrar abate</NuxtLink>
       </template>
 
       <!-- AMIGOS -->
@@ -279,24 +242,12 @@ onMounted(async () => {
         </template>
       </template>
 
-      <!-- ENCERRAR -->
-      <div v-if="aberta && m.souDono" class="card encerrar">
-        <h3>Encerrar caçada</h3>
-        <div class="meta">
-          Encerrar é o único jeito de sair. Não dá para reabrir depois.
-        </div>
-        <label for="m_avist">Quantos javalis você avistou?</label>
-        <input id="m_avist" v-model="avistamentos" inputmode="numeric">
-        <div v-if="avistamentosNoMapa" class="meta">
-          <Icone nome="mapa" /> <b class="no-i18n">{{ avistamentosNoMapa }}</b>
-          marcados no mapa durante o guiamento. Ajuste se avistou mais.
-        </div>
-        <button class="btn danger" :disabled="encerrando" @click="encerrar">
-          {{ encerrando ? 'Encerrando…' : 'Encerrar caçada' }}
-        </button>
-      </div>
-
-      <NuxtLink to="/ibama" class="btn sec"><Icone nome="arquivo" /> Fechamento IBAMA</NuxtLink>
+      <!--
+        ⚠️ ENCERRAR SAIU DAQUI. Ele vive no cartão da caçada, uma tela antes,
+        com o Entrar ao lado: encerrar é decisão que se toma olhando a lista,
+        não no meio da operação — e ter o botão aqui convidava a encerrar sem
+        querer, no fim de uma tela que se usa com o celular na mão, andando.
+      -->
       <NuxtLink to="/cacadas" class="btn sec">Voltar</NuxtLink>
     </template>
   </div>
@@ -304,6 +255,8 @@ onMounted(async () => {
 
 <style scoped>
 h3 { margin: 0 0 4px; }
+/* O javali da marca dentro do botão. */
+.ic-javali { width: 20px; height: 20px; object-fit: contain; vertical-align: -4px; margin-right: 4px; }
 .ruim { color: var(--danger); }
 .cab.aberta { border-left: 5px solid var(--danger); }
 .cab .meta { margin: 4px 0 0; }
@@ -330,5 +283,4 @@ h3 { margin: 0 0 4px; }
 .encerrar { border-left: 5px solid var(--danger); }
 .encerrar .btn { background: var(--danger); }
 .btn.sec { margin-top: 14px; text-decoration: none; }
-.guiar { margin: 10px 0 0; text-decoration: none; }
 </style>
