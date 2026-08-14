@@ -167,6 +167,26 @@ function comecarPercurso() {
   ui.avisar('Gravando o percurso — ele vira uma rota ao concluir')
 }
 
+/**
+ * Cancela a gravação e joga fora o traçado.
+ *
+ * ⚠️ PEDE CONFIRMAÇÃO, e a frase diz o que se perde. É o único botão desta
+ * tela que destrói trabalho: quem andou dois quilômetros não pode perder isso
+ * por um toque errado com o celular na mão. Antes não existia cancelar
+ * nenhum — a única saída era sair da tela, o que dava no mesmo sem avisar.
+ */
+function cancelarPercurso() {
+  const n = percurso.value.length
+  if (n > 1 && !confirm(
+    'Cancelar a gravação?\n\n'
+    + 'O percurso de ' + fmtDist(distanciaPercurso.value) + ' que você andou até aqui '
+    + 'será descartado. Não dá para recuperar.'
+  )) return
+  gravando.value = false
+  percurso.value = []
+  ui.avisar('Gravação cancelada')
+}
+
 async function salvarPercurso() {
   if (percurso.value.length < 2) {
     ui.avisar('Ande um pouco antes de salvar — o percurso ainda não tem traçado', 'erro')
@@ -491,10 +511,15 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </div>
-          <button class="btn" :disabled="salvandoPercurso || percurso.length < 2" @click="salvarPercurso">
-            <Icone nome="salvar" />
-            {{ salvandoPercurso ? 'Salvando…' : 'Concluir e salvar rota' }}
-          </button>
+          <div class="acoes-perc">
+            <button class="btn" :disabled="salvandoPercurso || percurso.length < 2" @click="salvarPercurso">
+              <Icone nome="salvar" />
+              {{ salvandoPercurso ? 'Salvando…' : 'Concluir e salvar rota' }}
+            </button>
+            <button class="btn sec" :disabled="salvandoPercurso" @click="cancelarPercurso">
+              Cancelar
+            </button>
+          </div>
           <div class="meta">
             Ao concluir, o percurso vira uma rota. Para se livrar dela depois,
             apague em Rotas.
@@ -650,7 +675,8 @@ onBeforeUnmount(() => {
 .percurso .linha { display: flex; align-items: center; gap: 10px; }
 .percurso .grow { flex: 1; min-width: 0; }
 .percurso .meta { margin: 2px 0 0; }
-.percurso .btn { margin-top: 10px; }
+.acoes-perc { display: flex; gap: 8px; margin-top: 10px; }
+.acoes-perc .btn { flex: 1; margin: 0; }
 .ponto-vivo {
   flex: none; width: 11px; height: 11px; border-radius: 50%;
   background: var(--danger); animation: pulsa 1.6s ease-in-out infinite;

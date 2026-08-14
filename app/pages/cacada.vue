@@ -47,16 +47,6 @@ const convidando = ref(false)
 
 const aberta = computed(() => m.value?.status === 'aberto')
 
-/**
- * Leva ao painel de campo, que está no topo desta mesma tela. Rolar até lá é
- * melhor que abrir outra tela: o mapa já está carregado, com a posição e o
- * percurso em gravação, e recarregar tudo perderia os dois.
- */
-const campoEl = ref<HTMLElement | null>(null)
-function irAoCampo() {
-  campoEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
 async function carregar() {
   erro.value = ''
   try {
@@ -127,9 +117,7 @@ onMounted(carregar)
         pessoa e o campo, e quem entra numa caçada aberta entra para ver o
         caminho. Fechada, a caçada é histórico e não precisa de mapa ao vivo.
       -->
-      <div ref="campoEl">
-        <PainelCampo v-if="aberta" :manejo-id="id" :sou-dono="m.souDono" />
-      </div>
+      <PainelCampo v-if="aberta" :manejo-id="id" :sou-dono="m.souDono" />
 
       <div class="dash">
         <div class="kpi"><b>{{ m.abates?.animais || 0 }}</b><span>animais</span></div>
@@ -167,15 +155,10 @@ onMounted(carregar)
         </div>
 
         <!--
-          ⚠️ SEM BOTÃO DE REGISTRO AQUI. Ele existia e era IGUAL ao do painel
-          de campo, logo acima na mesma tela — dois botões idênticos, e nenhum
-          jeito de saber que faziam a mesma coisa. As três ações (evento,
-          abate, percurso) vivem no painel, junto do mapa, que é onde a pessoa
-          está olhando quando precisa delas.
+          ⚠️ SEM BOTÃO DE REGISTRO AQUI, nem atalho para o mapa. As três ações
+          (evento, abate, percurso) vivem no painel de campo, logo acima na
+          mesma tela — um botão aqui só repetiria o que já está à vista.
         -->
-        <button v-if="aberta" class="btn sec ir-campo" @click="irAoCampo">
-          <Icone nome="mapa" /> Ir ao mapa para registrar
-        </button>
       </template>
 
       <!-- AMIGOS -->
@@ -267,7 +250,6 @@ onMounted(carregar)
 
 <style scoped>
 h3 { margin: 0 0 4px; }
-.ir-campo { margin-top: 10px; }
 .ruim { color: var(--danger); }
 .cab.aberta { border-left: 5px solid var(--danger); }
 .cab .meta { margin: 4px 0 0; }
