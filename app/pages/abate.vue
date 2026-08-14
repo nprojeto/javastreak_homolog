@@ -80,6 +80,10 @@ const mostraLocal = computed(() => !cevaId.value)
  * `apiClimaPonto` consulta o MET Norway por lat/lng.
  */
 const temPonto = computed(() => !!(Number(lat.value) || Number(lng.value)))
+
+/** Nome da ceva escolhida, para o rodapé do clima dizer de onde ele veio. */
+const nomeDaCeva = computed(() =>
+  (m.value?.cevas || []).find((c) => String(c.id) === cevaId.value)?.nome || 'ceva escolhida')
 const podeTempoReal = computed(() => !!cevaId.value || temPonto.value)
 
 /**
@@ -212,6 +216,26 @@ watch(m, (v) => {
   else if (rs.length === 1 && !cs.length) onde.value = 'r:' + rs[0]!.id
 }, { immediate: true })
 watch(modo, (v) => { if (v === 'tempoReal') verClima() })
+
+/**
+ * ⚠️ TROCAR A COORDENADA REFAZ A CONSULTA. Sem isto, quem abrisse em tempo
+ * real e depois movesse o ponto no mapa continuaria vendo — e gravando — o
+ * tempo do lugar anterior, sem nada avisar. Erra em silêncio, e o número vai
+ * ao relatório do IBAMA.
+ *
+ * ⚠️ Com `debounce`: arrastar a mira no mapa muda lat/lng dezenas de vezes, e
+ * uma chamada por passo estouraria o limite de uso do MET Norway.
+ */
+let relogioClima: ReturnType<typeof setTimeout> | null = null
+watch([lat, lng], () => {
+  /* Com ceva escolhida quem manda é a coordenada dela — o servidor
+     sobrescreve o ponto do abate pelo da ceva, e os dois têm que concordar. */
+  if (cevaId.value || modo.value !== 'tempoReal') return
+  if (relogioClima) clearTimeout(relogioClima)
+  relogioClima = setTimeout(() => verClima(), 700)
+})
+
+onBeforeUnmount(() => { if (relogioClima) clearTimeout(relogioClima) })
 
 async function escolheuFoto(e: Event) {
   const f = (e.target as HTMLInputElement).files?.[0]
@@ -365,9 +389,15 @@ async function salvar() {
               vento {{ clima.vento }} km/h {{ clima.ventoDir }} ·
               chuva {{ clima.chuvaProb }}%
             </div>
+            <!-- ⚠️ Dizer DE ONDE veio: sem isso não há como saber se o tempo
+                 é do ponto do abate ou de outro lugar. -->
+            <div class="meta no-i18n">
+              <Icone nome="pino" :px="14" />
+              {{ cevaId ? nomeDaCeva : Number(lat).toFixed(5) + ', ' + Number(lng).toFixed(5) }}
+            </div>
             <div class="meta">
-              Data, hora, lua e clima são gravados pelo servidor, medidos no
-              ponto do abate. Fonte: MET Norway.
+              Data, hora, lua e clima são gravados pelo servidor, medidos neste
+              ponto. Fonte: MET Norway.
             </div>
           </div>
           <div v-else class="meta ruim">

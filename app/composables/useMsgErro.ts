@@ -11,7 +11,11 @@
 const SIMPLES: Record<string, string> = {
   PERFIL_INCOMPLETO:
     'Seu perfil de manejador ainda não foi criado. Preencha nome e localização para liberar este botão.',
-  PROPRIEDADE_OBRIGATORIA: 'Escolha a propriedade onde fica esta ceva',
+  /* ⚠️ Sem citar CEVA. O código vem do `propriedadeUsavel_`, que é usado por
+     ceva, rota e manejo — a frase nasceu na tela de ceva e passou a mentir
+     quando o guiamento começou a salvar percurso. Mensagem de erro genérica
+     precisa de texto genérico. */
+  PROPRIEDADE_OBRIGATORIA: 'Escolha a propriedade a que este item pertence',
   PROP_SEM_DESENHO: 'Desenhe o limite da propriedade antes de salvar',
   CTF_TELA_PROPRIA: 'O CTF é cadastrado em CAÇAR, na tela própria dele.',
   CTF_VENCIDO:
@@ -24,6 +28,17 @@ const SIMPLES: Record<string, string> = {
     'A propriedade não muda depois que a caçada começa — pode haver abate registrado nela.',
   PROP_SEM_PRAZO: 'Faltam as autorizações desta propriedade.',
   ROTA_SEM_PONTOS: 'Marque ao menos 2 pontos no traçado',
+  /* Códigos do clima. Sem tradução eles chegavam CRUS na tela, o que o
+     dossiê proíbe — e são justamente os que mais aparecem no campo. */
+  ABATE_SEM_COORD:
+    'Informe onde o abate aconteceu: sem a coordenada não dá para consultar o tempo naquele ponto.',
+  CEVA_SEM_COORD: 'Esta ceva não tem coordenada. Marque o ponto dela antes.',
+  CLIMA_INDISPONIVEL:
+    'A consulta de tempo não está configurada no servidor. Registre em "Aconteceu antes" e preencha as condições à mão.',
+  CLIMA_FALHOU:
+    'Não foi possível consultar o tempo agora. Registre em "Aconteceu antes" e preencha as condições à mão.',
+  CLIMA_IDENTIFICACAO:
+    'A consulta de tempo não está configurada no servidor. Registre em "Aconteceu antes" e preencha as condições à mão.',
   EMAIL_NAO_CONFIRMADO: 'Confirme seu e-mail para entrar',
   NAO_AUTENTICADO: 'Sessão expirada, entre novamente',
   VAGAS_ESGOTADAS: 'Cadastro temporariamente fechado',
