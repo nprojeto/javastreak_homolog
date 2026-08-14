@@ -29,7 +29,9 @@ const props = defineProps<{
 
 interface Resposta {
   ceva?: { id: string; nome?: string; tipo?: string }
-  rota?: { id: string; nome?: string }
+  /* `lat`/`lng` da rota são o primeiro ponto do traçado — é ele que serve de
+     referência para consultar o tempo. */
+  rota?: { id: string; nome?: string; lat?: number | string; lng?: number | string }
   abates?: Abate[]
 }
 interface ClimaAgora extends Agora { ok?: boolean; erro?: string }
@@ -43,6 +45,9 @@ const aba = ref<'nada' | 'tempo' | 'resumo'>('nada')
 const dim = ref('sexo')
 
 const cab = ref<{ nome: string; tipo: string }>({ nome: '', tipo: '' })
+
+/** Primeiro ponto do traçado, usado como referência de tempo na rota. */
+const pontoRota = ref<{ lat: number; lng: number } | null>(null)
 
 const agora = computed<Agora | null>(() => {
   if (!clima.value) return null
@@ -78,14 +83,28 @@ async function carregar() {
     abates.value = d?.abates || []
     const alvo = d?.ceva || d?.rota
     cab.value = { nome: alvo?.nome || '', tipo: (d?.ceva?.tipo) || '' }
+    const la = Number(d?.rota?.lat), ln = Number(d?.rota?.lng)
+    pontoRota.value = isFinite(la) && isFinite(ln) && (la || ln) ? { lat: la, lng: ln } : null
   } catch {
     abates.value = []
   }
-  /* O clima de agora sai da coordenada da CEVA. Na rota não há ação
-     equivalente, então lá o painel mostra o histórico sem o índice. */
-  if (props.tipo !== 'ceva') return
+  /**
+   * ⚠️ A ROTA TAMBÉM TEM ÍNDICE. Antes só a ceva tinha, porque só ela tem
+   * coordenada própria e só existia o `apiClimaCeva`. Com o `apiClimaPonto`, a
+   * rota consulta pelo PRIMEIRO ponto do traçado — que é onde a caçada
+   * começa. É aproximação declarada: numa rota de 5 km o tempo do início não é
+   * o do fim, mas para efeito de faixa (temperatura, chuva, vento) dá no mesmo.
+   */
   try {
-    const c = await server<ClimaAgora>('apiClimaCeva', props.id)
+    let c: ClimaAgora | null = null
+    if (props.tipo === 'ceva') {
+      c = await server<ClimaAgora>('apiClimaCeva', props.id)
+    } else if (pontoRota.value) {
+      c = await server<ClimaAgora>('apiClimaPonto', pontoRota.value.lat, pontoRota.value.lng)
+    } else {
+      erroClima.value = 'Esta rota não tem traçado, então não dá para consultar o tempo'
+      return
+    }
     if (c?.ok) clima.value = c
     else erroClima.value = c?.erro || 'Não foi possível consultar o tempo agora'
   } catch {

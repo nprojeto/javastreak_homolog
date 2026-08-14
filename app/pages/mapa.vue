@@ -445,18 +445,12 @@ onMounted(carregar)
         </button>
       </div>
 
-      <div v-if="tracados.length" class="card">
-        <div class="meta">
-          Toque numa rota ou numa ceva no mapa para ver o que aconteceu ali.
-        </div>
-        <NuxtLink
-          v-for="r in tracados"
-          :key="r.id"
-          :to="{ path: '/rota-detalhe', query: { id: r.id } }"
-          class="linha-rota no-i18n"
-        ><Icone nome="rotas" /> {{ r.nome || 'Rota' }} ›</NuxtLink>
-      </div>
-
+      <!--
+        ⚠️ A LISTA DE ROTAS SAIU daqui. Ela repetia o que o mapa já mostra e
+        empurrava o rodapé para longe — e o toque na rota, que era o único
+        motivo dela existir, agora acontece no próprio traçado, abrindo a
+        folha por cima do mapa.
+      -->
       <div v-if="!total" class="card vazio">
         <div class="big"><Icone nome="mapa" /></div>
         Nada para mostrar ainda.
@@ -519,10 +513,6 @@ onMounted(carregar)
 .folha-corpo :deep(.card) { background: none; border-radius: 0; }
 .barra-mapa { display: flex; gap: 8px; margin-top: 8px; }
 .barra-mapa .btn { flex: 1; margin: 0; }
-.linha-rota {
-  display: block; padding: 8px 0; border-top: 1px solid var(--linha);
-  text-decoration: none; color: var(--txt); font-size: 14px;
-}
 .vazio { text-align: center; padding: 24px; }
 .vazio .big { font-size: 40px; margin-bottom: 6px; }
 .rodape { text-align: center; margin-top: 10px; font-size: 11px; }
