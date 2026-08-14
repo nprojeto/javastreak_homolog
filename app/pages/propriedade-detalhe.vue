@@ -15,6 +15,7 @@
  * desenhar — em vez de mostrar uma lista vazia sem explicação.
  */
 import { useUi } from '~/stores/ui'
+import { abrirAbaVazia, mostrar } from '~/composables/useAbrirArquivo'
 import { dataBR } from '~/composables/useMascaras'
 import { pontoDentro, areaPoligono, fmtArea } from '~/composables/useMapa'
 import { statusVencimento } from '~/composables/useArquivo'
@@ -82,11 +83,13 @@ const pinos = computed(() => [
 
 async function abrirAnexo(docId?: string) {
   if (!docId) return
+  /* ⚠️ ANTES do await: é o gesto que autoriza abrir a aba. */
+  const aba = abrirAbaVazia()
   abrindo.value = docId
   try {
     const r = await server<{ url?: string }>('apiAbrirDocumento', docId)
-    if (r?.url) window.open(r.url, '_blank')
-    else ui.avisar('Não foi possível abrir', 'erro')
+    if (r?.url) mostrar(aba, r.url)
+    else { aba?.close(); ui.avisar('Não foi possível abrir', 'erro') }
   } catch { /* já avisado */ } finally {
     abrindo.value = ''
   }

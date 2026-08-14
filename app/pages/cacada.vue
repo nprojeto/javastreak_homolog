@@ -14,6 +14,7 @@
  * O registro de abate chega no lote 7b; o relatório do IBAMA, no 7c.
  */
 import { useUi } from '~/stores/ui'
+import { abrirAbaVazia, mostrar } from '~/composables/useAbrirArquivo'
 import { dataBR } from '~/composables/useMascaras'
 import type { Manejo } from '~/pages/cacadas.vue'
 import type { Propriedade } from '~/pages/propriedades.vue'
@@ -46,42 +47,30 @@ const aba = ref<'abates' | 'amigos' | 'docs'>('abates')
 /**
  * ── DOCUMENTAÇÃO DA CAÇADA ──
  *
- * ⚠️ A aba EXISTIA E ESTAVA VAZIA: o botão abria e não mostrava nada. Em campo
- * é onde a fiscalização pede o papel, e é a hora em que o app tem que
- * entregar — inclusive para o convidado, porque a autorização que ampara a
- * caçada é a do DONO, não a de quem foi convidado.
+ * ⚠️ Só as AUTORIZAÇÕES DA PROPRIEDADE, e é o que basta: são elas que amparam
+ * a caçada e que a fiscalização pede, e valem para todos que estão ali. O
+ * convidado precisa alcançá-las, e é a correção do `podeVerDocumento_` que
+ * torna isso possível.
  */
-interface DocManejo {
-  id: string; tipo: string; numero?: string; categoria?: string
-  vencimento?: string; arquivoNome?: string; deNome?: string; souEu?: boolean
-}
-const docs = ref<DocManejo[] | null>(null)
 const abrindoDoc = ref('')
 
-async function carregarDocs() {
-  try {
-    const r = await server<{ documentos?: DocManejo[] }>('apiDocumentosDoManejo', id.value)
-    docs.value = r?.documentos || []
-  } catch {
-    docs.value = []
-  }
-}
+interface DocManejo { id: string; tipo: string }
 
 async function abrirDoc(d: DocManejo) {
   abrindoDoc.value = d.id
+  /* ⚠️ ANTES do await: é o gesto que autoriza abrir a aba. */
+  const aba = abrirAbaVazia()
   try {
     /* ⚠️ A URL é assinada e temporária, e a checagem de acesso acontece de
        novo no servidor — a lista não é passe livre. */
     const r = await server<{ url?: string }>('apiAbrirDocumento', d.id)
-    if (r?.url) window.open(r.url, '_blank')
-    else ui.avisar('Não foi possível abrir o documento', 'erro')
+    if (r?.url) mostrar(aba, r.url)
+    else { aba?.close(); ui.avisar('Não foi possível abrir o documento', 'erro') }
   } catch { /* já avisado */ } finally {
     abrindoDoc.value = ''
   }
 }
 
-/* Só busca quando a aba abre: em campo, cada chamada custa bateria e sinal. */
-watch(aba, (v) => { if (v === 'docs' && docs.value === null) carregarDocs() })
 const loginAmigo = ref('')
 const convidando = ref(false)
 
@@ -288,45 +277,21 @@ onMounted(carregar)
             </div>
           </div>
 
-          <ClientOnly>
-            <MapaPontos
-              :limites="prop.temLimite ? [{ nome: prop.nome, pontos: prop.limite }] : []"
-              altura="36vh"
-            />
-          </ClientOnly>
+          <!--
+            ⚠️ SEM MAPA AQUI. O painel de campo, no topo desta mesma tela, já
+            mostra o limite da propriedade — dois mapas iguais na mesma tela
+            custam bateria, dados e rolagem, e nenhum diz nada que o outro não
+            diga.
+          -->
         </template>
 
         <!--
-          ⚠️ Documentos de TODOS os que estão na caçada, não só os seus. É a
-          autorização do dono que ampara quem foi convidado, e é ela que a
-          fiscalização pede — o convidado precisa alcançá-la em campo.
+          ⚠️ SEM os documentos pessoais de cada participante. O que a
+          fiscalização pede em campo são as autorizações DA PROPRIEDADE — elas
+          valem para todos que estão caçando ali, e é isso que ampara a
+          caçada. Listar o CTF e os papéis de cada um espalhava dado pessoal
+          por uma tela que qualquer convidado abre, sem necessidade nenhuma.
         -->
-        <h3 class="sub">Documentos de quem está na caçada</h3>
-        <div v-if="docs === null" class="card"><div class="meta">Carregando…</div></div>
-        <div v-else-if="!docs.length" class="card">
-          <div class="meta">
-            Nenhum documento com arquivo anexado.
-            <template v-if="!aberta"> A caçada está encerrada, e o acesso aos
-            documentos dos outros fecha junto com ela.</template>
-          </div>
-        </div>
-        <div
-          v-for="d in docs || []"
-          :key="d.id"
-          class="card doc"
-          :class="{ 'de-outro': !d.souEu }"
-        >
-          <div class="grow">
-            <b class="no-i18n">{{ d.tipo }}</b>
-            <div class="meta no-i18n">
-              {{ d.deNome }}<template v-if="d.numero"> · nº {{ d.numero }}</template>
-              <template v-if="d.vencimento"> · vence {{ dataBR(d.vencimento) }}</template>
-            </div>
-          </div>
-          <button class="ver" :disabled="abrindoDoc === d.id" @click="abrirDoc(d)">
-            {{ abrindoDoc === d.id ? '…' : 'Ver' }}
-          </button>
-        </div>
       </template>
 
       <!--

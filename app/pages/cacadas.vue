@@ -91,6 +91,9 @@ const verEncerradas = ref(true)
 
 const { daCacada } = usePercurso()
 
+/* Estado do CTF, para avisar antes de a pessoa tentar aceitar. */
+const ctfOk = computed(() => cred.dados?.ctfEmDia === true)
+
 /**
  * ⚠️ TRAVA: não encerra caçada com percurso pendente que tem ABATE.
  *
@@ -168,8 +171,24 @@ onMounted(carregar)
               de {{ c.donoNome || 'manejador' }} · {{ dataBR(c.criadoEm) }}
             </div>
           </div>
-          <button class="btn sm" @click="responder(c, 'aceito')">Aceitar</button>
+          <!--
+            ⚠️ Aceitar exige CTF em dia — a regra já é do servidor
+            (`exigirCtfEmDia_` no `apiResponderConviteManejo`). Aqui ela só
+            aparece ANTES da tentativa: levar a recusa depois de tocar em
+            "Aceitar" não diz o que fazer, e recusar continua livre, senão o
+            convite fica preso.
+          -->
+          <button
+            class="btn sm"
+            :class="{ off: !ctfOk }"
+            @click="responder(c, 'aceito')"
+          >Aceitar</button>
           <button class="btn sm sec" @click="responder(c, 'recusado')">Recusar</button>
+        </div>
+        <div v-if="!ctfOk" class="meta ctf-aviso">
+          <Icone nome="alerta" /> Você precisa do CTF em dia para aceitar um
+          convite. Recusar continua liberado.
+          <NuxtLink to="/ctf" class="ir-ctf">Regularizar</NuxtLink>
         </div>
       </template>
 
@@ -342,6 +361,14 @@ onMounted(carregar)
 .ac:active { background: var(--linha); }
 
 .ocultar { margin-top: 10px; }
+/* Continua clicável: o toque traz a recusa do servidor com o motivo. */
+.convite .btn.off { opacity: .55; }
+.ctf-aviso { color: var(--alerta); margin: 0 4px 10px; }
+.ir-ctf {
+  display: inline-block; margin-left: 6px; font-weight: 700;
+  color: var(--laranja-cl); text-decoration: none;
+}
+
 .trava {
   margin-top: 12px; padding: 10px 12px; border-radius: 10px;
   background: var(--carvao-3); border-left: 4px solid var(--alerta);

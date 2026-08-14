@@ -8,6 +8,7 @@
  * Abrir chama o servidor em vez de montar um link.
  */
 import { lerArquivo, DOC_MAX_MB } from '~/composables/useArquivo'
+import { abrirAbaVazia, mostrar } from '~/composables/useAbrirArquivo'
 import { useUi } from '~/stores/ui'
 
 const props = defineProps<{
@@ -44,10 +45,12 @@ async function escolheu(e: Event) {
 async function abrir() {
   if (!props.docId) return
   abrindo.value = true
+  /* ⚠️ ANTES do await: é o gesto que autoriza abrir a aba. */
+  const aba = abrirAbaVazia()
   try {
     const r = await server<{ url?: string }>('apiAbrirDocumento', props.docId)
-    if (r?.url) window.open(r.url, '_blank')
-    else ui.avisar('Não foi possível abrir', 'erro')
+    if (r?.url) mostrar(aba, r.url)
+    else { aba?.close(); ui.avisar('Não foi possível abrir', 'erro') }
   } catch { /* o useServer já avisou */ } finally {
     abrindo.value = false
   }
