@@ -115,7 +115,8 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 </template>
 
 <style scoped>
-.mapa { height: 50vh; min-height: 300px; border-radius: 12px; border: 1px solid var(--linha); }
+/* `touch-action: none`: o gesto é do mapa, não da página. */
+.mapa { height: 50vh; min-height: 300px; border-radius: 12px; border: 1px solid var(--linha); touch-action: none; }
 .dash { display: flex; gap: 8px; margin: 8px 0; }
 .kpi { flex: 1; background: var(--card); border: 1px solid var(--linha); border-radius: 12px; padding: 8px; text-align: center; }
 .kpi b { display: block; font-size: 17px; }

@@ -287,7 +287,8 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.mapa { height: 50vh; min-height: 300px; border-radius: 12px; border: 1px solid var(--linha); }
+/* `touch-action: none`: o gesto é do mapa, não da página. */
+.mapa { height: 50vh; min-height: 300px; border-radius: 12px; border: 1px solid var(--linha); touch-action: none; }
 .onde { flex: none; width: 44px; color: var(--laranja-cl); }
 .modos { display: flex; gap: 6px; margin-bottom: 6px; }
 .modos button {

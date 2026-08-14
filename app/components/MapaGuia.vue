@@ -297,7 +297,21 @@ function escapar(s: string) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] || c))
 }
 
-defineExpose({ enquadrar })
+/**
+ * Centraliza na posição com zoom de trabalho.
+ *
+ * ⚠️ Zoom 19 é ~20 m de largura visível num celular — é a escala em que dá
+ * para ver a divisa da mata e a trilha ao lado. `setView` em vez de `panTo`
+ * porque o ponto é justamente mudar o zoom junto, e não só arrastar.
+ */
+async function centralizar(zoom = 19) {
+  const L = await carregarLeaflet()
+  if (!map || !props.eu) return
+  map.setView([props.eu.lat, props.eu.lng], zoom, { animate: true })
+  void L
+}
+
+defineExpose({ enquadrar, centralizar })
 
 watch(() => [props.limites, props.rotas, props.cevas, props.marcacoes], desenharBase, { deep: true })
 watch(() => [props.eu, props.rumoAparelho, props.alvo], desenharEu, { deep: true })
@@ -356,6 +370,8 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 </style>
 
 <style scoped>
-.mapa { border-radius: 12px; border: 1px solid var(--linha); }
+/* ⚠️ `touch-action: none` entrega o gesto ao Leaflet. Sem isso o navegador
+   disputa a pinça com o mapa e acaba zoomando a página. */
+.mapa { border-radius: 12px; border: 1px solid var(--linha); touch-action: none; }
 .mapa.escolhendo { border-color: var(--laranja-cl); box-shadow: 0 0 0 2px rgba(255, 122, 26, .25); cursor: crosshair; }
 </style>

@@ -203,7 +203,8 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 }
 
 .palco { position: relative; }
-.mapa { height: 46vh; min-height: 260px; border-radius: 12px; border: 1px solid var(--linha); }
+/* `touch-action: none`: o gesto é do mapa, não da página. */
+.mapa { height: 46vh; min-height: 260px; border-radius: 12px; border: 1px solid var(--linha); touch-action: none; }
 .mira {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   pointer-events: none; z-index: 500;

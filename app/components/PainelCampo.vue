@@ -48,50 +48,44 @@ const {
 } = useBussola()
 
 /**
- * ── PERMISSÕES ANTES DO MAPA ──
+ * ── PERMISSÕES ──
  *
- * ⚠️ Entrar na caçada PEDE localização e bússola de uma vez, numa tela só. O
- * botão "ativar bússola" espalhado pelo caminho era pior de duas formas:
- * aparecia no meio da operação, e no iOS a permissão de orientação **só pode
- * ser pedida dentro de um gesto do usuário** — pedir sozinho é recusado em
- * silêncio, e o app parecia sem bússola.
+ * ⚠️ SEM TELA DE AUTORIZAÇÃO. Quem pede é o navegador, com o pop-up dele:
+ * `getCurrentPosition` na abertura dispara o diálogo nativo de localização
+ * sem precisar de botão nenhum.
  *
- * ⚠️ NÃO É BLOQUEIO. Quem recusar, ou estiver num aparelho sem sensor, segue
- * com o mapa: ele continua mostrando limite, rotas e cevas. O que se perde é
- * a própria posição e a seta — e a tela diz isso em vez de travar.
+ * ⚠️ A BÚSSOLA NO iOS é o caso difícil, e não dá para contornar:
+ * `requestPermission()` só funciona dentro de um gesto do usuário — chamada
+ * na abertura, é recusada em silêncio. A saída é pendurá-la no PRIMEIRO
+ * TOQUE da pessoa na tela, qualquer que seja ele: rolar, tocar no mapa,
+ * abrir o filtro. O pop-up nativo aparece nesse instante, e nenhum botão
+ * precisou existir para isso.
  */
-const permissoesOk = ref(false)
-const pedindo = ref(false)
+let pediuBussola = false
 
-async function autorizar() {
-  pedindo.value = true
-  try {
-    /* A bússola primeiro: no iOS ela exige o gesto, e o diálogo do GPS
-       logo em seguida não atrapalha. */
-    await pedirPermissao()
-    await new Promise<void>((resolve) => {
-      if (!navigator.geolocation) { erroGps.value = 'Seu aparelho não oferece localização.'; resolve(); return }
-      navigator.geolocation.getCurrentPosition(
-        (p) => {
-          eu.value = { lat: p.coords.latitude, lng: p.coords.longitude,
-            precisao: p.coords.accuracy ? Math.round(p.coords.accuracy) : undefined }
-          resolve()
-        },
-        (e) => {
-          erroGps.value = e.code === e.PERMISSION_DENIED
-            ? 'Permissão de localização negada. Você segue vendo o mapa, mas não a sua posição.'
-            : 'Sem sinal de GPS no momento. O mapa continua servindo.'
-          resolve()
-        },
-        { enableHighAccuracy: true, timeout: 15000 }
-      )
-    })
-  } finally {
-    pedindo.value = false
-    permissoesOk.value = true
-    ligarGps()
-    travarTela()
+function pedirBussolaNoPrimeiroToque() {
+  if (pediuBussola) return
+  pediuBussola = true
+  /* `once` e `passive`: um disparo só, e sem atrapalhar a rolagem. */
+  const alvo = () => {
+    pedirPermissao().catch(() => { /* recusou: o mapa continua servindo */ })
+    document.removeEventListener('pointerdown', alvo)
+    document.removeEventListener('touchstart', alvo)
   }
+  document.addEventListener('pointerdown', alvo, { once: true, passive: true })
+  document.addEventListener('touchstart', alvo, { once: true, passive: true })
+}
+
+const mapaRef = ref<{ centralizar: (z?: number) => void; enquadrar: () => void } | null>(null)
+
+/**
+ * ⚠️ Centralizar faz DUAS coisas: religa o seguimento e aproxima em ~20 m.
+ * Só religar deixava o mapa no zoom em que a pessoa tinha parado, que costuma
+ * ser longe — e o botão parecia não ter funcionado.
+ */
+function centralizar() {
+  seguir.value = true
+  mapaRef.value?.centralizar(19)
 }
 
 const g = ref<Guia | null>(null)
@@ -327,6 +321,21 @@ async function salvarEvento() {
   }
 }
 
+/**
+ * Atalho direto para o abate, sem passar pelo painel. É o caminho de quem
+ * acabou de abater e não precisa escolher tipo de evento.
+ */
+function irDiretoAoAbate() {
+  const q: Record<string, string> = { manejo: props.manejoId }
+  if (eu.value) { q.lat = eu.value.lat.toFixed(6); q.lng = eu.value.lng.toFixed(6) }
+  /* Com UMA ceva só, ela vai junto — o servidor grava o ponto dela e o clima
+     em tempo real sai da coordenada certa. Com várias, quem escolhe é a tela
+     do abate, que já tem o seletor. */
+  const cs = g.value?.cevas || []
+  if (cs.length === 1) q.ceva = String(cs[0]!.id)
+  navigateTo({ path: '/abate', query: q })
+}
+
 /** Leva ao registro de abate com a coordenada e a ceva já escolhidas. */
 function irParaAbate() {
   const p = pontoNovo.value || eu.value
@@ -378,9 +387,11 @@ async function travarTela() {
 
 onMounted(() => {
   carregar()
-  /* `iniciar` só PREPARA: no iOS ele marca que falta permissão, e quem pede
-     é o botão — dentro do gesto, que é a única forma que funciona lá. */
   iniciarBussola()
+  /* O diálogo nativo do GPS aparece aqui, sem intermediário. */
+  ligarGps()
+  travarTela()
+  pedirBussolaNoPrimeiroToque()
 })
 
 onBeforeUnmount(() => {
@@ -395,28 +406,6 @@ onBeforeUnmount(() => {
   <div class="campo">
     <div v-if="erro" class="card"><div class="meta ruim">{{ erro }}</div></div>
     <div v-else-if="!g" class="card"><div class="meta">Carregando o mapa…</div></div>
-
-    <!-- ⚠️ PORTA DE ENTRADA: pede as duas permissões de uma vez. -->
-    <div v-else-if="!permissoesOk" class="card portao">
-      <h3><Icone nome="pino" /> Antes de entrar no campo</h3>
-      <!-- ⚠️ Uma frase inteira por nó de texto: o tradutor casa o texto do nó
-           contra o dicionário, e um <b> no meio parte a frase em pedaços que
-           nunca casam — a tela ficaria em português no modo inglês. -->
-      <div class="meta">
-        O mapa usa a sua localização para mostrar onde você está e gravar o
-        percurso, e a bússola para saber para que lado você está virado.
-      </div>
-      <button class="btn" :disabled="pedindo" @click="autorizar">
-        {{ pedindo ? 'Aguardando…' : 'Autorizar e abrir o mapa' }}
-      </button>
-      <button class="btn sec" :disabled="pedindo" @click="permissoesOk = true">
-        Abrir sem localização
-      </button>
-      <div class="meta">
-        Sem autorizar, o mapa continua mostrando o limite, as rotas e as cevas
-        — mas não a sua posição.
-      </div>
-    </div>
 
     <template v-else>
       <!-- situação, antes do mapa -->
@@ -458,6 +447,7 @@ onBeforeUnmount(() => {
       <div class="palco">
       <ClientOnly>
         <MapaGuia
+          ref="mapaRef"
           :limites="limitesVis"
           :rotas="rotasNoMapa"
           :cevas="cevasVis"
@@ -478,7 +468,7 @@ onBeforeUnmount(() => {
         fixo abaixo, ele ocupava espaço permanente para uma ação que quase
         nunca é necessária — o mapa segue a posição sozinho.
       -->
-      <button v-if="!seguir && !escolhendo" class="centralizar" @click="seguir = true">
+      <button v-if="!seguir && !escolhendo" class="centralizar" @click="centralizar">
         <Icone nome="pino" :px="16" /> Centralizar
       </button>
       </div>
@@ -511,9 +501,19 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
+        <!--
+          ⚠️ TRÊS botões, um por ação, e nenhum repetido na tela. Antes havia
+          "Registrar evento" aqui e outro igual no fim da aba Abates — dois
+          botões idênticos na mesma tela, e nenhum jeito de saber que faziam a
+          mesma coisa. O abate ganhou botão próprio porque é o registro que
+          mais se procura depois que acontece.
+        -->
         <div v-if="!painel" class="acoes-campo">
-          <button class="btn" @click="abrirPainel">
+          <button class="btn sec" @click="abrirPainel">
             <Icone nome="adicionar" /> Registrar evento
+          </button>
+          <button class="btn" @click="irDiretoAoAbate">
+            <img src="/marca/javali-branco.png" class="ic-javali" alt=""> Registrar abate
           </button>
           <button v-if="!gravando" class="btn sec" @click="comecarPercurso">
             <Icone nome="rotas" /> Gravar novo percurso
@@ -637,8 +637,14 @@ onBeforeUnmount(() => {
 }
 .centralizar:active { background: rgba(32, 30, 23, .95); }
 
-.acoes-campo { display: flex; gap: 8px; margin-top: 10px; }
-.acoes-campo .btn { flex: 1; margin: 0; }
+/* Três numa linha só num celular de 360 px: rótulo curto, duas linhas se
+   precisar, e nada de ícone gigante. */
+.acoes-campo { display: flex; gap: 6px; margin-top: 10px; }
+.acoes-campo .btn {
+  flex: 1; margin: 0; padding: 10px 6px; font-size: 11.5px; line-height: 1.25;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.ic-javali { width: 20px; height: 20px; object-fit: contain; }
 
 .percurso { margin-top: 10px; border-left: 4px solid var(--danger); }
 .percurso .linha { display: flex; align-items: center; gap: 10px; }

@@ -167,14 +167,14 @@ onMounted(carregar)
         </div>
 
         <!--
-          ⚠️ REGISTRAR EVENTO, não "registrar abate". Abate é UM dos eventos, e
-          mandar direto para a tela dele obrigava a pessoa a saber, antes de
-          tocar, que o que ela viu era abate — quando muitas vezes é rastro,
-          avistamento ou perigo. O painel de campo pergunta primeiro e desvia
-          para o abate quando for o caso.
+          ⚠️ SEM BOTÃO DE REGISTRO AQUI. Ele existia e era IGUAL ao do painel
+          de campo, logo acima na mesma tela — dois botões idênticos, e nenhum
+          jeito de saber que faziam a mesma coisa. As três ações (evento,
+          abate, percurso) vivem no painel, junto do mapa, que é onde a pessoa
+          está olhando quando precisa delas.
         -->
-        <button v-if="aberta" class="btn" @click="irAoCampo">
-          <img src="/marca/javali-branco.png" class="ic-javali" alt=""> Registrar evento
+        <button v-if="aberta" class="btn sec ir-campo" @click="irAoCampo">
+          <Icone nome="mapa" /> Ir ao mapa para registrar
         </button>
       </template>
 
@@ -267,8 +267,7 @@ onMounted(carregar)
 
 <style scoped>
 h3 { margin: 0 0 4px; }
-/* O javali da marca dentro do botão. */
-.ic-javali { width: 20px; height: 20px; object-fit: contain; vertical-align: -4px; margin-right: 4px; }
+.ir-campo { margin-top: 10px; }
 .ruim { color: var(--danger); }
 .cab.aberta { border-left: 5px solid var(--danger); }
 .cab .meta { margin: 4px 0 0; }

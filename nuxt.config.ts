@@ -54,7 +54,18 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         {
           name: 'viewport',
-          content: 'width=device-width, initial-scale=1, viewport-fit=cover'
+          /**
+           * ⚠️ `maximum-scale=1, user-scalable=no` por causa do MAPA. Sem
+           * isso, a pinça sobre o Leaflet no iOS zoomava a PÁGINA inteira em
+           * vez do mapa — e o app ficava com tudo deslocado, parecendo layout
+           * quebrado, sem jeito óbvio de voltar.
+           *
+           * O custo é real e conhecido: quem quiser aumentar o texto perde a
+           * pinça. Em troca, o app usa fontes de 12,5 px para cima, respeita o
+           * tamanho de fonte do sistema, e o mapa — que é a tela em que a
+           * pinça importa — continua com o zoom dele.
+           */
+          content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
         },
         { name: 'theme-color', content: '#16150F' }
       ],
@@ -104,7 +115,7 @@ export default defineNuxtConfig({
        * Ver app/composables/useMarca.ts.
        */
       marca: process.env.NUXT_PUBLIC_MARCA || 'javastreak',
-      appVer: 'vJS.140826.1024',
+      appVer: 'vJS.140826.1049',
       ambiente: 'homologacao'
     }
   },

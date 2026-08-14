@@ -257,5 +257,7 @@ onBeforeUnmount(() => { map?.remove(); map = null })
 </style>
 
 <style scoped>
-.mapa { min-height: 240px; border-radius: 12px; border: 1px solid var(--linha); }
+/* ⚠️ `touch-action: none` entrega o gesto ao Leaflet, senão o navegador
+   disputa a pinça com o mapa e zooma a página. */
+.mapa { min-height: 240px; border-radius: 12px; border: 1px solid var(--linha); touch-action: none; }
 </style>
