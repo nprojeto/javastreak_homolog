@@ -19,6 +19,7 @@
 import { useUi } from '~/stores/ui'
 import { lerArquivo, FOTO_MAX_MB } from '~/composables/useArquivo'
 import { pontoDentro } from '~/composables/useMapa'
+import { usePercurso } from '~/composables/usePercurso'
 import type { Manejo } from '~/pages/cacadas.vue'
 
 definePageMeta({ layout: 'app' })
@@ -140,6 +141,7 @@ const onde = ref('')
  * com a coordenada — bloquear o registro perderia um dado que vai ao IBAMA, e
  * isso seria pior que registrar sem vínculo.
  */
+const { marcarAbate } = usePercurso()
 const gravandoPercurso = computed(() => route.query.percurso === '1')
 
 const opcoesOnde = computed(() => {
@@ -363,6 +365,11 @@ async function salvar() {
   salvando.value = true
   try {
     await server('apiCriarAbate', d)
+    /* ⚠️ Marca o vínculo com o percurso em gravação. É esta contagem que
+       impede, depois, descartar o traçado ou encerrar a caçada sem salvá-lo:
+       um abate ligado a uma rota que nunca existiu vira registro órfão no
+       relatório do IBAMA. */
+    if (onde.value === 'p') marcarAbate()
     ui.avisar('Abate registrado ✔')
     await router.push({ path: '/cacada', query: { id: m.value.id } })
   } catch { /* o useServer já avisou, traduzido */ } finally {

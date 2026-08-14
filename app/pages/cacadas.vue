@@ -14,6 +14,7 @@
 import { dataBR } from '~/composables/useMascaras'
 import { useCreditos } from '~/stores/creditos'
 import { useUi } from '~/stores/ui'
+import { usePercurso } from '~/composables/usePercurso'
 
 definePageMeta({ layout: 'app' })
 
@@ -88,6 +89,24 @@ const encerrada = ref<Manejo | null>(null)
  */
 const verEncerradas = ref(true)
 
+const { daCacada } = usePercurso()
+
+/**
+ * ⚠️ TRAVA: não encerra caçada com percurso pendente que tem ABATE.
+ *
+ * Encerrar é irreversível, e o percurso vive só no aparelho até ser salvo. Se
+ * a caçada fechar antes, o abate fica apontando para uma rota que nunca vai
+ * existir — e o relatório do IBAMA mostra um registro sem origem, sem jeito de
+ * corrigir depois.
+ *
+ * Sem abate a trava não vale: perder um traçado é chato, perder o vínculo de
+ * um abate é problema de prestação de contas.
+ */
+const percursoPendente = computed(() =>
+  encerrandoM.value ? daCacada(encerrandoM.value.id) : null)
+
+const travadoPorPercurso = computed(() => (percursoPendente.value?.abates || 0) > 0)
+
 function abrirEncerrar(m: Manejo) {
   encerrandoM.value = m
   encerrada.value = null
@@ -96,6 +115,10 @@ function abrirEncerrar(m: Manejo) {
 async function confirmarEncerrar() {
   const m = encerrandoM.value
   if (!m) return
+  if (travadoPorPercurso.value) {
+    ui.avisar('Salve o percurso antes de encerrar — há abate registrado nele.', 'erro')
+    return
+  }
   salvandoEnc.value = true
   try {
     /* Sem número: quem conta é o servidor, pelos eventos marcados. */
@@ -160,8 +183,27 @@ onMounted(carregar)
           Os avistamentos que você marcou no mapa durante a caçada já estão
           contados — não precisa informar nada aqui.
         </div>
+
+        <!-- ⚠️ Bloqueia com o motivo à vista e o caminho para resolver. -->
+        <div v-if="travadoPorPercurso" class="trava">
+          <b><Icone nome="alerta" /> Há um percurso não salvo</b>
+          <div class="meta">
+            Você registrou
+            <span class="no-i18n">{{ percursoPendente?.abates }}</span> abate(s)
+            no percurso <span class="no-i18n">"{{ percursoPendente?.nome }}"</span>,
+            que ainda não virou rota. Encerrar agora deixaria esse abate sem
+            origem no relatório do IBAMA.
+          </div>
+          <NuxtLink :to="{ path: '/cacada', query: { id: encerrandoM.id } }" class="btn">
+            Entrar e salvar o percurso
+          </NuxtLink>
+        </div>
         <div class="acoes-enc">
-          <button class="btn danger" :disabled="salvandoEnc" @click="confirmarEncerrar">
+          <button
+            class="btn danger"
+            :disabled="salvandoEnc || travadoPorPercurso"
+            @click="confirmarEncerrar"
+          >
             {{ salvandoEnc ? 'Encerrando…' : 'Encerrar caçada' }}
           </button>
           <button class="btn sec" :disabled="salvandoEnc" @click="encerrandoM = null">Cancelar</button>
@@ -300,6 +342,12 @@ onMounted(carregar)
 .ac:active { background: var(--linha); }
 
 .ocultar { margin-top: 10px; }
+.trava {
+  margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+  background: var(--carvao-3); border-left: 4px solid var(--alerta);
+}
+.trava b { font-size: 13.5px; color: var(--alerta); }
+.trava .btn { margin-top: 10px; text-decoration: none; }
 .enc { border-left: 5px solid var(--danger); margin-bottom: 12px; }
 .enc h3 { margin: 0 0 4px; }
 .acoes-enc { display: flex; gap: 8px; margin-top: 12px; }

@@ -20,6 +20,7 @@
 import { useUi } from '~/stores/ui'
 import { distanciaM, fmtDist, pontoDentro } from '~/composables/useMapa'
 import { useBussola } from '~/composables/useBussola'
+import { usePercurso } from '~/composables/usePercurso'
 import { lerArquivo, FOTO_MAX_MB } from '~/composables/useArquivo'
 import type { Ponto } from '~/composables/useMapa'
 import type { LimiteGuia, RotaGuia, CevaGuia, MarcaGuia } from '~/components/MapaGuia.vue'
@@ -145,10 +146,15 @@ const dentro = computed(() => {
  * ⚠️ Ponto novo só a cada 15 m. Sem esse filtro, o GPS parado gera dezenas de
  * pontos no mesmo lugar: o traçado vira um borrão e o payload cresce à toa.
  */
-const DIST_MIN_M = 15
+const {
+  atual: guardado, daCacada, comecar, acrescentar, limpar: limparPercurso,
+  marcarInterrompido
+} = usePercurso()
 
-const gravando = ref(false)
-const percurso = ref<Ponto[]>([])
+/* O percurso desta caçada — outro guardado, de outra caçada, não conta. */
+const meuPercurso = computed(() => daCacada(props.manejoId))
+const gravando = computed(() => !!meuPercurso.value)
+const percurso = computed<Ponto[]>(() => meuPercurso.value?.pontos || [])
 const salvandoPercurso = ref(false)
 
 const distanciaPercurso = computed(() => {
@@ -168,9 +174,7 @@ const rotasNoMapa = computed(() => {
 
 function pontoDoPercurso(p: { lat: number; lng: number }) {
   if (!gravando.value) return
-  const u = percurso.value[percurso.value.length - 1]
-  if (u && distanciaM(u, p) < DIST_MIN_M) return
-  percurso.value = [...percurso.value, { lat: p.lat, lng: p.lng }]
+  acrescentar(p, distanciaM)
 }
 
 /**
@@ -191,13 +195,28 @@ const podeGravar = computed(() => {
   return ls.some((l) => pontoDentro(eu.value!, l.limite))
 })
 
+/**
+ * ⚠️ O NOME É PEDIDO NA LARGADA, não no fim. Duas razões, e a segunda é a que
+ * importa: perguntar no fim exige que a pessoa esteja com o celular na mão e
+ * o app aberto naquele instante — e se o aparelho morrer no meio da
+ * caminhada, o traçado fica sem nome e não há como salvá-lo sozinho depois.
+ * Com o nome já escolhido, a recuperação é automática.
+ */
 function comecarPercurso() {
   if (!podeGravar.value) {
     ui.avisar('Você está fora do limite da propriedade. Entre nela para começar a gravar.', 'erro')
     return
   }
-  percurso.value = []
-  gravando.value = true
+  if (!g.value?.propriedadeId) {
+    ui.avisar('Não consegui identificar a propriedade desta caçada. Recarregue a tela e tente de novo.', 'erro')
+    return
+  }
+  const nome = prompt(
+    'Nome da rota que vai ser gravada:',
+    'Percurso de ' + new Date().toLocaleDateString()
+  )
+  if (nome === null) return
+  comecar(props.manejoId, g.value.propriedadeId, nome.trim() || 'Percurso')
   ui.avisar('Gravando o percurso — ele vira uma rota ao concluir')
 }
 
@@ -210,28 +229,36 @@ function comecarPercurso() {
  * nenhum — a única saída era sair da tela, o que dava no mesmo sem avisar.
  */
 function cancelarPercurso() {
+  /* ⚠️ COM ABATE VINCULADO, não descarta. Um abate ligado a um traçado que
+     nunca existiu vira registro órfão no relatório do IBAMA — e o abate não
+     pode ser desfeito para acompanhar. Salvar é o único caminho. */
+  if ((meuPercurso.value?.abates || 0) > 0) {
+    ui.avisar(
+      'Este percurso tem abate registrado. Conclua e salve — descartar deixaria o abate sem a rota.',
+      'erro'
+    )
+    return
+  }
   const n = percurso.value.length
   if (n > 1 && !confirm(
     'Cancelar a gravação?\n\n'
     + 'O percurso de ' + fmtDist(distanciaPercurso.value) + ' que você andou até aqui '
     + 'será descartado. Não dá para recuperar.'
   )) return
-  gravando.value = false
-  percurso.value = []
+  limparPercurso()
   ui.avisar('Gravação cancelada')
 }
 
-async function salvarPercurso() {
-  if (percurso.value.length < 2) {
-    ui.avisar('Ande um pouco antes de salvar — o percurso ainda não tem traçado', 'erro')
+async function salvarPercurso(silencioso = false) {
+  const cur = meuPercurso.value
+  if (!cur) return
+  if (cur.pontos.length < 2) {
+    if (!silencioso) {
+      ui.avisar('Ande um pouco antes de salvar — o percurso ainda não tem traçado', 'erro')
+    }
     return
   }
-  if (!g.value?.propriedadeId) {
-    ui.avisar('Não consegui identificar a propriedade desta caçada. Recarregue a tela e tente de novo.', 'erro')
-    return
-  }
-  const nome = prompt('Nome da rota:', 'Percurso de ' + new Date().toLocaleDateString())
-  if (nome === null) return
+  const nome = cur.nome
   salvandoPercurso.value = true
   try {
     /* ⚠️ `origem: 'gps'` é o que faz o servidor AVISAR em vez de recusar
@@ -239,14 +266,13 @@ async function salvarPercurso() {
        fora a caminhada inteira. */
     const r = await server<{ foraDoLimite?: boolean }>('apiCriarRota', {
       nome: nome || 'Percurso',
-      propriedadeId: g.value.propriedadeId,
-      pontos: percurso.value,
+      propriedadeId: cur.propriedadeId,
+      pontos: cur.pontos,
       origem: 'gps',
       modalidade: 'manejo',
       distancia: Math.round(distanciaPercurso.value)
     })
-    gravando.value = false
-    percurso.value = []
+    limparPercurso()
     ui.avisar(r?.foraDoLimite
       ? 'Rota salva ✔ — parte do percurso saiu do limite da propriedade'
       : 'Rota salva ✔')
@@ -450,8 +476,42 @@ async function travarTela() {
   } catch { /* negado ou sem suporte */ }
 }
 
+/**
+ * ── RECUPERAÇÃO ──
+ *
+ * ⚠️ O app NÃO consegue salvar sozinho enquanto está fechado: sem JavaScript
+ * rodando não há chamada de API, e `sendBeacon` não manda o cabeçalho de
+ * autenticação que a Edge Function exige. O que dá para garantir é o traçado
+ * sobreviver no aparelho e ser salvo na PRIMEIRA vez que a caçada reabrir —
+ * que é o primeiro instante em que existe rede e sessão de novo.
+ *
+ * ⚠️ Salva SOZINHO porque o nome foi escolhido na largada. Sem ele, restaria
+ * perguntar — e perguntar é o que falha quando a pessoa não está com o
+ * aparelho na mão.
+ */
+async function recuperarPercurso() {
+  const cur = meuPercurso.value
+  if (!cur || !cur.interrompido) return
+  if (cur.pontos.length < 2) {
+    /* Nada andado: não vale virar rota, e guardar não serve para nada. */
+    limparPercurso()
+    return
+  }
+  ui.avisar('Recuperando o percurso interrompido…')
+  await salvarPercurso(true)
+}
+
+/* Marca a interrupção enquanto ainda há JavaScript vivo. `pagehide` é o único
+   evento em que o Safari do iOS ainda executa antes de matar a página. */
+function aoSair() { marcarInterrompido() }
+
 onMounted(() => {
   carregar()
+  recuperarPercurso()
+  window.addEventListener('pagehide', aoSair)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') marcarInterrompido()
+  })
   iniciarBussola()
   /* O diálogo nativo do GPS aparece aqui, sem intermediário. */
   ligarGps()
@@ -459,6 +519,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('pagehide', aoSair)
   if (observador !== null) navigator.geolocation.clearWatch(observador)
   observador = null
   travaTela?.release().catch(() => { /* já solta */ })
@@ -567,7 +628,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <div class="acoes-perc">
-            <button class="btn" :disabled="salvandoPercurso || percurso.length < 2" @click="salvarPercurso">
+            <button class="btn" :disabled="salvandoPercurso || percurso.length < 2" @click="salvarPercurso()">
               <Icone nome="salvar" />
               {{ salvandoPercurso ? 'Salvando…' : 'Concluir e salvar rota' }}
             </button>
