@@ -92,7 +92,11 @@ const rede = ref<Rede | null>(null)
 const props_ = ref<ItemMapa[]>([])
 const erro = ref('')
 const abertos = ref(true)
-const mapaRef = ref<{ enquadrar: () => void; mapa: () => unknown } | null>(null)
+const mapaRef = ref<{
+  enquadrar: () => void
+  projetar: (lat: number, lng: number) => { x: number; y: number } | null
+  mapa: () => unknown
+} | null>(null)
 
 /**
  * ⚠️ O ÍNDICE NO PINO. É ele que faz o mapa responder "qual ceva hoje?" sem
@@ -116,6 +120,38 @@ const indicePorCeva = computed<Record<string, number | null>>(() => {
     if (!meus.length) { out[c.id] = null; continue }
     const e = estatisticaDe({ ...clima, quando: new Date() }, meus)
     out[c.id] = e.indice
+  }
+  return out
+})
+
+/**
+ * ⚠️ ÍNDICE NAS ROTAS TAMBÉM. Faltava, e o pino da rota ficava sem etiqueta
+ * enquanto o da ceva mostrava o número — o mapa dizia que só a ceva tinha
+ * histórico, o que não é verdade.
+ *
+ * ⚠️ O clima usado é o da CEVA MAIS PRÓXIMA do começo da rota. O
+ * `apiClimaCevas` traz o tempo de todas as cevas numa chamada só; pedir uma
+ * consulta por rota multiplicaria as chamadas ao MET Norway, que pede cache.
+ * Dentro de uma propriedade a diferença de tempo entre dois pontos não muda
+ * de faixa — e quem quiser o número exato da rota abre o painel dela, que
+ * consulta pelo ponto certo.
+ */
+const indicePorRota = computed<Record<string, number | null>>(() => {
+  const out: Record<string, number | null> = {}
+  const d = dados.value
+  if (!d) return out
+  const cevas = (d.cevas || []).filter((c) => temCoord(c) && climaPorCeva.value[c.id])
+  for (const r of d.rotas || []) {
+    const p0 = (r.pontos || [])[0]
+    const meus = (d.abates || []).filter((a) => String(a.rotaId || '') === String(r.id)) as unknown as Abate[]
+    if (!p0 || !meus.length || !cevas.length) { out[r.id] = null; continue }
+    let melhor = cevas[0]!, dist = Infinity
+    for (const c of cevas) {
+      const dd = distM(p0.lat, p0.lng, num(c.lat)!, num(c.lng)!)
+      if (dd < dist) { dist = dd; melhor = c }
+    }
+    const e = estatisticaDe({ ...climaPorCeva.value[melhor.id]!, quando: new Date() }, meus)
+    out[r.id] = e.indice
   }
   return out
 })
@@ -220,6 +256,8 @@ interface PinoMapa {
   linhas?: string[]; foto?: string; icone?: string
   acoes?: Array<{ rotulo: string; url: string }>
   sel?: { tipo: 'ceva' | 'rota'; id: string }
+  /** Etiqueta 0–100 pendurada no pino. */
+  indice?: number | null
 }
 
 /**
@@ -227,11 +265,85 @@ interface PinoMapa {
  * a pergunta "vale a pena ir nesta hoje?" nasce olhando o mapa, não dentro da
  * ficha da ceva, que ninguém abre no meio do mato.
  */
-const selecionado = ref<{ tipo: 'ceva' | 'rota'; id: string; nome: string } | null>(null)
+const selecionado = ref<{ tipo: 'ceva' | 'rota'; id: string; nome: string; lat: number; lng: number } | null>(null)
 
-/* A folha abre SOBRE o mapa: não há para onde rolar, e é esse o ponto. */
-function selecionar(x: { tipo: 'ceva' | 'rota'; id: string; nome: string }) {
+/**
+ * ── BALÃO ANCORADO AO PINO ──
+ *
+ * ⚠️ Sai DO PINO, não do rodapé. A folha que subia de baixo cobria o mapa
+ * inteiro e não dizia a que pino pertencia — num mapa com três cevas, era
+ * preciso lembrar em qual se tinha tocado.
+ *
+ * ⚠️ A posição é recalculada a cada movimento do mapa, para o balão seguir o
+ * pino no arrasto e no zoom. Sem isso ele ficaria parado enquanto o terreno
+ * anda por baixo.
+ */
+const ancora = ref<{ x: number; y: number } | null>(null)
+const alturaMapa = 62   // vh, o mesmo do MapaPontos abaixo
+/* O elemento do palco, para medir a caixa REAL do mapa. */
+const mapaEl = ref<HTMLElement | null>(null)
+
+function recalcularAncora() {
+  const sel = selecionado.value
+  if (!sel) { ancora.value = null; return }
+  ancora.value = mapaRef.value?.projetar(sel.lat, sel.lng) ?? null
+}
+
+/**
+ * Onde desenhar o balão, em pixels dentro do mapa.
+ *
+ * ⚠️ Abre PARA CIMA quando há espaço, e para baixo quando o pino está no
+ * topo — senão o balão nasceria fora da tela. E é preso nas laterais para não
+ * vazar: num pino junto da borda, ele desliza em vez de sumir.
+ */
+/**
+ * ⚠️ O estilo é montado NO SCRIPT, não no template. Expressão de CSS no
+ * template vira texto solto para o conferidor de traduções, que passa a
+ * cobrar tradução de `calc(100% -`.
+ */
+const estiloBalao = computed(() => {
+  const p = posBalao.value
+  if (!p) return {}
+  return {
+    left: p.x + 'px',
+    width: p.larg + 'px',
+    top: p.paraCima ? 'auto' : (p.topo + 26) + 'px',
+    bottom: p.paraCima ? `calc(100% - ${p.topo - 26}px)` : 'auto',
+    maxHeight: p.alt + 'px',
+    '--seta': p.seta + 'px'
+  } as Record<string, string>
+})
+
+const posBalao = computed(() => {
+  const a = ancora.value
+  if (!a) return null
+  /**
+   * ⚠️ A largura de referência é a do MAPA, não a da janela. O mapa vive
+   * dentro do conteúdo, que tem margem — usar a janela fazia o balão vazar
+   * pela direita exatamente a largura dessa margem.
+   */
+  const cx = mapaEl.value?.getBoundingClientRect()
+  const alturaPx = cx?.height || (typeof window !== 'undefined' ? window.innerHeight * alturaMapa / 100 : 500)
+  const larguraPx = cx?.width || 360
+  const LARG = Math.min(320, larguraPx - 16)
+  const paraCima = a.y > alturaPx * 0.45
+  const x = Math.max(8, Math.min(a.x - LARG / 2, larguraPx - LARG - 8))
+  /**
+   * ⚠️ ALTURA LIMITADA AO ESPAÇO QUE SOBRA acima ou abaixo do pino. Sem isso
+   * o balão passava do topo do mapa e ficava cortado pela barra do app — e o
+   * cabeçalho dele, com o nome e o botão de fechar, sumia junto.
+   */
+  const folga = 12
+  const alt = paraCima
+    ? Math.max(140, a.y - 26 - folga)
+    : Math.max(140, alturaPx - a.y - 26 - folga)
+  return { x, larg: LARG, paraCima, topo: a.y, seta: a.x - x, alt }
+})
+
+async function selecionar(x: { tipo: 'ceva' | 'rota'; id: string; nome: string; lat: number; lng: number }) {
   selecionado.value = x
+  await nextTick()
+  recalcularAncora()
 }
 
 const pinos = computed(() => {
@@ -276,7 +388,8 @@ const pinos = computed(() => {
       const p = (r.pontos || [])[0]
       if (!p) continue
       out.push({ lat: p.lat, lng: p.lng, titulo: r.nome || 'Rota', cor: '#3b6ea5',
-        icone: 'rotas', sel: { tipo: 'rota' as const, id: r.id } })
+        icone: 'rotas', sel: { tipo: 'rota' as const, id: r.id },
+        indice: indicePorRota.value[r.id] ?? null })
     }
   }
 
@@ -400,7 +513,7 @@ onMounted(carregar)
         era preciso rolar para ver o que o toque tinha aberto, e no mato isso
         significa perder de vista onde se está.
       -->
-      <div class="palco">
+      <div ref="mapaEl" class="palco">
         <ClientOnly>
           <MapaPontos
             ref="mapaRef"
@@ -410,11 +523,17 @@ onMounted(carregar)
             enquadrar-uma-vez
             altura="62vh"
             @selecionar="selecionar"
+            @moveu="recalcularAncora"
           />
         </ClientOnly>
 
-        <!-- Folha sobre o mapa: sobe de baixo e cobre até 70% da altura dele. -->
-        <div v-if="selecionado" class="folha">
+        <!-- Balão saindo do pino. -->
+        <div
+          v-if="selecionado && posBalao"
+          class="folha"
+          :class="posBalao.paraCima ? 'acima' : 'abaixo'"
+          :style="estiloBalao"
+        >
           <div class="folha-cab">
             <b class="no-i18n">{{ selecionado.nome }}</b>
             <NuxtLink
@@ -480,17 +599,30 @@ onMounted(carregar)
 .chip.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); font-weight: 600; }
 .chip i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .aviso { color: var(--laranja-esc); margin-top: 8px; }
-/* ── folha sobre o mapa ── */
+/* ── balão ancorado ao pino ── */
 .palco { position: relative; }
 .folha {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 600;
-  max-height: 72%; display: flex; flex-direction: column;
+  position: absolute; z-index: 600;
+  display: flex; flex-direction: column;
   background: var(--card); border: 1px solid var(--linha);
-  border-radius: 14px 14px 12px 12px;
-  box-shadow: 0 -6px 20px rgba(0, 0, 0, .5);
-  animation: sobe .18s ease-out;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .55);
+  animation: surge .16s ease-out;
 }
-@keyframes sobe { from { transform: translateY(14px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes surge { from { transform: scale(.96); opacity: 0 } to { transform: none; opacity: 1 } }
+
+/* A ponta aponta para o pino, na horizontal em que ele está. */
+.folha::after {
+  content: ''; position: absolute; left: var(--seta, 50%);
+  margin-left: -7px; width: 0; height: 0;
+  border-left: 7px solid transparent; border-right: 7px solid transparent;
+}
+.folha.acima::after {
+  top: 100%; border-top: 8px solid var(--card);
+}
+.folha.abaixo::after {
+  bottom: 100%; border-bottom: 8px solid var(--card);
+}
 
 .folha-cab {
   display: flex; align-items: center; gap: 8px;

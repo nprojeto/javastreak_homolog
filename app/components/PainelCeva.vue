@@ -120,7 +120,13 @@ onMounted(carregar)
     <!-- ─────────── 1. CONDIÇÕES AGORA ─────────── -->
     <template v-if="est.indice !== null">
       <div class="cond" :class="FAIXA(est.indice)">
-        <div class="aro"><b class="no-i18n">{{ est.indice }}</b><span class="no-i18n">/100</span></div>
+        <!-- ⚠️ Só o NÚMERO dentro do aro. O "/100" ao lado empurrava o
+             número para fora do círculo quando ele tinha dois dígitos — e
+             sempre tem. A escala vai para baixo, onde há largura. -->
+        <div class="aro">
+          <b class="no-i18n">{{ est.indice }}</b>
+          <i class="de100">de 100</i>
+        </div>
         <div class="grow">
           <b>Condições agora</b>
           <div class="meta">
@@ -241,11 +247,16 @@ onMounted(carregar)
 .cond { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
 .aro {
   flex: none; width: 64px; height: 64px; border-radius: 50%;
-  display: flex; align-items: baseline; justify-content: center; gap: 1px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   border: 3px solid var(--linha); background: var(--carvao-3);
+  /* Nada escapa do círculo, aconteça o que acontecer com o número. */
+  overflow: hidden; line-height: 1;
 }
-.aro b { font-size: 22px; }
-.aro span { font-size: 10px; color: var(--osso-2); }
+.aro b { font-size: 21px; line-height: 1; }
+.de100 {
+  font-size: 8.5px; font-style: normal; color: var(--osso-2);
+  letter-spacing: .02em; margin-top: 2px;
+}
 .cond.alta .aro { border-color: var(--verde); color: var(--verde-esc); }
 .cond.media .aro { border-color: var(--alerta); color: var(--alerta); }
 .cond.baixa .aro { border-color: var(--osso-2); color: var(--osso-2); }

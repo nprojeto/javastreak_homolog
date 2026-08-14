@@ -57,7 +57,14 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   pronto: []
-  selecionar: [{ tipo: 'ceva' | 'rota'; id: string; nome: string }]
+  /**
+   * ⚠️ A COORDENADA VAI JUNTO. É ela que permite ancorar o painel ao pino:
+   * a tela reprojeta esse ponto para pixels e desenha o balão saindo dali,
+   * inclusive depois de arrastar ou dar zoom.
+   */
+  selecionar: [{ tipo: 'ceva' | 'rota'; id: string; nome: string; lat: number; lng: number }]
+  /* Disparado a cada movimento do mapa, para o balão acompanhar o pino. */
+  moveu: []
 }>()
 
 /** Já enquadrou uma vez? Ver `enquadrarUmaVez`. */
@@ -124,7 +131,11 @@ async function desenhar() {
     linha.addTo(camada)
     if (r.sel) {
       const s = r.sel, t = r.nome || 'Rota'
-      linha.on('click', () => emit('selecionar', { tipo: s.tipo, id: s.id, nome: t }))
+      /* Numa rota, o ponto de ancoragem é o PRIMEIRO do traçado — o mesmo que
+         serve de referência para a consulta de tempo. */
+      const p0 = r.pontos[0]!
+      linha.on('click', () =>
+        emit('selecionar', { tipo: s.tipo, id: s.id, nome: t, lat: p0.lat, lng: p0.lng }))
     } else {
       linha.bindPopup('<b>' + esc(r.nome || 'Rota') + '</b>' + extra)
     }
@@ -160,7 +171,8 @@ async function desenhar() {
        balão por cima só atrapalharia a leitura do que abre embaixo. */
     if (p.sel) {
       const s = p.sel, t = p.titulo || ''
-      alvo.on('click', () => emit('selecionar', { tipo: s.tipo, id: s.id, nome: t }))
+      alvo.on('click', () =>
+        emit('selecionar', { tipo: s.tipo, id: s.id, nome: t, lat: p.lat, lng: p.lng }))
     } else {
       alvo.bindPopup(balao)
     }
@@ -186,7 +198,21 @@ function enquadrar() {
   } catch { /* camada vazia */ }
 }
 
-defineExpose({ enquadrar, mapa: () => map })
+/**
+ * Converte coordenada em pixels DENTRO do mapa. É o que ancora o balão ao
+ * pino — sem isso o painel só saberia aparecer no rodapé.
+ */
+function projetar(lat: number, lng: number): { x: number; y: number } | null {
+  if (!map) return null
+  try {
+    const p = map.latLngToContainerPoint([lat, lng])
+    return { x: p.x, y: p.y }
+  } catch {
+    return null
+  }
+}
+
+defineExpose({ enquadrar, projetar, mapa: () => map })
 
 watch(() => [props.limites, props.pinos, props.tracado, props.rotas], desenhar, { deep: true })
 
@@ -196,7 +222,10 @@ onMounted(async () => {
   map = L.map(el.value, { preferCanvas: true }).setView([-15.78, -47.93], 4)
   await addBase(map)
   camada = L.featureGroup().addTo(map)
-  setTimeout(() => { map?.invalidateSize(); desenhar() }, 150)
+  /* O balão ancorado ao pino precisa acompanhar arrasto e zoom. */
+  map.on('move', () => emit('moveu'))
+  map.on('zoom', () => emit('moveu'))
+  setTimeout(() => { map?.invalidateSize(); desenhar(); emit('moveu') }, 150)
 })
 
 onBeforeUnmount(() => { map?.remove(); map = null })
