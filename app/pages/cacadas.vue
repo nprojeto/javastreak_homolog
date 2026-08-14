@@ -25,7 +25,8 @@ export interface Manejo {
   participantes?: Array<{ id: string; nome: string; dono?: boolean }>
   /* `atribuida` separa o que foi escolhido na criação do que existe na
      propriedade — o servidor devolve os dois. */
-  cevas?: Array<{ id: string; nome: string; atribuida?: boolean }>
+  /* `lat`/`lng` só existem na ceva — rota tem traçado, não ponto. */
+  cevas?: Array<{ id: string; nome: string; atribuida?: boolean; lat?: number | string; lng?: number | string }>
   rotas?: Array<{ id: string; nome: string; atribuida?: boolean }>
   /* O limite vem junto: é ele que enquadra o mapa de escolher ponto. */
   propriedade?: {

@@ -18,6 +18,7 @@
  */
 import { useUi } from '~/stores/ui'
 import { lerArquivo, FOTO_MAX_MB } from '~/composables/useArquivo'
+import { pontoDentro } from '~/composables/useMapa'
 import type { Manejo } from '~/pages/cacadas.vue'
 
 definePageMeta({ layout: 'app' })
@@ -72,6 +73,10 @@ const salvando = ref(false)
 /* Com ceva escolhida, o local do abate é o da ceva — o servidor sobrescreve. */
 const mostraLocal = computed(() => !cevaId.value)
 
+/** Coordenada da ceva escolhida, para a tela mostrar em vez de esconder. */
+const cevaEscolhida = computed(() =>
+  (m.value?.cevas || []).find((c) => String(c.id) === cevaId.value) || null)
+
 /**
  * ⚠️ O TEMPO REAL NÃO DEPENDE MAIS DA CEVA. Antes o bloco de condições só
  * aparecia com ceva escolhida, e o abate de caçada livre ou de rota nem via a
@@ -81,10 +86,39 @@ const mostraLocal = computed(() => !cevaId.value)
  */
 const temPonto = computed(() => !!(Number(lat.value) || Number(lng.value)))
 
+/**
+ * ⚠️ TEMPO REAL SÓ DENTRO DA PROPRIEDADE. O clima consultado agora só vale
+ * como medição do abate se o abate aconteceu ali — um ponto fora da divisa
+ * traz o tempo de outro lugar, e o número vai ao relatório do IBAMA como se
+ * fosse medido. Fora do limite, resta o preenchimento à mão, que sai marcado
+ * como `manual` e é honesto sobre a origem.
+ *
+ * ⚠️ Sem limite desenhado ou sem coordenada, NÃO trava: não se afirma que
+ * está fora quando não se sabe onde é o dentro.
+ */
+const limiteProp = computed(() => m.value?.propriedade?.limite || [])
+
+const foraDoLimite = computed(() => {
+  const la = Number(lat.value), ln = Number(lng.value)
+  if (limiteProp.value.length < 3) return false
+  if (!isFinite(la) || !isFinite(ln) || (!la && !ln)) return false
+  return !pontoDentro({ lat: la, lng: ln }, limiteProp.value)
+})
+
 /** Nome da ceva escolhida, para o rodapé do clima dizer de onde ele veio. */
 const nomeDaCeva = computed(() =>
   (m.value?.cevas || []).find((c) => String(c.id) === cevaId.value)?.nome || 'ceva escolhida')
-const podeTempoReal = computed(() => !!cevaId.value || temPonto.value)
+const podeTempoReal = computed(() =>
+  (!!cevaId.value || temPonto.value) && !foraDoLimite.value)
+
+/* Saiu do limite com o tempo real ligado: cai para o manual e avisa. */
+watch(foraDoLimite, (fora) => {
+  if (fora && modo.value === 'tempoReal') {
+    modo.value = 'passado'
+    climaFalhou.value = true
+    motivoClima.value = 'Este ponto está fora do limite da propriedade.'
+  }
+})
 
 /**
  * ── ONDE O ABATE ENTRA ──
@@ -95,16 +129,31 @@ const podeTempoReal = computed(() => !!cevaId.value || temPonto.value)
  */
 const onde = ref('')
 
+/**
+ * ⚠️ SEM "SOLTO NA PROPRIEDADE". Era uma opção que não dizia nada — o abate
+ * ficava sem vínculo e ninguém sabia depois a que ele pertencia. No lugar
+ * dela entra o PERCURSO EM GRAVAÇÃO, que é o vínculo real de quem está
+ * andando numa caçada livre.
+ *
+ * ⚠️ Quando não há opção nenhuma (nem ceva, nem rota, nem gravação), o campo
+ * SOME em vez de mostrar uma escolha falsa. O abate continua sendo registrado
+ * com a coordenada — bloquear o registro perderia um dado que vai ao IBAMA, e
+ * isso seria pior que registrar sem vínculo.
+ */
+const gravandoPercurso = computed(() => route.query.percurso === '1')
+
 const opcoesOnde = computed(() => {
   const o: Array<{ valor: string; rotulo: string }> = []
-  if (route.query.percurso === '1') {
-    o.push({ valor: 'p', rotulo: 'No percurso que estou gravando' })
+  if (gravandoPercurso.value && !foraDoLimite.value) {
+    o.push({ valor: 'p', rotulo: 'No percurso em gravação' })
   }
   for (const c of m.value?.cevas || []) o.push({ valor: 'c:' + c.id, rotulo: 'Ceva: ' + (c.nome || 'ceva') })
   for (const r of m.value?.rotas || []) o.push({ valor: 'r:' + r.id, rotulo: 'Rota: ' + (r.nome || 'rota') })
-  o.push({ valor: '', rotulo: 'Solto na propriedade' })
   return o
 })
+
+/* Com uma opção só, escolher não é escolha: aplica e não pergunta. */
+const precisaEscolherOnde = computed(() => opcoesOnde.value.length > 1)
 
 /**
  * ⚠️ `onde` MANDA em `cevaId` e `rotaId`, e não o contrário. Deixar os três
@@ -208,12 +257,9 @@ watch(m, (v) => {
   const rota = String(route.query.rota || '')
   if (ceva && (v.cevas || []).some((c) => String(c.id) === ceva)) { onde.value = 'c:' + ceva; return }
   if (rota && (v.rotas || []).some((r) => String(r.id) === rota)) { onde.value = 'r:' + rota; return }
-  if (route.query.percurso === '1') { onde.value = 'p'; return }
-  /* Um item só na propriedade: escolher por ela poupa um toque e não esconde
-     nada — o seletor continua à vista, mostrando o que foi escolhido. */
-  const cs = v.cevas || [], rs = v.rotas || []
-  if (cs.length === 1 && !rs.length) onde.value = 'c:' + cs[0]!.id
-  else if (rs.length === 1 && !cs.length) onde.value = 'r:' + rs[0]!.id
+  /* Sem pré-seleção da URL, vale a primeira opção — que é o percurso quando
+     há gravação, e a única ceva ou rota quando só existe uma. */
+  onde.value = opcoesOnde.value[0]?.valor ?? ''
 }, { immediate: true })
 watch(modo, (v) => { if (v === 'tempoReal') verClima() })
 
@@ -351,13 +397,18 @@ async function salvar() {
           nada impedia preencher os dois — um abate com ceva E rota, que o
           relatório do IBAMA não sabe representar.
         -->
-        <label for="ab_onde">Onde foi o abate *</label>
-        <select id="ab_onde" v-model="onde">
-          <option v-for="o in opcoesOnde" :key="o.valor" :value="o.valor">{{ o.rotulo }}</option>
-        </select>
+        <template v-if="precisaEscolherOnde">
+          <label for="ab_onde">Onde foi o abate *</label>
+          <select id="ab_onde" v-model="onde">
+            <option v-for="o in opcoesOnde" :key="o.valor" :value="o.valor">{{ o.rotulo }}</option>
+          </select>
+        </template>
+        <div v-else-if="opcoesOnde.length === 1" class="meta">
+          <Icone nome="pino" /> <span class="no-i18n">{{ opcoesOnde[0]!.rotulo }}</span>
+        </div>
         <div v-if="onde === 'p'" class="meta">
-          O percurso ainda está sendo gravado, então o abate fica solto na
-          propriedade e guarda a coordenada de onde você está.
+          O percurso ainda está sendo gravado, então o abate guarda a
+          coordenada de onde você está e entra na rota quando ela for salva.
         </div>
 
         <label for="ab_quem">Quem abateu *</label>
@@ -369,13 +420,36 @@ async function salvar() {
       </div>
 
       <!-- ───────── CONDIÇÕES ───────── -->
-      <div v-if="podeTempoReal" class="card">
+      <!--
+        ⚠️ Fora do limite, o tempo real some — mas com o motivo escrito. Uma
+        opção que desaparece sem explicação faz a pessoa procurar o que não
+        existe mais.
+      -->
+      <div v-if="foraDoLimite" class="card fora">
+        <h3><Icone nome="alerta" /> Fora do limite da propriedade</h3>
+        <div class="meta">
+          O tempo consultado aqui seria de outro lugar, então ele não vale como
+          medição deste abate. Preencha as condições à mão, abaixo.
+        </div>
+      </div>
+
+      <!--
+        ⚠️ O BLOCO APARECE SEMPRE; o que some é o BOTÃO de tempo real. Ele já
+        esteve inteiro atrás do `podeTempoReal`, e aí quem estivesse fora do
+        limite ficava sem os campos de lua e condição — sem tempo real E sem
+        como preencher à mão, que é justamente o caminho que sobra.
+      -->
+      <div class="card">
         <h3>Condições</h3>
         <div class="modos">
           <button :class="{ on: modo === 'passado' }" @click="modo = 'passado'">
             <Icone nome="calendario" /> Aconteceu antes
           </button>
-          <button :class="{ on: modo === 'tempoReal' }" @click="modo = 'tempoReal'">
+          <button
+            v-if="podeTempoReal"
+            :class="{ on: modo === 'tempoReal' }"
+            @click="modo = 'tempoReal'"
+          >
             <Icone nome="relogio" /> Agora (tempo real)
           </button>
         </div>
@@ -496,7 +570,21 @@ async function salvar() {
             :nome-limite="m.propriedade?.nome"
           />
         </template>
-        <div v-else class="meta local"><Icone nome="pino" /> O local do abate é o da ceva escolhida.</div>
+        <!--
+          ⚠️ MOSTRA A COORDENADA DA CEVA. Antes o bloco de local sumia e
+          sobrava só a frase — escolher rota mostrava o ponto e escolher ceva
+          escondia, sem motivo aparente. O campo continua não editável, porque
+          quem manda é a ceva: o servidor sobrescreve o ponto pelo dela.
+        -->
+        <div v-else class="card ceva-local">
+          <div class="meta"><Icone nome="pino" /> O local do abate é o da ceva escolhida.</div>
+          <div v-if="cevaEscolhida?.lat" class="coord no-i18n">
+            {{ Number(cevaEscolhida.lat).toFixed(5) }}, {{ Number(cevaEscolhida.lng).toFixed(5) }}
+          </div>
+          <div v-else class="meta ruim">
+            <Icone nome="alerta" /> Esta ceva não tem coordenada marcada.
+          </div>
+        </div>
 
         <label class="check">
           <input v-model="amostra" type="checkbox">
@@ -537,6 +625,11 @@ h3 { margin: 0 0 8px; }
   background: var(--card); cursor: pointer; font-weight: 600; font-size: 12.5px; color: var(--txt);
 }
 .modos button.on { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-esc); }
+.fora { border-left: 4px solid var(--alerta); }
+.fora h3 { color: var(--alerta); }
+.ceva-local { margin-top: 6px; }
+.ceva-local .meta { margin: 0; }
+.ceva-local .coord { margin-top: 4px; font-size: 13px; font-weight: 700; }
 .recuo { border-left: 4px solid var(--alerta); background: var(--carvao-3); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
 .recuo .meta { margin: 4px 0 0; }
 .recuo .btn { margin-top: 8px; }

@@ -279,7 +279,7 @@ const ondeNovo = ref('')
 
 const opcoesOnde = computed(() => {
   const o: Array<{ valor: string; rotulo: string }> = []
-  if (gravando.value) o.push({ valor: '__percurso', rotulo: 'No percurso que estou gravando' })
+  if (gravando.value) o.push({ valor: '__percurso', rotulo: 'No percurso em gravação' })
   for (const r of g.value?.rotas || []) o.push({ valor: 'r:' + r.id, rotulo: 'Rota: ' + (r.nome || 'rota') })
   for (const c of g.value?.cevas || []) o.push({ valor: 'c:' + c.id, rotulo: 'Ceva: ' + (c.nome || 'ceva') })
   o.push({ valor: '', rotulo: 'Solto no mapa' })
